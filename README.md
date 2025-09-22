@@ -30,11 +30,18 @@ npm -v
 
 Una vez instalado la version de node sugerida y descargado el proyecto en nuestro local procederemos a instalar las dependencias del programa, para ello usamos el comando:
 
+### 1️⃣ Clonar el repositorio
+Ejecuta el siguiente comando en tu terminal para descargar el proyecto en tu máquina local:  
+
+```bash
+git clone https://github.com/Chronos-Code-SRL/oh-sansi-frontend.git
+
+```
+2️⃣ Instalar dependencias
+
+Accede a la carpeta del proyecto y ejecuta el siguiente comando para instalar todas las dependencias necesarias:
 ```bash
 npm install
-```
-
-una vez cargado las dependencias procedemos a ejecutar el programa con:
 
 ```bash
 npm run dev
