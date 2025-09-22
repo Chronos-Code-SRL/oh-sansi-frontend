@@ -42,6 +42,7 @@ git clone https://github.com/Chronos-Code-SRL/oh-sansi-frontend.git
 Accede a la carpeta del proyecto y ejecuta el siguiente comando para instalar todas las dependencias necesarias:
 ```bash
 npm install
+```
 
 ```bash
 npm run dev
