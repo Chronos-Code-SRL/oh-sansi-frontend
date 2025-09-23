@@ -2,16 +2,14 @@ interface BreadcrumbProps {
     pageTitle: string;
 }
 
-const PageBreadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle }) => {
+const AdminPageBreadCrumb : React.FC<BreadcrumbProps> = ({ pageTitle }) => {
     return (
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h2
-                className="text-xl font-semibold text-gray-800 dark:text-white/90"
-            >
+        <div className="flex flex-wrap items- justify-between gap-3 mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">
                 {pageTitle}
             </h2>
-        </div>
+        </div> 
     );
 };
 
-export default PageBreadcrumb;
+export default AdminPageBreadCrumb;

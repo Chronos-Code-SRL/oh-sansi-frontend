@@ -1,89 +1,53 @@
-import { useState } from "react";
 import ComponentCard from "../../common/ComponentCard";
 import Label from "../Label";
 import Input from "../input/InputField";
-import Select from "../Select";
-import { EyeCloseIcon, EyeIcon, TimeIcon } from "../../../icons";
 import DatePicker from "../date-picker.tsx";
+import Button from "../../ui/button/Button.tsx";
 
-export default function DefaultInputs() {
-    const [showPassword, setShowPassword] = useState(false);
-    const options = [
-        { value: "marketing", label: "Marketing" },
-        { value: "template", label: "Template" },
-        { value: "development", label: "Development" },
-    ];
-    const handleSelectChange = (value: string) => {
-        console.log("Selected value:", value);
-    };
+export default function AdminDefaultInputs() {
 
     return (
-        <ComponentCard title="Default Inputs">
+        <ComponentCard title="Completa la informacion básica para comenzar">
             <div className="space-y-6">
                 <div>
-                    <Label htmlFor="input">Input</Label>
-                    <Input type="text" id="input" />
+                    <Label htmlFor="input">Nombre Olimpiada</Label>
+                    <Input type="text" id="input" placeholder="Ej. Olimpiada Nacional de Tecnologia 2025"/>
                 </div>
+
                 <div>
-                    <Label htmlFor="inputTwo">Input with Placeholder</Label>
-                    <Input type="text" id="inputTwo" placeholder="info@gmail.com" />
-                </div>
-                <div>
-                    <Label>Select Input</Label>
-                    <Select
-                        options={options}
-                        placeholder="Select an option"
-                        onChange={handleSelectChange}
-                        className="dark:bg-dark-900"
-                    />
-                </div>
-                <div>
-                    <Label>Password Input</Label>
-                    <div className="relative">
-                        <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
-                        />
-                        <button
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                        >
-                            {showPassword ? (
-                                <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
-                            ) : (
-                                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
-                            )}
-                        </button>
-                    </div>
+                    <Label>Numero de etapas</Label>
+                    <Input placeholder="Ingrese el numero de etapas para la olimpiada"/>
                 </div>
 
                 <div>
                     <DatePicker
-                        id="date-picker"
-                        label="Date Picker Input"
-                        placeholder="Select a date"
+                        id="date-start"
+                        label="Fecha de inicio"
+                        placeholder="dd/mm/yyyy"
+                        //MAKE CALENDAR
+
                         onChange={(dates, currentDateString) => {
                             // Handle your logic
                             console.log({ dates, currentDateString });
                         }}
                     />
                 </div>
-
+                
                 <div>
-                    <Label htmlFor="tm">Time Picker Input</Label>
-                    <div className="relative">
-                        <Input
-                            type="time"
-                            id="tm"
-                            name="tm"
-                            onChange={(e) => console.log(e.target.value)}
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                            <TimeIcon className="size-6" />
-                        </span>
-                    </div>
+                    <DatePicker
+                        id="date-end"
+                        label="Fecha de finalizacion"
+                        placeholder="dd/mm/yyyy"
+                        //Make Calendar
+                        onChange={(dates, currentDateString) => {
+                            // Handle your logic
+                            console.log({ dates, currentDateString });
+                        }}
+                    />
                 </div>
             </div>
+            <Button children="Conitunar a continuacion de Areas"/>
+            
         </ComponentCard>
     );
 }
