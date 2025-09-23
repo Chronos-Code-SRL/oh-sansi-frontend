@@ -18,6 +18,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import UserList from "./pages/Users/UserList";
 
 export default function App() {
   return (
@@ -40,6 +41,9 @@ export default function App() {
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
 
+            {/*Users*/}
+            <Route path="/users/list" element={<UserList />} />
+
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
@@ -59,6 +63,9 @@ export default function App() {
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
+          
+          {/*Users*/}
+          <Route path="/users/list" element={<UserList />} />
         </Routes>
       </Router>
     </>
