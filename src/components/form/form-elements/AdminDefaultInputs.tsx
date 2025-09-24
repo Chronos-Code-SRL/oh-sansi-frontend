@@ -9,45 +9,48 @@ export default function AdminDefaultInputs() {
     return (
         <ComponentCard title="Completa la informacion básica para comenzar">
             <div className="space-y-6">
-                <div>
+                <div className="max-w-3xl mx-auto">
                     <Label htmlFor="input">Nombre Olimpiada</Label>
-                    <Input type="text" id="input" placeholder="Ej. Olimpiada Nacional de Tecnologia 2025"/>
+                    <Input type="text" id="input" placeholder="Ej. Olimpiada Nacional de Tecnologia 2025" />
                 </div>
 
-                <div>
+                <div className="max-w-3xl mx-auto">
                     <Label>Numero de etapas</Label>
-                    <Input placeholder="Ingrese el numero de etapas para la olimpiada"/>
+                    <Input placeholder="Ingrese el numero de etapas para la olimpiada" />
                 </div>
 
-                <div>
+
+                <div className="max-w-3xl mx-auto">
                     <DatePicker
                         id="date-start"
                         label="Fecha de inicio"
-                        placeholder="dd/mm/yyyy"
-                        //MAKE CALENDAR
+                        placeholder="yyyy/mm/dd"
+                    //MAKE CALENDAR
 
-                        onChange={(dates, currentDateString) => {
-                            // Handle your logic
-                            console.log({ dates, currentDateString });
-                        }}
+                    // onChange={(dates, currentDateString) => {
+                    //     // Handle your logic
+                    //     console.log({ dates, currentDateString });
+                    // }}
                     />
                 </div>
-                
-                <div>
+                <div className="max-w-3xl mx-auto">
                     <DatePicker
                         id="date-end"
                         label="Fecha de finalizacion"
-                        placeholder="dd/mm/yyyy"
-                        //Make Calendar
-                        onChange={(dates, currentDateString) => {
-                            // Handle your logic
-                            console.log({ dates, currentDateString });
-                        }}
+                        placeholder="yyyy/mm/dd"
+                    //Make Calendar
+                    // onChange={(dates, currentDateString) => {
+                    //     // Handle your logic
+                    //     console.log({ dates, currentDateString });
+                    // }}
                     />
                 </div>
+
+
+                <div className="max-w-3xl mx-auto">
+                    <Button children="Conitunar a Configuracion de Areas" />
+                </div>
             </div>
-            <Button children="Conitunar a continuacion de Areas"/>
-            
         </ComponentCard>
     );
 }
