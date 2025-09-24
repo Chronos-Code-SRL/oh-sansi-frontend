@@ -8,47 +8,47 @@ export default function AdminDefaultInputs() {
 
     return (
         <ComponentCard title="Completa la informacion básica para comenzar">
-            <div className="space-y-6">
-                <div className="max-w-3xl mx-auto">
-                    <Label htmlFor="input">Nombre Olimpiada</Label>
-                    <Input type="text" id="input" placeholder="Ej. Olimpiada Nacional de Tecnologia 2025" />
-                </div>
+            <div className="space-y-5 max-w-2xl mx-auto"> {/* space-y-5 para 20px de separación */}
 
-                <div className="max-w-3xl mx-auto">
-                    <Label>Numero de etapas</Label>
-                    <Input placeholder="Ingrese el numero de etapas para la olimpiada" />
-                </div>
-
-
-                <div className="max-w-3xl mx-auto">
-                    <DatePicker
-                        id="date-start"
-                        label="Fecha de inicio"
-                        placeholder="yyyy/mm/dd"
-                    //MAKE CALENDAR
-
-                    // onChange={(dates, currentDateString) => {
-                    //     // Handle your logic
-                    //     console.log({ dates, currentDateString });
-                    // }}
-                    />
-                </div>
-                <div className="max-w-3xl mx-auto">
-                    <DatePicker
-                        id="date-end"
-                        label="Fecha de finalizacion"
-                        placeholder="yyyy/mm/dd"
-                    //Make Calendar
-                    // onChange={(dates, currentDateString) => {
-                    //     // Handle your logic
-                    //     console.log({ dates, currentDateString });
-                    // }}
+                {/* Nombre Olimpiada */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="olimpiada-name" className="block text-sm font-medium text-gray-700">
+                        Nombre Olimpiada
+                    </Label>
+                    <Input
+                        type="text"
+                        id="olimpiada-name"
+                        placeholder="Olimpiada Nacional de Tecnología 2025"
+                        className="w-full border-gray-300 focus:border-blue-500"
                     />
                 </div>
 
+                {/* Número de etapas */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="etapas" className="block text-sm font-medium text-gray-700">
+                        Número de etapas
+                    </Label>
+                    <Input
+                        id="etapas"
+                        type="number"
+                        placeholder="Ingrese el número de etapas para la olimpiada"
+                        className="w-full border-gray-300 focus:border-blue-500"
+                    />
+                </div>
 
-                <div className="max-w-3xl mx-auto">
-                    <Button children="Conitunar a Configuracion de Areas" />
+                {/* Fechas */}
+                <div className="space-y-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <DatePicker id="date-start" label="Fecha de inicio" placeholder="dd/mm/yyyy" />
+                        <DatePicker id="date-end" label="Fecha de finalización" placeholder="dd/mm/yyyy" />
+                    </div>
+                </div>
+
+                {/* Botón */}
+                <div className="pt-3">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5">
+                        Continuar a Configuración de Áreas
+                    </Button>
                 </div>
             </div>
         </ComponentCard>

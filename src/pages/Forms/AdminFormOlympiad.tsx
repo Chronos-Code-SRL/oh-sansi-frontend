@@ -17,7 +17,6 @@ export default function AdminFormOlympiad() {
             <div className="flex justify-center">
                 <div className="w-full max-w-5xl space-y-6">
                     <AdminDefaultInputs />
-                    {/* <AdminSelectInputs /> */}
                 </div>
             </div>
         </>
