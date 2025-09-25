@@ -3,6 +3,7 @@ import Label from "../Label";
 import Input from "../input/InputField";
 import DatePicker from "../date-picker.tsx";
 import Button from "../../ui/button/Button.tsx";
+import AdminSelectInputs from "./AdminSelectInputs.tsx";
 
 export default function AdminDefaultInputs() {
 
@@ -39,16 +40,19 @@ export default function AdminDefaultInputs() {
                 {/* Fechas */}
                 <div className="space-y-1.5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <DatePicker id="date-start" label="Fecha de inicio" placeholder="dd/mm/yyyy" />
-                        <DatePicker id="date-end" label="Fecha de finalización" placeholder="dd/mm/yyyy" />
+                        <DatePicker id="date-start" label="Fecha de inicio" placeholder="yyyy/mm/dd" />
+                        <DatePicker id="date-end" label="Fecha de finalización" placeholder="yyyy/mm/dd" />
                     </div>
                 </div>
 
+                <AdminSelectInputs />
+
                 {/* Botón */}
                 <div className="pt-3">
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5">
-                        Continuar a Configuración de Áreas
+                    <Button className="w-full text-white font-medium py-2.5">
+                        Crear olimpiada
                     </Button>
+
                 </div>
             </div>
         </ComponentCard>
