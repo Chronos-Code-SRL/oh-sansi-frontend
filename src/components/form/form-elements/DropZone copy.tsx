@@ -1,4 +1,4 @@
-import Badge from "../../ui/badge/Badge";
+import ComponentCard from "../../common/ComponentCard";
 import { useDropzone } from "react-dropzone";
 // import Dropzone from "react-dropzone";
 
@@ -11,11 +11,14 @@ const DropzoneComponent: React.FC = () => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      "text/csv": [],    
+      "image/png": [],
+      "image/jpeg": [],
+      "image/webp": [],
+      "image/svg+xml": [],
     },
   });
   return (
-    
+    <ComponentCard title="Dropzone">
       <div className="transition border border-gray-300 border-dashed cursor-pointer dark:hover:border-brand-500 dark:border-gray-700 rounded-xl hover:border-brand-500">
         <form
           {...getRootProps()}
@@ -53,32 +56,20 @@ const DropzoneComponent: React.FC = () => {
 
             {/* Text Content */}
             <h4 className="mb-3 font-semibold text-gray-800 text-theme-xl dark:text-white/90">
-            Registrar información de los Competidores
-             
+              {isDragActive ? "Drop Files Here" : "Drag & Drop Files Here"}
             </h4>
 
-            <div className="flex items-center justify-center gap-1 mb-3">
-              <span className="text-sm text-gray-700 dark:text-gray-400">
-                Arrastra tus archivos aquí o
-              </span>
-              <span className="font-medium underline text-theme-sm text-brand-500 cursor-pointer">
-                Haz clic para seleccionarlos
-              </span>
-            </div>
-
-
-           <span className=" text-center mb-2 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
-              Formato permitido:
-              <Badge color="primary"> csv</Badge>
+            <span className=" text-center mb-5 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
+              Drag and drop your PNG, JPG, WebP, SVG images here or browse
             </span>
-            
-                
 
-
+            <span className="font-medium underline text-theme-sm text-brand-500">
+              Browse File
+            </span>
           </div>
         </form>
       </div>
-    
+    </ComponentCard>
   );
 };
 

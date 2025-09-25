@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   {
     icon: <ListIcon />,
     name: "Competidores",
-    path: "/calendar",
+    path: "/registration",
   },
   {
     name: "Reportes",
