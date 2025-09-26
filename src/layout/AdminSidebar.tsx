@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
   {
     icon: <ListIcon />,
     name: "Registrar Usuario",
-    path: "/"
+    path: "user/register"
   },
   {
     icon: <ListIcon />,
