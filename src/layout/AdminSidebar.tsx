@@ -23,8 +23,8 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ListIcon />,
-    name: "Usuarios",
-    path: "/profile",
+    name: "Registrar Usuario",
+    path: "user/register"
   },
   {
     icon: <ListIcon />,
