@@ -3,7 +3,7 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 // import AppSidebar from "./AppSidebar";
-import AdminSidebar from "../layout/AdminSidebar";
+import AdminSidebar from "./adminLayout/AdminSidebar";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
