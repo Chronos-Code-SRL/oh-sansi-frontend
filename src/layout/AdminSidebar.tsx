@@ -17,25 +17,25 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Olimpiadas",
     subItems: [
-      { name: "Crear Olimpiada", path: "/", pro: false },
-      { name: "Ver Olimpliadas", path: "/", pro: false },
+      { name: "Crear Olimpiada", path: "/form-Olympiad", pro: false },
+      
     ],
   },
   {
     icon: <ListIcon />,
     name: "Registrar Usuario",
-    path: "user/register"
+    path: "user-register"
   },
   {
     icon: <ListIcon />,
     name: "Competidores",
     path: "/registration",
   },
-  {
-    name: "Reportes",
-    icon: <ListIcon />,
-    path: "/",
-  },
+  // {
+  //   name: "Reportes",
+  //   icon: <ListIcon />,
+  //   path: "/",
+  // },
 ];
 
 const AppSidebar: React.FC = () => {

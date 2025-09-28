@@ -1,6 +1,5 @@
 import { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
 
 import Label from "../../components/form/Label";
@@ -8,6 +7,7 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
+import AdminPageBreadCrumb from "../../components/common/AdminPageBreadCrumb";
 
 export default function RegisterUser() { 
   const [firstName, setFirstName] = useState("");
@@ -42,7 +42,7 @@ export default function RegisterUser() {
         title="Registrar Usuario | Oh! SanSi"
         description="Página para registrar responsables académicos y evaluadores"
       />
-      <PageBreadcrumb pageTitle="Registrar Usuario" />
+      <AdminPageBreadCrumb pageTitle="Registrar Usuario" />
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">            

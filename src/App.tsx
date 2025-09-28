@@ -20,9 +20,8 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import RegisterUser from "./pages/Users/RegisterUser";
 import AdminFormOlympiad from "./pages/Forms/AdminFormOlympiad";
-
-
 import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
+
 export default function App() {
   return (
     <>
@@ -49,7 +48,7 @@ export default function App() {
             <Route path="/basic-tables" element={<BasicTables />} />
 
             {/*Register User*/}
-            < Route path="/user/register" element={<RegisterUser/>}/>
+            < Route path="/user-register" element={<RegisterUser/>}/>
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
