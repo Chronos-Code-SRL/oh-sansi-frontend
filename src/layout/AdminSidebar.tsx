@@ -23,13 +23,13 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ListIcon />,
-    name: "Usuarios",
-    path: "/profile",
+    name: "Registrar Usuario",
+    path: "user/register"
   },
   {
     icon: <ListIcon />,
     name: "Competidores",
-    path: "/calendar",
+    path: "/registration",
   },
   {
     name: "Reportes",

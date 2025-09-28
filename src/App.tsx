@@ -13,12 +13,16 @@ import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
-import FormElements from "./pages/Forms/FormElements";
+// import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import RegisterUser from "./pages/Users/RegisterUser";
+import AdminFormOlympiad from "./pages/Forms/AdminFormOlympiad";
 
+
+import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 export default function App() {
   return (
     <>
@@ -29,16 +33,23 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
 
+             {/* Aministration*/}
+             <Route index path="/registration" element={<AdRegistration/>} />
+
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}
-            <Route path="/form-elements" element={<FormElements />} />
+            {/* <Route path="/form-elements" element={<FormElements />} /> */}
+            <Route path="/form-Olympiad" element={<AdminFormOlympiad />} />
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
+
+            {/*Register User*/}
+            < Route path="/user/register" element={<RegisterUser/>}/>
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
