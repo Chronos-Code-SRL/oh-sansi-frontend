@@ -5,7 +5,6 @@ import DatePicker from "../date-picker.tsx";
 import Button from "../../ui/button/Button.tsx";
 import AdminSelectInputs from "./AdminSelectInputs.tsx";
 
-import SelectInputs from "./SelectInputs.tsx";
 
 export default function AdminDefaultInputs() {
 
