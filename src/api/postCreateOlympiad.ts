@@ -1,13 +1,13 @@
 import { ohSansiApi } from "./ohSansiApi";
 
 
-export interface OlympiadData {
-    name: string;
-    number_of_phases: number;
-    edition: string;
-    start_date: String;
-    end_date: String;
-}
+// export interface OlympiadData {
+//     name: string;
+//     number_of_phases: number;
+//     edition: string;
+//     start_date: String;
+//     end_date: String;
+// }
 
 export const createOlympiad = {
     postOlympiad: async function (data: any) {
@@ -18,12 +18,3 @@ export const createOlympiad = {
         }
     }
 }
-
-
-
-
-
-// async (data: OlympiadData) => {
-//     const response = await ohSansiApi.post("/olympiads", data);
-//     return response.data;
-// };
