@@ -6,9 +6,9 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
-import AdminPageBreadCrumb from "../../components/common/AdminPageBreadCrumb";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 
-export default function RegisterUser() { 
+export default function RegisterUser() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [ci, setCi] = useState("");
@@ -73,7 +73,7 @@ export default function RegisterUser() {
   };
 
 
-  {/*Simulación de envío*/}
+  {/*Simulación de envío*/ }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -100,15 +100,15 @@ export default function RegisterUser() {
         title="Registrar Usuario | Oh! SanSi"
         description="Página para registrar responsables académicos y evaluadores"
       />
-      <AdminPageBreadCrumb pageTitle="Registrar Usuario" />
+      <TitleBreadCrumb pageTitle="Registrar Usuario" />
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">            
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="space-y-6"> {/*Columna izquierda*/}
             <ComponentCard title="Ingrese información">
-              <div className="grid grid-cols-1 gap-6">  
-                
-                <div> 
+              <div className="grid grid-cols-1 gap-6">
+
+                <div>
                   <Label htmlFor="firstName">Nombre(s)</Label>
                   <InputField
                     id="firstName"
@@ -134,7 +134,7 @@ export default function RegisterUser() {
                   />
                 </div>
 
-                <div> 
+                <div>
                   <Label htmlFor="ci">Carnet de Identidad</Label>
                   <InputField
                     id="ci"
@@ -147,7 +147,7 @@ export default function RegisterUser() {
                   />
                 </div>
 
-                <div> 
+                <div>
                   <Label htmlFor="phone">Teléfono</Label>
                   <InputField
                     id="phone"
@@ -160,7 +160,7 @@ export default function RegisterUser() {
                   />
                 </div>
 
-                <div> 
+                <div>
                   <Label htmlFor="email">Correo electrónico</Label>
                   <InputField
                     id="email"
@@ -250,9 +250,9 @@ export default function RegisterUser() {
                 </div>
 
                 <div>
-                    <Button size="md" variant="primary" className="w-full" >
-                        Registrar
-                    </Button>
+                  <Button size="md" variant="primary" className="w-full" >
+                    Registrar
+                  </Button>
                 </div>
               </div>
             </ComponentCard>
