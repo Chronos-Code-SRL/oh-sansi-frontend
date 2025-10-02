@@ -186,17 +186,17 @@ export default function RegisterUser() {
                     <Radio
                       id="gender-f"
                       name="gender"
-                      value="F"
+                      value="femenino"
                       label="Femenino"
-                      checked={gender === "F"}
+                      checked={gender === "femenino"}
                       onChange={setGender}
                     />
                     <Radio
                       id="gender-m"
                       name="gender"
-                      value="M"
+                      value="masculino"
                       label="Masculino"
-                      checked={gender === "M"}
+                      checked={gender === "masculino"}
                       onChange={setGender}
                     />
                   </div>
@@ -211,17 +211,17 @@ export default function RegisterUser() {
                     <Radio
                       id="role-resp"
                       name="role"
-                      value="responsable"
+                      value="2"
                       label="Responsable Académico"
-                      checked={role === "responsable"}
+                      checked={role === "2"}
                       onChange={setRole}
                     />
                     <Radio
                       id="role-eval"
                       name="role"
-                      value="evaluador"
+                      value="3"
                       label="Evaluador"
-                      checked={role === "evaluador"}
+                      checked={role === "3"}
                       onChange={setRole}
                     />      
                   </div>
