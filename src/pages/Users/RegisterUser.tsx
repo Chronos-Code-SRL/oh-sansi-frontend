@@ -1,7 +1,6 @@
 import { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
@@ -18,11 +17,70 @@ export default function RegisterUser() {
   const [gender, setGender] = useState("");
   const [role, setRole] = useState("");
   const [areas, setAreas] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+
+  {/*Validaciones*/}
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) {
+      newErrors.firstName = "El nombre es obligatorio.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(firstName)) {
+      newErrors.firstName = "El nombre debe tener solo letras.";
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "El apellido es obligatorio.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(lastName)) {
+      newErrors.lastName = "El apellido debe tener solo letras.";
+    }
+
+    if (!ci.trim()) {
+      newErrors.ci = "El CI es obligatorio.";
+    } else if (!/^[a-zA-Z0-9]{6,12}$/.test(ci)) {
+      newErrors.ci = "El CI debe ser alfanumérico.";
+    }
+
+    if (!phone.trim()) {
+      newErrors.phone = "El teléfono es obligatorio.";
+    } else if (!/^[0-9]{7,15}$/.test(phone)) {
+      newErrors.phone = "El teléfono debe tener entre 7 y 15 dígitos.";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "El correo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Formato de correo no válido.";
+    }
+
+    if (!gender) {
+      newErrors.gender = "Debe seleccionar un género.";
+    }
+
+    if (!role) {
+      newErrors.role = "Debe seleccionar un rol.";
+    }
+
+    if (areas.length === 0) {
+      newErrors.areas = "Debe seleccionar al menos un área.";
+    } else if (role === "responsable" && areas.length > 1) {
+      newErrors.areas = "El responsable académico solo puede tener un área.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
 
   {/*Simulación de envío*/}
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+    return;
+    }
+
     console.log({
       firstName,
       lastName,
@@ -58,6 +116,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu nombre(s)"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
+                    error={!!errors.firstName}
+                    hint={errors.firstName}
                   />
                 </div>
 
@@ -69,6 +129,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu apellido(s)"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    error={!!errors.lastName}
+                    hint={errors.lastName}
                   />
                 </div>
 
@@ -80,6 +142,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu número de carnet de identidad"
                     value={ci}
                     onChange={(e) => setCi(e.target.value)}
+                    error={!!errors.ci}
+                    hint={errors.ci}
                   />
                 </div>
 
@@ -91,6 +155,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu número de teléfono"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    error={!!errors.phone}
+                    hint={errors.phone}
                   />
                 </div>
 
@@ -102,6 +168,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu correo electrónico"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    error={!!errors.email}
+                    hint={errors.email}
                   />
                 </div>
               </div>
@@ -132,6 +200,9 @@ export default function RegisterUser() {
                       onChange={setGender}
                     />
                   </div>
+                  {errors.gender && (
+                    <p className="text-sm text-red-500 mt-1">{errors.gender}</p>
+                  )}
                 </div>
 
                 <div>
@@ -152,8 +223,11 @@ export default function RegisterUser() {
                       label="Evaluador"
                       checked={role === "evaluador"}
                       onChange={setRole}
-                    />
+                    />      
                   </div>
+                  {errors.role && (
+                    <p className="text-sm text-red-500 mt-1">{errors.role}</p>
+                  )}
                 </div>
 
                 <div>
@@ -170,6 +244,9 @@ export default function RegisterUser() {
                     defaultSelected={[]}
                     onChange={setAreas}
                   />
+                  {errors.areas && (
+                    <p className="text-sm text-red-500 mt-1">{errors.areas}</p>
+                  )}
                 </div>
 
                 <div>
