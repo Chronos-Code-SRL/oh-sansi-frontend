@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
@@ -7,6 +7,7 @@ import Radio from "../../components/form/input/Radio";
 import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
+import { areaService } from "../../api/getAreas";
 
 export default function RegisterUser() {
   const [firstName, setFirstName] = useState("");
@@ -18,6 +19,29 @@ export default function RegisterUser() {
   const [role, setRole] = useState("");
   const [areas, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
+
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const res = await areaService.getAreas();
+        const data = res.data;
+
+        if (data.areas) {
+          const formatted = data.areas.map((area: any) => ({
+            value: area.id.toString(),
+            text: area.name,
+          }));
+          setAreaOptions(formatted);
+        }
+      } catch (error) {
+        console.error("Error al obtener las áreas:", error);
+      }
+    };
+
+    fetchAreas();
+  }, []);
 
 
   {/*Validaciones*/}
@@ -233,14 +257,7 @@ export default function RegisterUser() {
                 <div>
                   <MultiSelect
                     label="Seleccionar Área(s)"
-                    options={[
-                      { value: "fisica", text: "Física" },
-                      { value: "informatica", text: "Informática" },
-                      { value: "quimica", text: "Química" },
-                      { value: "biologia", text: "Biología" },
-                      { value: "matematica", text: "Matemática" },
-                      { value: "astronomia", text: "Astronomía" },
-                    ]}
+                    options={areaOptions}
                     defaultSelected={[]}
                     onChange={setAreas}
                   />
