@@ -2,14 +2,14 @@ import DropzoneComponent from "../../components/form/form-elements/DropZone";
 import PageMeta from "../../components/common/PageMeta";
 import { useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
+import AdminPageBreadCrumb from "../../components/common/AdminPageBreadCrumb";
+import Button from "../../components/ui/button/Button";
 //import Dropzone from "react-dropzone";
 
 type UploadedFile = {
   name: string;
   size: string;
 };
-import AdminPageBreadCrumb from "../../components/common/AdminPageBreadCrumb";
-
 export default function AdRegistration() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
 
@@ -17,10 +17,9 @@ export default function AdRegistration() {
     const newFiles = acceptedFiles.map((file) => ({
       name: file.name,
       size: (file.size / 1024).toFixed(2) + " KB",
-      status: "Completado" as const,
     }));
 
-    setFiles((prev) => [...prev, ...newFiles]); // acumulamos
+    setFiles((prev) => [...prev, ...newFiles]); 
   };
 
   return (
@@ -35,14 +34,15 @@ export default function AdRegistration() {
         <div className="mx-auto w-full text-center space-y-6">
           <DropzoneComponent onFilesAdded={handleFilesAdded} />
             {/* Lista de archivos subidos */}
+             <ComponentCard title="Archivos subidos">
                 {files.length > 0 && (
-                  <ComponentCard title="Archivos subidos">
+                 
                   <div className="mt-6 text-left">
                     <div className="space-y-2">
                       {files.map((f, idx) => (
                         <div
                           key={idx}
-                          className="flex justify-between items-center p-3 border rounded-xl shadow-sm "
+                          className="flex justify-between items-center p-3 border rounded-xl"
                         >
                           <div>
                             <p className="font-medium">{f.name}</p>
@@ -52,15 +52,15 @@ export default function AdRegistration() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                   </ComponentCard>
+                  </div>                  
                 )
-               
                 }
-             
-          
-           
-
+                <div className="flex items-center gap-3 px-2 mt-6 justify-end">
+                  <Button size="sm" onClick={() => {}}>
+                    Inscribir
+                  </Button>
+                </div>
+              </ComponentCard>
         </div>
       </div>
     </div>
