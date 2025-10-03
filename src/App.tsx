@@ -42,7 +42,7 @@ export default function App() {
 
             {/* Forms */}
 
-            <Route path="/Olimpiada" element={<FormOlympiad />} />
+            <Route path="/form-Olympiad" element={<FormOlympiad />} />
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
