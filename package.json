@@ -20,7 +20,6 @@
     "@react-jvectormap/world": "^1.1.2",
     "axios": "^1.4.0",
     "apexcharts": "^4.1.0",
-    "axios": "^1.12.2",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "react": "^19.0.0",
