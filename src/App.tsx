@@ -21,6 +21,8 @@ import Home from "./pages/Dashboard/Home";
 import RegisterUser from "./pages/Users/RegisterUser";
 import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
+import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
+
 
 export default function App() {
   return (
@@ -43,6 +45,8 @@ export default function App() {
             {/* Forms */}
 
             <Route path="/Olimpiada" element={<FormOlympiad />} />
+            <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
+
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
