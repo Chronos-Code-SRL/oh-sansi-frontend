@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Contestant } from "../types/Contestant";
+import { Contestant } from "../types/RegisterContestant";
 
 const API_URL = "http://localhost:8000/upload-csv";
 
