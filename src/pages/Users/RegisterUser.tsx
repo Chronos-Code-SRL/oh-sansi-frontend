@@ -8,15 +8,16 @@ import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { areaService } from "../../api/getAreas";
+import { registerApi} from "../../api/postRegisterUser"
 
 export default function RegisterUser() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [first_name, setfirst_name] = useState("");
+  const [last_name, setlast_name] = useState("");
   const [ci, setCi] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone_number, setphone_number] = useState("");
   const [email, setEmail] = useState("");
-  const [gender, setGender] = useState("");
-  const [role, setRole] = useState("");
+  const [genre, setgenre] = useState("");
+  const [roles_id, setroles_id] = useState("");
   const [areas, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
@@ -48,16 +49,16 @@ export default function RegisterUser() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!firstName.trim()) {
+    if (!first_name.trim()) {
       newErrors.firstName = "El nombre es obligatorio.";
-    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(firstName)) {
-      newErrors.firstName = "El nombre debe tener solo letras.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
+      newErrors.first_name = "El nombre debe tener solo letras.";
     }
 
-    if (!lastName.trim()) {
+    if (!last_name.trim()) {
       newErrors.lastName = "El apellido es obligatorio.";
-    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(lastName)) {
-      newErrors.lastName = "El apellido debe tener solo letras.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
+      newErrors.last_name = "El apellido debe tener solo letras.";
     }
 
     if (!ci.trim()) {
@@ -66,10 +67,10 @@ export default function RegisterUser() {
       newErrors.ci = "El CI debe ser alfanumérico.";
     }
 
-    if (!phone.trim()) {
-      newErrors.phone = "El teléfono es obligatorio.";
-    } else if (!/^[0-9]{7,15}$/.test(phone)) {
-      newErrors.phone = "El teléfono debe tener entre 7 y 15 dígitos.";
+    if (!phone_number.trim()) {
+      newErrors.phone_number = "El teléfono es obligatorio.";
+    } else if (!/^[0-9]{7,15}$/.test(phone_number)) {
+      newErrors.phone_number = "El teléfono deben ser dígitos.";
     }
 
     if (!email.trim()) {
@@ -78,17 +79,17 @@ export default function RegisterUser() {
       newErrors.email = "Formato de correo no válido.";
     }
 
-    if (!gender) {
-      newErrors.gender = "Debe seleccionar un género.";
+    if (!genre) {
+      newErrors.genre = "Debe seleccionar un género.";
     }
 
-    if (!role) {
-      newErrors.role = "Debe seleccionar un rol.";
+    if (!roles_id) {
+      newErrors.roles_id = "Debe seleccionar un rol.";
     }
 
     if (areas.length === 0) {
       newErrors.areas = "Debe seleccionar al menos un área.";
-    } else if (role === "responsable" && areas.length > 1) {
+    } else if (roles_id === "responsable" && areas.length > 1) {
       newErrors.areas = "El responsable académico solo puede tener un área.";
     }
 
@@ -97,25 +98,50 @@ export default function RegisterUser() {
   };
 
 
-  {/*Simulación de envío*/ }
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
     return;
     }
 
-    console.log({
-      firstName,
-      lastName,
-      ci,
-      phone,
-      email,
-      gender,
-      role,
-      areas,
-    });
-    alert("Usuario registrado correctamente (simulación)");
+    try {
+      const datos = {
+          first_name,
+          last_name,
+          ci,
+          phone_number,
+          email,
+          genre,
+          roles_id,
+          //areas,
+      };
+
+      const resultado = await registerApi.postRegister(datos);
+
+      if (resultado.status === 201) {
+        alert(resultado.data.message);
+      }
+
+    } catch (error:any) {
+      if (error.response) {
+    const status = error.response.status;
+    const data = error.response.data;
+
+    if (status === 400) {
+      setErrors(data.error); 
+      //alert("Errores en el formulario, revisa los campos.");
+      //alert(data.message)
+    }
+
+    if (status === 500) {
+      //alert(data.message || "Error interno al crear el usuario");
+      alert(data.message)
+    }
+  } else {
+    alert("Error de conexión con el servidor");
+  }
+    }
   };
 
   return (
@@ -133,28 +159,28 @@ export default function RegisterUser() {
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
-                  <Label htmlFor="firstName">Nombre(s)</Label>
+                  <Label htmlFor="first_name">Nombre(s)</Label>
                   <InputField
-                    id="firstName"
+                    id="first_name"
                     type="text"
                     placeholder="Ingresa tu nombre(s)"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    value={first_name}
+                    onChange={(e) => setfirst_name(e.target.value)}
                     error={!!errors.firstName}
-                    hint={errors.firstName}
+                    hint={errors.first_name}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="lastName">Apellido(s)</Label>
+                  <Label htmlFor="last_name">Apellido(s)</Label>
                   <InputField
-                    id="lastName"
+                    id="last_name"
                     type="text"
                     placeholder="Ingresa tu apellido(s)"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    error={!!errors.lastName}
-                    hint={errors.lastName}
+                    value={last_name}
+                    onChange={(e) => setlast_name(e.target.value)}
+                    error={!!errors.last_name}
+                    hint={errors.last_name}
                   />
                 </div>
 
@@ -172,15 +198,15 @@ export default function RegisterUser() {
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">Teléfono</Label>
+                  <Label htmlFor="phone_number">Teléfono</Label>
                   <InputField
-                    id="phone"
+                    id="phone_number"
                     type="text"
                     placeholder="Ingresa tu número de teléfono"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    error={!!errors.phone}
-                    hint={errors.phone}
+                    value={phone_number}
+                    onChange={(e) => setphone_number(e.target.value)}
+                    error={!!errors.phone_number}
+                    hint={errors.phone_number}
                   />
                 </div>
 
@@ -208,24 +234,24 @@ export default function RegisterUser() {
                   <Label>Género</Label>
                   <div className="flex gap-4">
                     <Radio
-                      id="gender-f"
-                      name="gender"
+                      id="genre-f"
+                      name="genre"
                       value="femenino"
                       label="Femenino"
-                      checked={gender === "femenino"}
-                      onChange={setGender}
+                      checked={genre === "femenino"}
+                      onChange={setgenre}
                     />
                     <Radio
-                      id="gender-m"
-                      name="gender"
+                      id="genre-m"
+                      name="genre"
                       value="masculino"
                       label="Masculino"
-                      checked={gender === "masculino"}
-                      onChange={setGender}
+                      checked={genre === "masculino"}
+                      onChange={setgenre}
                     />
                   </div>
-                  {errors.gender && (
-                    <p className="text-sm text-red-500 mt-1">{errors.gender}</p>
+                  {errors.genre && (
+                    <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
                   )}
                 </div>
 
@@ -233,24 +259,24 @@ export default function RegisterUser() {
                   <Label>Rol</Label>
                   <div className="flex gap-4">
                     <Radio
-                      id="role-resp"
-                      name="role"
+                      id="roles_id-resp"
+                      name="roles_id"
                       value="2"
                       label="Responsable Académico"
-                      checked={role === "2"}
-                      onChange={setRole}
+                      checked={roles_id === "2"}
+                      onChange={setroles_id}
                     />
                     <Radio
-                      id="role-eval"
-                      name="role"
+                      id="roles_id-eval"
+                      name="roles_id"
                       value="3"
                       label="Evaluador"
-                      checked={role === "3"}
-                      onChange={setRole}
+                      checked={roles_id === "3"}
+                      onChange={setroles_id}
                     />      
                   </div>
-                  {errors.role && (
-                    <p className="text-sm text-red-500 mt-1">{errors.role}</p>
+                  {errors.roles_id && (
+                    <p className="text-sm text-red-500 mt-1">{errors.roles_id}</p>
                   )}
                 </div>
 
