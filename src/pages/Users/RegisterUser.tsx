@@ -1,39 +1,147 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
-import AdminPageBreadCrumb from "../../components/common/AdminPageBreadCrumb";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
+import { areaService } from "../../api/getAreas";
+import { registerApi} from "../../api/postRegisterUser"
 
-export default function RegisterUser() { 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+export default function RegisterUser() {
+  const [first_name, setfirst_name] = useState("");
+  const [last_name, setlast_name] = useState("");
   const [ci, setCi] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone_number, setphone_number] = useState("");
   const [email, setEmail] = useState("");
-  const [gender, setGender] = useState("");
-  const [role, setRole] = useState("");
+  const [genre, setgenre] = useState("");
+  const [roles_id, setroles_id] = useState("");
   const [areas, setAreas] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
 
 
-  {/*Simulación de envío*/}
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const res = await areaService.getAreas();
+        const data = res.data;
+
+        if (data.areas) {
+          const formatted = data.areas.map((area: any) => ({
+            value: area.id.toString(),
+            text: area.name,
+          }));
+          setAreaOptions(formatted);
+        }
+      } catch (error) {
+        console.error("Error al obtener las áreas:", error);
+      }
+    };
+
+    fetchAreas();
+  }, []);
+
+
+  {/*Validaciones*/}
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!first_name.trim()) {
+      newErrors.firstName = "El nombre es obligatorio.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
+      newErrors.first_name = "El nombre debe tener solo letras.";
+    }
+
+    if (!last_name.trim()) {
+      newErrors.lastName = "El apellido es obligatorio.";
+    } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
+      newErrors.last_name = "El apellido debe tener solo letras.";
+    }
+
+    if (!ci.trim()) {
+      newErrors.ci = "El CI es obligatorio.";
+    } else if (!/^[a-zA-Z0-9]{6,12}$/.test(ci)) {
+      newErrors.ci = "El CI debe ser alfanumérico.";
+    }
+
+    if (!phone_number.trim()) {
+      newErrors.phone_number = "El teléfono es obligatorio.";
+    } else if (!/^[0-9]{7,15}$/.test(phone_number)) {
+      newErrors.phone_number = "El teléfono deben ser dígitos.";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "El correo es obligatorio.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Formato de correo no válido.";
+    }
+
+    if (!genre) {
+      newErrors.genre = "Debe seleccionar un género.";
+    }
+
+    if (!roles_id) {
+      newErrors.roles_id = "Debe seleccionar un rol.";
+    }
+
+    if (areas.length === 0) {
+      newErrors.areas = "Debe seleccionar al menos un área.";
+    } else if (roles_id === "responsable" && areas.length > 1) {
+      newErrors.areas = "El responsable académico solo puede tener un área.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      firstName,
-      lastName,
-      ci,
-      phone,
-      email,
-      gender,
-      role,
-      areas,
-    });
-    alert("Usuario registrado correctamente (simulación)");
+
+    if (!validateForm()) {
+    return;
+    }
+
+    try {
+      const datos = {
+          first_name,
+          last_name,
+          ci,
+          phone_number,
+          email,
+          genre,
+          roles_id,
+          //areas,
+      };
+
+      const resultado = await registerApi.postRegister(datos);
+
+      if (resultado.status === 201) {
+        alert(resultado.data.message);
+      }
+
+    } catch (error:any) {
+      if (error.response) {
+    const status = error.response.status;
+    const data = error.response.data;
+
+    if (status === 400) {
+      setErrors(data.error); 
+      //alert("Errores en el formulario, revisa los campos.");
+      //alert(data.message)
+    }
+
+    if (status === 500) {
+      //alert(data.message || "Error interno al crear el usuario");
+      alert(data.message)
+    }
+  } else {
+    alert("Error de conexión con el servidor");
+  }
+    }
   };
 
   return (
@@ -42,37 +150,41 @@ export default function RegisterUser() {
         title="Registrar Usuario | Oh! SanSi"
         description="Página para registrar responsables académicos y evaluadores"
       />
-      <AdminPageBreadCrumb pageTitle="Registrar Usuario" />
+      <TitleBreadCrumb pageTitle="Registrar Usuario" />
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">            
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="space-y-6"> {/*Columna izquierda*/}
             <ComponentCard title="Ingrese información">
-              <div className="grid grid-cols-1 gap-6">  
-                
-                <div> 
-                  <Label htmlFor="firstName">Nombre(s)</Label>
+              <div className="grid grid-cols-1 gap-6">
+
+                <div>
+                  <Label htmlFor="first_name">Nombre(s)</Label>
                   <InputField
-                    id="firstName"
+                    id="first_name"
                     type="text"
                     placeholder="Ingresa tu nombre(s)"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    value={first_name}
+                    onChange={(e) => setfirst_name(e.target.value)}
+                    error={!!errors.firstName}
+                    hint={errors.first_name}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="lastName">Apellido(s)</Label>
+                  <Label htmlFor="last_name">Apellido(s)</Label>
                   <InputField
-                    id="lastName"
+                    id="last_name"
                     type="text"
                     placeholder="Ingresa tu apellido(s)"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    value={last_name}
+                    onChange={(e) => setlast_name(e.target.value)}
+                    error={!!errors.last_name}
+                    hint={errors.last_name}
                   />
                 </div>
 
-                <div> 
+                <div>
                   <Label htmlFor="ci">Carnet de Identidad</Label>
                   <InputField
                     id="ci"
@@ -80,21 +192,25 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu número de carnet de identidad"
                     value={ci}
                     onChange={(e) => setCi(e.target.value)}
+                    error={!!errors.ci}
+                    hint={errors.ci}
                   />
                 </div>
 
-                <div> 
-                  <Label htmlFor="phone">Teléfono</Label>
+                <div>
+                  <Label htmlFor="phone_number">Teléfono</Label>
                   <InputField
-                    id="phone"
+                    id="phone_number"
                     type="text"
                     placeholder="Ingresa tu número de teléfono"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    value={phone_number}
+                    onChange={(e) => setphone_number(e.target.value)}
+                    error={!!errors.phone_number}
+                    hint={errors.phone_number}
                   />
                 </div>
 
-                <div> 
+                <div>
                   <Label htmlFor="email">Correo electrónico</Label>
                   <InputField
                     id="email"
@@ -102,6 +218,8 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu correo electrónico"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    error={!!errors.email}
+                    hint={errors.email}
                   />
                 </div>
               </div>
@@ -116,66 +234,68 @@ export default function RegisterUser() {
                   <Label>Género</Label>
                   <div className="flex gap-4">
                     <Radio
-                      id="gender-f"
-                      name="gender"
-                      value="F"
+                      id="genre-f"
+                      name="genre"
+                      value="femenino"
                       label="Femenino"
-                      checked={gender === "F"}
-                      onChange={setGender}
+                      checked={genre === "femenino"}
+                      onChange={setgenre}
                     />
                     <Radio
-                      id="gender-m"
-                      name="gender"
-                      value="M"
+                      id="genre-m"
+                      name="genre"
+                      value="masculino"
                       label="Masculino"
-                      checked={gender === "M"}
-                      onChange={setGender}
+                      checked={genre === "masculino"}
+                      onChange={setgenre}
                     />
                   </div>
+                  {errors.genre && (
+                    <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label>Rol</Label>
                   <div className="flex gap-4">
                     <Radio
-                      id="role-resp"
-                      name="role"
-                      value="responsable"
+                      id="roles_id-resp"
+                      name="roles_id"
+                      value="2"
                       label="Responsable Académico"
-                      checked={role === "responsable"}
-                      onChange={setRole}
+                      checked={roles_id === "2"}
+                      onChange={setroles_id}
                     />
                     <Radio
-                      id="role-eval"
-                      name="role"
-                      value="evaluador"
+                      id="roles_id-eval"
+                      name="roles_id"
+                      value="3"
                       label="Evaluador"
-                      checked={role === "evaluador"}
-                      onChange={setRole}
-                    />
+                      checked={roles_id === "3"}
+                      onChange={setroles_id}
+                    />      
                   </div>
+                  {errors.roles_id && (
+                    <p className="text-sm text-red-500 mt-1">{errors.roles_id}</p>
+                  )}
                 </div>
 
                 <div>
                   <MultiSelect
                     label="Seleccionar Área(s)"
-                    options={[
-                      { value: "fisica", text: "Física" },
-                      { value: "informatica", text: "Informática" },
-                      { value: "quimica", text: "Química" },
-                      { value: "biologia", text: "Biología" },
-                      { value: "matematica", text: "Matemática" },
-                      { value: "astronomia", text: "Astronomía" },
-                    ]}
+                    options={areaOptions}
                     defaultSelected={[]}
                     onChange={setAreas}
                   />
+                  {errors.areas && (
+                    <p className="text-sm text-red-500 mt-1">{errors.areas}</p>
+                  )}
                 </div>
 
                 <div>
-                    <Button size="md" variant="primary" className="w-full" >
-                        Registrar
-                    </Button>
+                  <Button size="md" variant="primary" className="w-full" >
+                    Registrar
+                  </Button>
                 </div>
               </div>
             </ComponentCard>
