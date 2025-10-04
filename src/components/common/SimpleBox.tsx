@@ -1,9 +1,16 @@
 import Badge from "../ui/badge/Badge"
 import Button from "../ui/button/Button"
 
+interface SimpleBoxProps {
+    id?: number;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+    areas: string[];
+}
 
-
-export const SimpleBox = () => {
+export const SimpleBox: React.FC<SimpleBoxProps> = ({ name, status, startDate, endDate, areas }) => {
 
     return (
 
@@ -11,16 +18,17 @@ export const SimpleBox = () => {
             <div className="flex items-start justify-between mb-3">
                 <h3 className="text-lg font-semibold text-card-foreground leading-tight">
                     {/* Aca tenemos que consumir de la Api el nombre de la olimpiada */}
-                    Olimpiada Nacional de Matemáticas 2024
+                    {name}
                 </h3>
-                <Badge color="error">Inactivo</Badge>  {/*Aca tengo que consumir de la Api si esta activo o inactivo */}
+                <Badge color={status === "Activo" ? "success" : "error"}>
+                    {status}
+                </Badge>  {/*Aca tengo que consumir de la Api si esta activo o inactivo */}
             </div>
-
 
             <div className="mb-4">
                 <p className="text-sm font-medium text-gray-800 mb-1">Fechas:</p>
                 <p className="text-sm ">
-                    14/3/2024 - 29/6/2024  {/*Aca tengo que consumir de la Api las fechas para ponerlo*/}
+                    {startDate} - {endDate}  {/*Aca tengo que consumir de la Api las fechas para ponerlo*/}
                 </p>
             </div>
 
@@ -29,17 +37,19 @@ export const SimpleBox = () => {
                     Áreas asignadas:
                 </p>
                 <div className="flex flex-wrap gap-2">
+
                     {/*Aca tengo que consumir de la Api todas las areas que tiene esa olimpiada y se tiene que automatizar en poner
                      los n areas para y solo usar un Badge y talves usar el Map*/}
-                    <Badge color="light">Matemática</Badge>
-                    <Badge color="light">Matematica</Badge>
-                    <Badge color="light">Matematica</Badge>
-                    <Badge color="light">Matematica</Badge>
+                    {areas.map((area, index) => (
+                        <Badge key={index} color="light">
+                            {area}
+                        </Badge>
+                    ))}
                 </div>
             </div>
             <div>
                 <Button size="sm" className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed" >
-                    Configurar Areas
+                    Configurar Áreas
                 </Button>
             </div>
 
