@@ -1,20 +1,43 @@
 import DropzoneComponent from "../../components/form/form-elements/DropZone";
 import PageMeta from "../../components/common/PageMeta";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
 import { CheckCircleIcon, DownloadIcon, ErrorIcon, FileIcon, InfoIcon } from "../../icons";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
+import Select from "../../components/form/Select";
+import { Olympiad } from "../../types/Olympiad";
+import { getOlympiads } from "../../services/olympiadService";
+
 //import Dropzone from "react-dropzone";
 
 type UploadedFile = {
   name: string;
   size: string;
 };
+
+
 export default function AdRegistration() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [olympiads, setOlympiads] = useState<Olympiad[]>([]);
+  const [selectedOlympiad, setSelectedOlympiad] = useState <Olympiad>();
+  //const [selectedOlimpiada, setSelectedOlimpiada] = useState<Eventis | null>(null);;
+  // const [selectedEvent, setSelectedEvent] = useState<Eventis | null>(null);
 
+const fetchOlympiads = async () => {
+    try {
+      const data = await getOlympiads();
+      setOlympiads(data);
+    } catch (error) {
+      console.log(error);
+    } 
+  };
+ 
+  useEffect(() => {
+    fetchOlympiads();
+  },[])
+  
   const handleFilesAdded = (acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
       name: file.name,
@@ -28,18 +51,44 @@ export default function AdRegistration() {
     <>
     <div>
       <PageMeta
-        title="React.js Blank Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Blank Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Registro de Competidores"
+        description="Registro masivo de competidores para las Olimpiadas"
       />
       < TitleBreadCrumb pageTitle="Registro de Competidores" />
       
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <div className="mx-auto w-full text-center space-y-6">
+        <div className="mx-auto w-full  space-y-8">
+          {/* Selector de Olimpiada */}
+          <p className="block text-left text-lg font-semibold mb-3">
+                Seleccionar Olimpiada
+              </p>
+          <p className= "text-gray-600 text-sm mb-3">Elige la olimpiada a la cual deseas registrar los competidores</p>
+            <div className=" max-w-md space-y-2">
+              
+              <Select
+                options={olympiads.map((ol) => ({
+                  value: ol.id,
+                  label: `${ol.name} - ${ol.edition}`,
+                }))}
+                value={selectedOlympiad?.id || ""}
+                onChange={(val) => {
+                  const pkg = olympiads.find((p) => p.id === val);
+                  if (pkg) setSelectedOlympiad(pkg);
+                }}
+                placeholder="Selecciona una Olimpiada"
+              />
+               </div>
+
+            {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
+            {selectedOlympiad && (
+              <div className="mx-auto w-full text-center space-y-6">
+
+
           <DropzoneComponent onFilesAdded={handleFilesAdded} />
             {/* Lista de archivos subidos */}
-             <ComponentCard title="Archivos subidos">
+             
                 {files.length > 0 && (
-                 
+                 <ComponentCard title="Archivos subidos">
                   <div className="mt-6 text-left">
                     <div className="space-y-2">
                       {files.map((f, idx) => (
@@ -64,20 +113,19 @@ export default function AdRegistration() {
                                 Descargar CSV de errores
                               </Button>
                             </div>
-                          <span className="text-green-600 font-semibold"></span>
+                            
+                          
                         </div>
                       ))}
                     </div>
-                  </div>                  
-                )
-                }
-                
-              </ComponentCard>
-             
-
+                  </div>  
+                  </ComponentCard>                
+                 )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

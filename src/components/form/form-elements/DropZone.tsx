@@ -63,7 +63,7 @@ const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
              
             </h4>
 
-            <div className="flex items-center justify-center gap-1 mb-3 ">
+            <div className="flex items-center justify-center gap-1 mb-3 col-span-2 ">
               <span className="text-sm text-gray-700 dark:text-gray-400">
                 Arrastra tus archivos aquí o
               </span>
