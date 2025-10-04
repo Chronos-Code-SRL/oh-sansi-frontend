@@ -15,7 +15,7 @@ interface Olympiad {
 }
 
 export const ViewOlympiad = () => {
-    // Estado para almacenar las olimpiadas
+
     const [olympiads, setOlympiads] = useState<Olympiad[]>([]);
     const [loading, setLoading] = useState(true); // Estado para manejar la carga
     const [error, setError] = useState<string | null>(null); // Estado para manejar errores
@@ -58,6 +58,7 @@ export const ViewOlympiad = () => {
                 {olympiads.map((olympiad) => (
                     <SimpleBox
                         key={olympiad.id} // Clave única para cada elemento
+                        id={olympiad.id} // Pasamos el ID de la olimpiada
                         name={olympiad.name} // Pasamos el nombre de la olimpiada
                         status={olympiad.status} // Pasamos el estado
                         startDate={olympiad.start_date} // Pasamos la fecha de inicio

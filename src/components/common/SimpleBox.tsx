@@ -1,8 +1,9 @@
+import { useNavigate } from "react-router";
 import Badge from "../ui/badge/Badge"
 import Button from "../ui/button/Button"
 
 interface SimpleBoxProps {
-    id?: number;
+    id: number; //Para que pasemo el ID Como parametro id tiene que ser obligario
     name: string;
     status: string;
     startDate: string;
@@ -10,7 +11,16 @@ interface SimpleBoxProps {
     areas: string[];
 }
 
-export const SimpleBox: React.FC<SimpleBoxProps> = ({ name, status, startDate, endDate, areas }) => {
+export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDate, endDate, areas }) => {
+    const navigate = useNavigate(); // Hook para manejar la navegación
+
+
+    // Función para manejar el clic en el botón
+    const handleButtonClick = () => {
+        // Redirigimos a la página de registro con el id de la olimpiada
+        navigate(`/ConfiguracionArea/${id}`);
+    };
+
 
     return (
 
@@ -48,7 +58,10 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ name, status, startDate, e
                 </div>
             </div>
             <div>
-                <Button size="sm" className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed" >
+                <Button size="sm"
+                    className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleButtonClick}
+                >
                     Configurar Áreas
                 </Button>
             </div>
