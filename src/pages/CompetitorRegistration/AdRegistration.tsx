@@ -17,13 +17,10 @@ type UploadedFile = {
   size: string;
 };
 
-
 export default function AdRegistration() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [olympiads, setOlympiads] = useState<Olympiad[]>([]);
   const [selectedOlympiad, setSelectedOlympiad] = useState <Olympiad>();
-  //const [selectedOlimpiada, setSelectedOlimpiada] = useState<Eventis | null>(null);;
-  // const [selectedEvent, setSelectedEvent] = useState<Eventis | null>(null);
 
 const fetchOlympiads = async () => {
     try {
@@ -32,7 +29,7 @@ const fetchOlympiads = async () => {
     } catch (error) {
       console.log(error);
     } 
-  };
+};
  
   useEffect(() => {
     fetchOlympiads();
