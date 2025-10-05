@@ -9,6 +9,8 @@ import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { areaService } from "../../api/getAreas";
 import { registerApi} from "../../api/postRegisterUser"
+import { Modal } from "../../components/ui/modal/index";
+
 
 export default function RegisterUser() {
   const [first_name, setfirst_name] = useState("");
@@ -21,6 +23,7 @@ export default function RegisterUser() {
   const [areas, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -120,7 +123,7 @@ export default function RegisterUser() {
       const resultado = await registerApi.postRegister(datos);
 
       if (resultado.status === 201) {
-        alert(resultado.data.message);
+        setIsModalOpen(true);
       }
 
     } catch (error:any) {
@@ -302,6 +305,29 @@ export default function RegisterUser() {
           </div>
         </div>
       </form>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        showCloseButton={true}
+        isFullscreen={false}
+        className="max-w-md mx-auto shadow-lg"
+      >
+        <div className="p-6 text-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+            ¡Registro exitoso!
+          </h2>
+          <Label>Usuario registrado correctamente</Label>
+          <Button
+            size="md"
+            variant="primary"
+            className="w-full"
+            onClick={() => setIsModalOpen(false)}
+          >
+            Aceptar
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
