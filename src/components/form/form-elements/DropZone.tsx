@@ -1,17 +1,23 @@
 import Badge from "../../ui/badge/Badge";
 import { useDropzone } from "react-dropzone";
-// import Dropzone from "react-dropzone";
+//import DropZone from "react-dropzone";
 
-const DropzoneComponent: React.FC = () => {
+interface DropZone {
+  onFilesAdded: (files: File[]) => void;
+}
+
+const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
   const onDrop = (acceptedFiles: File[]) => {
     console.log("Files dropped:", acceptedFiles);
     // Handle file uploads here
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
     accept: {
       "text/csv": [],    
+    },
+     onDrop: (acceptedFiles) => {
+      onFilesAdded(acceptedFiles); 
     },
   });
   return (
@@ -19,11 +25,11 @@ const DropzoneComponent: React.FC = () => {
       <div className="transition border border-gray-300 border-dashed cursor-pointer dark:hover:border-brand-500 dark:border-gray-700 rounded-xl hover:border-brand-500">
         <form
           {...getRootProps()}
-          className={`dropzone rounded-xl   border-dashed border-gray-300 p-7 lg:p-10
+          className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10
         ${
           isDragActive
-            ? "border-brand-500 bg-gray-100 dark:bg-gray-800"
-            : "border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+            ? "border-brand-500 bg-gray-100 "
+            : "border-gray-300 bg-gray-50 dark:border-gray-700 "
         }
       `}
           id="demo-upload"
@@ -57,7 +63,7 @@ const DropzoneComponent: React.FC = () => {
              
             </h4>
 
-            <div className="flex items-center justify-center gap-1 mb-3">
+            <div className="flex items-center justify-center gap-1 mb-3 col-span-2 ">
               <span className="text-sm text-gray-700 dark:text-gray-400">
                 Arrastra tus archivos aquí o
               </span>
