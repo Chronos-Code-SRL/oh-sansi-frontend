@@ -12,8 +12,9 @@ export const serviceGetOlympiads = {
     getOlympiadById: async (id: number) => {
         try {
             const response = await ohSansiApi.get(`/olympiads/${id}`);
-            const data = response.data as { olympiad: { name: string } };
-            return data.olympiad.name;
+            const data = response.data as { olympiad: { name: string; start_date: string; end_date: string } };
+            const { name, start_date, end_date } = data.olympiad;
+            return { name, start_date, end_date };
         } catch (error) {
             throw error;
         }
