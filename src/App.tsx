@@ -23,6 +23,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ConfigurationArea from "./pages/Olympiad/ConfigurationArea";
+import TestConfigureArea from "./pages/Olympiad/TestConfigureArea";
 
 
 export default function App() {
@@ -49,6 +50,9 @@ export default function App() {
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
             <Route path="/ConfiguracionArea/:id" element={<ConfigurationArea />} />
             
+            {/* Prueba Modal */}
+            <Route path="/test/configure-area" element={<TestConfigureArea />} />
+
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
 
