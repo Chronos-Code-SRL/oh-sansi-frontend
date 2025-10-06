@@ -18,7 +18,7 @@ export default function RegisterUser() {
   const [email, setEmail] = useState("");
   const [genre, setgenre] = useState("");
   const [roles_id, setroles_id] = useState("");
-  const [areas, setAreas] = useState<string[]>([]);
+  const [areas_id, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
 
@@ -87,9 +87,9 @@ export default function RegisterUser() {
       newErrors.roles_id = "Debe seleccionar un rol.";
     }
 
-    if (areas.length === 0) {
+    if (areas_id.length === 0) {
       newErrors.areas = "Debe seleccionar al menos un área.";
-    } else if (roles_id === "responsable" && areas.length > 1) {
+    } else if (roles_id === "responsable" && areas_id.length > 1) {
       newErrors.areas = "El responsable académico solo puede tener un área.";
     }
 
@@ -114,7 +114,7 @@ export default function RegisterUser() {
           email,
           genre,
           roles_id,
-          //areas,
+          areas_id,
       };
 
       const resultado = await registerApi.postRegister(datos);
