@@ -55,13 +55,13 @@ export default function RegisterUser() {
     if (!first_name.trim()) {
       newErrors.firstName = "El nombre es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
-      newErrors.first_name = "El nombre debe tener solo letras.";
+      newErrors.first_name = "El nombre debe tener solo letras (2-50 caracteres).";
     }
 
     if (!last_name.trim()) {
       newErrors.lastName = "El apellido es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
-      newErrors.last_name = "El apellido debe tener solo letras.";
+      newErrors.last_name = "El apellido debe tener solo letras (2-50 caracteres).";
     }
 
     if (!ci.trim()) {
@@ -71,7 +71,7 @@ export default function RegisterUser() {
     }
 
     if (!phone_number.trim()) {
-      newErrors.phone_number = "El teléfono es obligatorio.";
+      newErrors.phone_number = "El teléfono debe contener solo números (7-15 dígitos).";
     } else if (!/^[0-9]{7,15}$/.test(phone_number)) {
       newErrors.phone_number = "El teléfono deben ser dígitos.";
     }
@@ -317,7 +317,7 @@ export default function RegisterUser() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
             ¡Registro exitoso!
           </h2>
-          <Label>Usuario registrado correctamente</Label>
+          <Label>Usuario registrado correctamente.</Label>
           <Button
             size="md"
             variant="primary"
