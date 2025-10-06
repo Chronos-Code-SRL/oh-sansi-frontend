@@ -25,15 +25,14 @@ export default function AdRegistration() {
   const [selectedOlympiad, setSelectedOlympiad] = useState <Olympiad>();
   const [isUploading, setIsUploading] = useState(false);
 
-
-const fetchOlympiads = async () => {
-    try {
-      const data = await getOlympiads();
-      setOlympiads(data);
-    } catch (error) {
-      console.log(error);
-    } 
-};
+  const fetchOlympiads = async () => {
+      try {
+        const data = await getOlympiads();
+        setOlympiads(data);
+      } catch (error) {
+        console.log(error);
+      } 
+  };
  
   useEffect(() => {
     fetchOlympiads();
@@ -49,7 +48,7 @@ const fetchOlympiads = async () => {
       file,
     }));
 
-    setFiles((prev) => [...prev, ...newFiles]); 
+    setFiles((prev) => [...newFiles, ...prev]); 
 
     try {
       setIsUploading(true);
@@ -65,8 +64,9 @@ const fetchOlympiads = async () => {
       });
 
       setFiles(prev => [
-      ...prev.filter(f => !acceptedFiles.some(a => a.name === f.name)),
-      ...filesWithResults
+      ...filesWithResults,
+      // ...prev
+      ...prev.filter(f => !acceptedFiles.some(a => a.name === f.name))
     ]);
     } catch (error) {
       console.error("Error al subir archivos CSV:", error);
@@ -89,7 +89,6 @@ const fetchOlympiads = async () => {
   }
 };
 
-
   return (
     <>
     <div>
@@ -104,7 +103,7 @@ const fetchOlympiads = async () => {
           {/* Selector de Olimpiada */}
           <p className="block text-left text-lg font-semibold mb-3">
                 Seleccionar Olimpiada
-              </p>
+          </p>
           <p className= "text-gray-600 text-sm mb-3">Elige la olimpiada a la cual deseas registrar los competidores</p>
             <div className=" max-w-md space-y-2">
               
@@ -129,60 +128,67 @@ const fetchOlympiads = async () => {
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
 
+                <DropzoneComponent onFilesAdded={handleFilesAdded} />
+                {/* Lista de archivos subidos */}
+                  
+                  {files.length > 0 && (
+                    <ComponentCard title="Archivos subidos">
+                      <div className="mt-6 text-left">
+                        <div className="space-y-2">
+                          {files.map((f, idx) => (
+                            <div
+                              key={idx}
+                              className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-4 border rounded-xl gap-3"
+                              >
+                              <div className="flex items-start space-x-3">
+                                <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
+                                <div>
+                                  <p className="font-medium mb-1">{f.name}</p>
+                                  <p className="text-sm text-gray-500 mb-2">{f.size}</p>
 
-          <DropzoneComponent onFilesAdded={handleFilesAdded} />
-            {/* Lista de archivos subidos */}
-             
-                {files.length > 0 && (
-                 <ComponentCard title="Archivos subidos">
-                  <div className="mt-6 text-left">
-                    <div className="space-y-2">
-                      {files.map((f, idx) => (
-                         <div
-                        key={idx}
-                        className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-4 border rounded-xl gap-3"
-  >
-                         <div className="flex items-start space-x-3">
-                            <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
-                            <div>
-                              <p className="font-medium">{f.name}</p>
-                              <p className="text-sm text-gray-500">{f.size}</p>
-                               {f.result ? (
-                                  <div className="mt-1 space-x-2">
-                                    <Badge color="info" startIcon={<InfoIcon className="size-5" />} >{f.result.total_records} registros totales</Badge>
-                                    <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>{f.result.successful} exitosos</Badge>
-                                    <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>{f.result.competitor_errors + f.result.header_errors} errores</Badge>
-                                  </div>
-                                ):(
-                                 <p className="text-gray-400 text-sm mt-1">Pendiente de procesamiento...</p>
-                                )}
-                            </div>
-                          </div>
-
-                            {f.result?.error_file && (
-                              <div className="sm:ml-auto">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  startIcon={<DownloadIcon className="size-5" />}
-                                  onClick={() => handleDownloadError(f.result!.error_file!)}
-                                >
-                                  Descargar CSV de errores
-                                </Button>
+                                  {f.result?.header_errors && f.result.header_errors > 0 ? (
+                                    <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
+                                      Error de formato en el encabezado. Revisa las columnas del CSV o verifica si el archivo es correcto.
+                                    </Badge>
+                                  ): f.result?.total_records === 0 ? (
+                                    <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
+                                      El archivo está vacío. Asegúrate de que contenga registros.
+                                    </Badge>
+                                  ) : f.result ? (
+                                    <div className="mt-1 space-x-2">
+                                      <Badge color="info" startIcon={<InfoIcon className="size-5" />} >{f.result.total_records} registros totales</Badge>
+                                      <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>{f.result.successful} exitosos</Badge>
+                                      <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>{f.result.competitor_errors + f.result.header_errors} errores</Badge>
+                                    </div>
+                                  ):(
+                                    <p className="text-gray-400 text-sm mt-1">Pendiente de procesamiento...</p>
+                                  )}
+                                </div>
                               </div>
-                            )}
 
+                                  {f.result?.error_file && (
+                                    <div className="sm:ml-auto">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        startIcon={<DownloadIcon className="size-5" />}
+                                        onClick={() => handleDownloadError(f.result!.error_file!)}
+                                      >
+                                        Descargar CSV de errores
+                                      </Button>
+                                    </div>
+                                  )}
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>  
-                  </ComponentCard>                
-                 )}
+                      </div>  
+                    </ComponentCard>                
+                  )}
               </div>
             )}
-          </div>
         </div>
       </div>
+    </div>
     </>
   );
 }
