@@ -5,11 +5,12 @@ import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { gradesService } from "../../api/grades";
+import { levelGradesService } from "../../api/levelGradesService";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  areaName: string;//Ejemplo: "Robótica 2"
+  areaName: string; // Ejemplo: "Robótica 2"
 }
 
 export default function ConfigureAreaModal({
@@ -17,65 +18,94 @@ export default function ConfigureAreaModal({
   onClose,
   areaName,
 }: ConfigureAreaModalProps) {
-  const [levels, setLevels] = useState<any[]>([
-    { id: 1, name: "Nivel 1", range: "1ro Primaria - 6to Secundaria" },
-    { id: 2, name: "Nivel 2", range: "1ro Primaria - 6to Secundaria" },
-  ]);
-
+  const [levels, setLevels] = useState<any[]>([]);
   const [newLevelName, setNewLevelName] = useState("");
   const [startGrade, setStartGrade] = useState("");
   const [endGrade, setEndGrade] = useState("");
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
 
-
-  // Consumir la API para obtener los grados
-  const getGrades = async () => {
+  // Cargar grados desde el backend
+  const fetchGrades = async () => {
     try {
-      const response = await gradesService.getGrades(); // Llama al servicio correctamente
-      return response; // Retorna los datos obtenidos
+      const gradesData = await gradesService.getGrades(); 
+      setGrades(gradesData); 
     } catch (error) {
       console.error("Error al obtener los grados:", error);
-      throw error;
+    }
+  };
+
+  // Cargar niveles configurados desde el backend
+  const fetchLevels = async () => {
+    try {
+      const olympiadId = 1; 
+      const areaId = 1; 
+      const response = await levelGradesService.getLevelsFromArea(
+        olympiadId,
+        areaId
+      );
+      setLevels(response.data);
+    } catch (error) {
+      console.error("Error al obtener los niveles:", error);
     }
   };
 
   useEffect(() => {
-    const fetchGrades = async () => {
-      try {
-        const gradesData = await getGrades(); // Llama a la función del servicio
-        setGrades(gradesData); // Actualiza el estado con los grados obtenidos
-      } catch (error) {
-        console.error("Error al obtener los grados:", error);
-      }
-    };
+    if (isOpen) {
+      fetchGrades();
+      fetchLevels();
+    }
+  }, [isOpen]);
 
-    fetchGrades();
-  }, []);
-  const handleAddLevel = (e: React.FormEvent) => { //Agegar nivel
+  // Agregar nivel (POST)
+  const handleAddLevel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLevelName || !startGrade || !endGrade) return;
 
-    const newLevel = {
-      id: levels.length + 1,
-      name: newLevelName,
-      range: `${startGrade} - ${endGrade}`,
-    };
+    try {
+      const olympiadId = 1;
+      const areaId = 1;
 
-    setLevels([...levels, newLevel]);
-    setNewLevelName("");
-    setStartGrade("");
-    setEndGrade("");
+      const startIndex = grades.findIndex((g) => g.name === startGrade);
+      const endIndex = grades.findIndex((g) => g.name === endGrade);
+      const selectedGrades = grades
+        .slice(startIndex, endIndex + 1)
+        .map((g) => g.id);
+
+      const newLevelData = {
+        level_name: newLevelName,
+        grades: selectedGrades,
+      };
+
+      await levelGradesService.addLevelToArea(olympiadId, areaId, newLevelData);
+      await fetchLevels();
+      setNewLevelName("");
+      setStartGrade("");
+      setEndGrade("");
+    } catch (error) {
+      console.error("Error al agregar nivel:", error);
+    }
   };
 
-  const handleRemoveLevel = (id: number) => { //Eliminar nivel
+  // Eliminar nivel (DELETE)
+  const handleRemoveLevel = async (id: number) => {
     const confirmDelete = window.confirm("¿Deseas eliminar este nivel?");
     if (!confirmDelete) return;
-    setLevels(levels.filter((level) => level.id !== id));
+
+    try {
+      const olympiadId = 1;
+      const areaId = 1;
+      await levelGradesService.removeLevelFromArea(olympiadId, areaId, {
+        level_id: id,
+      });
+      await fetchLevels();
+    } catch (error) {
+      console.error("Error al eliminar nivel:", error);
+    }
   };
 
-
+  // Guardar configuración 
   const handleSave = () => {
-    console.log("Configuración guardada:Simulación", levels);
+    console.log("Configuración actual:", levels);
     onClose();
   };
 
@@ -92,9 +122,11 @@ export default function ConfigureAreaModal({
           Configurar Área: {areaName}
         </h2>
         <Label>
-          Define los niveles de competencia para esta área. Cada nivel puede abarcar uno o varios cursos consecutivos.
+          Define los niveles de competencia para esta área. Cada nivel puede
+          abarcar uno o varios cursos consecutivos.
         </Label>
 
+        {/* Agregar nuevo nivel */}
         <ComponentCard title="Agregar Nuevo Nivel">
           <form onSubmit={handleAddLevel} className="space-y-4">
             <div>
@@ -148,30 +180,37 @@ export default function ConfigureAreaModal({
           </form>
         </ComponentCard>
 
-
+        {/* Niveles configurados */}
         <ComponentCard title="Niveles Configurados">
           <div className="space-y-3">
-            {levels.map((level) => (
-              <div
-                key={level.id}
-                className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
-              >
-                <div>
-                  <p className="font-semibold">{level.name}</p>
-                  <p className="text-sm text-gray-500">{level.range}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRemoveLevel(level.id)}
+            {levels.length > 0 ? (
+              levels.map((level) => (
+                <div
+                  key={level.id}
+                  className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
                 >
-                  Eliminar
-                </Button>
-              </div>
-            ))}
+                  <div>
+                    <p className="font-semibold">{level.name}</p>
+                    <p className="text-sm text-gray-500">{level.range}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRemoveLevel(level.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-sm text-gray-500">
+                No hay niveles configurados aún.
+              </p>
+            )}
           </div>
         </ComponentCard>
 
+        {/* Botones inferiores */}
         <div className="flex justify-end gap-4 pt-4">
           <Button variant="outline" onClick={onClose}>
             Cancelar
