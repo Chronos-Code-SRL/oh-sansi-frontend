@@ -48,6 +48,7 @@ export default function App() {
 
             <Route path="/Olimpiada" element={<FormOlympiad />} />
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
+            <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
             <Route path="/ConfiguracionArea/:id" element={<ConfigurationArea />} />
             
             {/* Prueba Modal */}

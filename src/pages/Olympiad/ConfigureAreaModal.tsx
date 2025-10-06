@@ -4,7 +4,7 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import { gradesService } from "../../api/Grades";
+import { gradesService } from "../../api/grades";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -95,31 +95,6 @@ export default function ConfigureAreaModal({
           Define los niveles de competencia para esta área. Cada nivel puede abarcar uno o varios cursos consecutivos.
         </Label>
 
-        <ComponentCard title="Niveles Configurados">
-          <div className="space-y-3">
-            {levels.map((level) => (
-              <div
-                key={level.id}
-                className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
-              >
-                <div>
-                  <p className="font-semibold">{level.name}</p>
-                  <p className="text-sm text-gray-500">{level.range}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRemoveLevel(level.id)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  Eliminar
-                </Button>
-              </div>
-            ))}
-          </div>
-        </ComponentCard>
-
-
         <ComponentCard title="Agregar Nuevo Nivel">
           <form onSubmit={handleAddLevel} className="space-y-4">
             <div>
@@ -171,6 +146,30 @@ export default function ConfigureAreaModal({
               </Button>
             </div>
           </form>
+        </ComponentCard>
+
+
+        <ComponentCard title="Niveles Configurados">
+          <div className="space-y-3">
+            {levels.map((level) => (
+              <div
+                key={level.id}
+                className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
+              >
+                <div>
+                  <p className="font-semibold">{level.name}</p>
+                  <p className="text-sm text-gray-500">{level.range}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRemoveLevel(level.id)}
+                >
+                  Eliminar
+                </Button>
+              </div>
+            ))}
+          </div>
         </ComponentCard>
 
         <div className="flex justify-end gap-4 pt-4">
