@@ -9,18 +9,22 @@ import Badge from "../../components/ui/badge/Badge";
 import Select from "../../components/form/Select";
 import { Olympiad } from "../../types/Olympiad";
 import { getOlympiads } from "../../services/olympiadService";
-
-//import Dropzone from "react-dropzone";
+import { uploadCompetitorCsv , downloadErrorCsv } from "../../services/competitorService"
+import { FileDetail } from "../../types/CompetitorUpload";
 
 type UploadedFile = {
   name: string;
   size: string;
+  file: File;
+  result?: FileDetail;
 };
 
 export default function AdRegistration() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [olympiads, setOlympiads] = useState<Olympiad[]>([]);
   const [selectedOlympiad, setSelectedOlympiad] = useState <Olympiad>();
+  const [isUploading, setIsUploading] = useState(false);
+
 
 const fetchOlympiads = async () => {
     try {
@@ -35,14 +39,56 @@ const fetchOlympiads = async () => {
     fetchOlympiads();
   },[])
   
-  const handleFilesAdded = (acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map((file) => ({
+  const handleFilesAdded = async (acceptedFiles: File[]) => {
+
+    if (!selectedOlympiad) return alert("Selecciona una olimpiada primero");
+
+    const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
       name: file.name,
       size: (file.size / 1024).toFixed(2) + " KB",
+      file,
     }));
 
     setFiles((prev) => [...prev, ...newFiles]); 
+
+    try {
+      setIsUploading(true);
+      const res = await uploadCompetitorCsv(
+        acceptedFiles,
+        selectedOlympiad.id
+      );
+
+      // Asignamos resultados solo a los nuevos archivos que subimos
+      const filesWithResults = newFiles.map((f) => {
+        const match = res.data.details.find(d => d.filename === f.name);
+        return match ? { ...f, result: match } : f;
+      });
+
+      setFiles(prev => [
+      ...prev.filter(f => !acceptedFiles.some(a => a.name === f.name)),
+      ...filesWithResults
+    ]);
+    } catch (error) {
+      console.error("Error al subir archivos CSV:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
+
+  const handleDownloadError = async (filename: string) => {
+  try {
+    const blob = await downloadErrorCsv(filename);
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error al descargar archivo CSV de errores:", error);
+  }
+};
+
 
   return (
     <>
@@ -64,17 +110,20 @@ const fetchOlympiads = async () => {
               
               <Select
                 options={olympiads.map((ol) => ({
-                  value: ol.id,
+                  value: ol.id.toString(),
                   label: `${ol.name} - ${ol.edition}`,
                 }))}
-                value={selectedOlympiad?.id || ""}
+                 value={selectedOlympiad?.id.toString() || ""} 
                 onChange={(val) => {
-                  const pkg = olympiads.find((p) => p.id === val);
-                  if (pkg) setSelectedOlympiad(pkg);
+                  const pkg = olympiads.find((p) => p.id.toString() === val);
+                  if (pkg){
+                    setSelectedOlympiad(pkg);
+                    console.log("ID seleccionado:", pkg.id);
+                  } 
                 }}
                 placeholder="Selecciona una Olimpiada"
               />
-               </div>
+            </div>
 
             {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
             {selectedOlympiad && (
@@ -98,20 +147,31 @@ const fetchOlympiads = async () => {
                             <div>
                               <p className="font-medium">{f.name}</p>
                               <p className="text-sm text-gray-500">{f.size}</p>
-                              <div className="mt-1 space-x-2">
-                                <Badge color="info" startIcon={<InfoIcon className="size-5" />} >72 registros totales</Badge>
-                                <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>55 exitosos</Badge>
-                                <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>17 errores</Badge>
-                              </div>
+                               {f.result ? (
+                                  <div className="mt-1 space-x-2">
+                                    <Badge color="info" startIcon={<InfoIcon className="size-5" />} >{f.result.total_records} registros totales</Badge>
+                                    <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>{f.result.successful} exitosos</Badge>
+                                    <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>{f.result.competitor_errors + f.result.header_errors} errores</Badge>
+                                  </div>
+                                ):(
+                                 <p className="text-gray-400 text-sm mt-1">Pendiente de procesamiento...</p>
+                                )}
                             </div>
                           </div>
-                            <div className="sm:ml-auto ">      
-                              <Button size="sm" variant= "outline" startIcon={<DownloadIcon className="size-5" />}> 
-                                Descargar CSV de errores
-                              </Button>
-                            </div>
-                            
-                          
+
+                            {f.result?.error_file && (
+                              <div className="sm:ml-auto">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  startIcon={<DownloadIcon className="size-5" />}
+                                  onClick={() => handleDownloadError(f.result!.error_file!)}
+                                >
+                                  Descargar CSV de errores
+                                </Button>
+                              </div>
+                            )}
+
                         </div>
                       ))}
                     </div>

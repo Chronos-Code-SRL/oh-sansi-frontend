@@ -17,8 +17,8 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Olimpiadas",
     subItems: [
-      { name: "Crear Olimpiada", path: "/form-Olympiad", pro: false },
-      
+      { name: "Crear Olimpiada", path: "/Olimpiada", pro: false },
+      { name: "/ConfiguracionArea/:id", path: "/ConfiguracionArea/:id", pro: false }
     ],
   },
   {
