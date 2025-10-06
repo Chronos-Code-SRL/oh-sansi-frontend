@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "../../components/ui/modal/index";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
+import { gradesService } from "../../api/Grades";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -24,22 +25,32 @@ export default function ConfigureAreaModal({
   const [newLevelName, setNewLevelName] = useState("");
   const [startGrade, setStartGrade] = useState("");
   const [endGrade, setEndGrade] = useState("");
+  const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
 
-  const grades = [//grados para simular
-    "1ro Primaria",
-    "2do Primaria",
-    "3ro Primaria",
-    "4to Primaria",
-    "5to Primaria",
-    "6to Primaria",
-    "1ro Secundaria",
-    "2do Secundaria",
-    "3ro Secundaria",
-    "4to Secundaria",
-    "5to Secundaria",
-    "6to Secundaria",
-  ];
 
+  // Consumir la API para obtener los grados
+  const getGrades = async () => {
+    try {
+      const response = await gradesService.getGrades(); // Llama al servicio correctamente
+      return response; // Retorna los datos obtenidos
+    } catch (error) {
+      console.error("Error al obtener los grados:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const gradesData = await getGrades(); // Llama a la función del servicio
+        setGrades(gradesData); // Actualiza el estado con los grados obtenidos
+      } catch (error) {
+        console.error("Error al obtener los grados:", error);
+      }
+    };
+
+    fetchGrades();
+  }, []);
   const handleAddLevel = (e: React.FormEvent) => { //Agegar nivel
     e.preventDefault();
     if (!newLevelName || !startGrade || !endGrade) return;
@@ -60,7 +71,7 @@ export default function ConfigureAreaModal({
     const confirmDelete = window.confirm("¿Deseas eliminar este nivel?");
     if (!confirmDelete) return;
     setLevels(levels.filter((level) => level.id !== id));
-    };
+  };
 
 
   const handleSave = () => {
@@ -81,31 +92,31 @@ export default function ConfigureAreaModal({
           Configurar Área: {areaName}
         </h2>
         <Label>
-        Define los niveles de competencia para esta área. Cada nivel puede abarcar uno o varios cursos consecutivos.
+          Define los niveles de competencia para esta área. Cada nivel puede abarcar uno o varios cursos consecutivos.
         </Label>
 
         <ComponentCard title="Niveles Configurados">
-        <div className="space-y-3">
+          <div className="space-y-3">
             {levels.map((level) => (
-            <div
+              <div
                 key={level.id}
                 className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
-            >
+              >
                 <div>
-                <p className="font-semibold">{level.name}</p>
-                <p className="text-sm text-gray-500">{level.range}</p>
+                  <p className="font-semibold">{level.name}</p>
+                  <p className="text-sm text-gray-500">{level.range}</p>
                 </div>
                 <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleRemoveLevel(level.id)}
-                className="text-red-600 hover:text-red-700"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRemoveLevel(level.id)}
+                  className="text-red-600 hover:text-red-700"
                 >
-                Eliminar
+                  Eliminar
                 </Button>
-            </div>
+              </div>
             ))}
-        </div>
+          </div>
         </ComponentCard>
 
 
@@ -129,9 +140,9 @@ export default function ConfigureAreaModal({
                   onChange={(e) => setStartGrade(e.target.value)}
                 >
                   <option value="">Selecciona curso inicial</option>
-                  {grades.map((g, i) => (
-                    <option key={i} value={g}>
-                      {g}
+                  {grades.map((grade) => (
+                    <option key={grade.id} value={grade.name}>
+                      {grade.name}
                     </option>
                   ))}
                 </select>
@@ -145,9 +156,9 @@ export default function ConfigureAreaModal({
                   onChange={(e) => setEndGrade(e.target.value)}
                 >
                   <option value="">Selecciona curso final</option>
-                  {grades.map((g, i) => (
-                    <option key={i} value={g}>
-                      {g}
+                  {grades.map((grade) => (
+                    <option key={grade.id} value={grade.name}>
+                      {grade.name}
                     </option>
                   ))}
                 </select>
