@@ -18,7 +18,7 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
     // Función para manejar el clic en el botón
     const handleButtonClick = () => {
         // Redirigimos a la página de registro con el id de la olimpiada
-        navigate(`/ConfiguracionArea/${id}`);
+        navigate(`/OlimpiadaAreas/${id}`);
     };
 
 

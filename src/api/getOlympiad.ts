@@ -4,7 +4,16 @@ import { ohSansiApi } from "./ohSansiApi";
 export const serviceGetOlympiads = {
     getOlympiads: async () => {
         try {
-            return ohSansiApi.get("/olympiads"); // tu endpoint
+            return ohSansiApi.get("/olympiads");
+        } catch (error) {
+            throw error;
+        }
+    },
+    getOlympiadById: async (id: number) => {
+        try {
+            const response = await ohSansiApi.get(`/olympiads/${id}`);
+            const data = response.data as { olympiad: { name: string } };
+            return data.olympiad.name;
         } catch (error) {
             throw error;
         }
