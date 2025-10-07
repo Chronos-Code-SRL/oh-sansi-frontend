@@ -27,8 +27,9 @@ export default function ConfigureAreaModal({
   const [startGrade, setStartGrade] = useState("");
   const [endGrade, setEndGrade] = useState("");
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
+  const [errors, setErrors] = useState<{ name?: string; startGrade?: string; endGrade?:string }>({});
 
-  // 🔹 Cargar grados desde el backend
+  // Cargar grados desde el backend
   const fetchGrades = async () => {
     try {
       const gradesData = await gradesService.getGrades();
@@ -89,7 +90,7 @@ export default function ConfigureAreaModal({
       console.error("Error al obtener los niveles:", error);
     }
   };
-  // 🔹 Cargar datos cuando se abre el modal
+  // Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       fetchGrades();
@@ -97,17 +98,47 @@ export default function ConfigureAreaModal({
     }
   }, [isOpen]);
 
-  // 🔹 Agregar nivel (POST)
+  const validateName = (name: string): string | null => {
+    if (!name.trim()) return "El nombre del nivel es obligatorio.";
+
+    if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/.test(name))
+      return "Solo se permiten caracteres alfanuméricos (letras, números y espacios).";
+    return null;
+  };
+
+  const filteredEndGrades = () => {
+    const startIndex = grades.findIndex((g) => g.name === startGrade);
+    if (startIndex === -1) return grades;
+    return grades.slice(startIndex);
+  };
+
+  // Agregar nivel (POST)
   const handleAddLevel = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newLevelName || !startGrade || !endGrade) {
-      alert("Por favor completa todos los campos antes de agregar un nivel.");
+    const nameError = validateName(newLevelName);
+    const newErrors: { name?: string; startGrade?: string; endGrade?: string } = {};
+
+    if (nameError) {
+      newErrors.name = nameError;
+    }
+
+    if (!startGrade) {
+      newErrors.startGrade = "Debes seleccionar un curso inicial.";
+    }
+
+    if (!endGrade) {
+      newErrors.endGrade = "Debes seleccionar un curso final.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
-      console.log("📡 Enviando nivel a:", olympiadId, areaId);
+      // console.log("Enviando nivel a:", olympiadId, areaId);
+      setErrors({}); 
 
       const startIndex = grades.findIndex((g) => g.name === startGrade);
       const endIndex = grades.findIndex((g) => g.name === endGrade);
@@ -126,7 +157,7 @@ export default function ConfigureAreaModal({
         grade_ids: selectedGrades,
       };
 
-      console.log("📦 Datos enviados:", newLevelData);
+      // console.log("Datos enviados:", newLevelData);
 
       await levelGradesService.addLevelToArea(olympiadId, areaId, newLevelData);
       await fetchLevels();
@@ -153,7 +184,7 @@ export default function ConfigureAreaModal({
         return;
       }
 
-      console.log("🗑️ Eliminando nivel con ID:", id);
+      // console.log("Eliminando nivel con ID:", id);
 
       // Llama al servicio para eliminar el nivel
       await levelGradesService.removeLevelFromArea(olympiadId, areaId, id);
@@ -201,8 +232,14 @@ export default function ConfigureAreaModal({
               <InputField
                 placeholder="Ej. Nivel Básico, Inicial, Avanzado"
                 value={newLevelName}
-                onChange={(e) => setNewLevelName(e.target.value)}
+                onChange={(e) => {
+                    setNewLevelName(e.target.value);
+                    setErrors({ ...errors, name: undefined });
+                  }}
               />
+              {errors.name && (
+                <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -211,7 +248,10 @@ export default function ConfigureAreaModal({
                 <select
                   className="w-full rounded-md border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
                   value={startGrade}
-                  onChange={(e) => setStartGrade(e.target.value)}
+                  onChange={(e) => {
+                    setStartGrade(e.target.value);
+                    setErrors({ ...errors, startGrade: undefined });
+                  }}
                 >
                   <option value="">Selecciona curso inicial</option>
                   {grades.map((grade) => (
@@ -220,6 +260,9 @@ export default function ConfigureAreaModal({
                     </option>
                   ))}
                 </select>
+                {errors.startGrade && (
+                  <p className="text-sm text-red-500 mt-1">{errors.startGrade}</p>
+                )}
               </div>
 
               <div>
@@ -230,7 +273,7 @@ export default function ConfigureAreaModal({
                   onChange={(e) => setEndGrade(e.target.value)}
                 >
                   <option value="">Selecciona curso final</option>
-                  {grades.map((grade) => (
+                  {filteredEndGrades().map((grade) => (
                     <option key={grade.id} value={grade.name}>
                       {grade.name}
                     </option>
