@@ -3,9 +3,9 @@ import { Modal } from "../../components/ui/modal/index";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
-import Button from "../../components/ui/button/Button";
 import { gradesService } from "../../api/grades";
 import { levelGradesService } from "../../api/levelGradesService";
+import ButtonModal from "../../components/ui/button/ButtonModal";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -38,19 +38,28 @@ export default function ConfigureAreaModal({
     }
   };
 
-  // Cargar niveles configurados desde el backend
+  interface LevelsResponse {
+    level_grades: any[];
+    [key: string]: any;
+  }
+
   const fetchLevels = async () => {
     if (!olympiadId || !areaId) return;
+
     try {
       const levelsData = await levelGradesService.getLevelsFromArea(
         olympiadId,
         areaId
-      );
+      ) as LevelsResponse;
 
-      const rawLevels = levelsData.level_grades || levelsData;
+      // Verifica si levelsData.level_grades existe, de lo contrario lanza un error
+      if (!levelsData || !Array.isArray(levelsData.level_grades)) {
+        console.error("Error: La API no devolvió un array válido de niveles.");
+        return;
+      }
 
       // Agrupamos por ID de nivel
-      const groupedLevels = rawLevels.reduce((acc: any[], item: any) => {
+      const groupedLevels = levelsData.level_grades.reduce((acc: any[], item: any) => {
         const levelId = item.level?.id || item.id;
         const existing = acc.find((l) => l.id === levelId);
 
@@ -80,8 +89,6 @@ export default function ConfigureAreaModal({
       console.error("Error al obtener los niveles:", error);
     }
   };
-
-
   // 🔹 Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
@@ -139,22 +146,19 @@ export default function ConfigureAreaModal({
     if (!confirmDelete) return;
 
     try {
+      // Encuentra el nivel a eliminar
       const levelToDelete = levels.find((l) => l.id === id);
       if (!levelToDelete) {
         alert("No se encontró el nivel seleccionado.");
         return;
       }
 
-      // El backend espera este formato exacto:
-      const payload = {
-        level_name: levelToDelete.name,
-        grade_ids: levelToDelete.grades.map((g: any) => g.id),
-      };
+      console.log("🗑️ Eliminando nivel con ID:", id);
 
-      console.log("🗑️ Eliminando nivel con payload:", payload);
+      // Llama al servicio para eliminar el nivel
+      await levelGradesService.removeLevelFromArea(olympiadId, areaId, id);
 
-      await levelGradesService.removeLevelFromArea(olympiadId, areaId, payload);
-
+      // Actualiza los niveles después de eliminar
       await fetchLevels();
       alert("Nivel eliminado correctamente");
     } catch (error) {
@@ -236,9 +240,9 @@ export default function ConfigureAreaModal({
             </div>
 
             <div className="flex justify-center">
-              <Button type="submit" variant="outline" className="px-6">
+              <ButtonModal type="submit" variant="outline" className="px-6">
                 + Agregar Nivel
-              </Button>
+              </ButtonModal>
             </div>
           </form>
         </ComponentCard>
@@ -263,13 +267,13 @@ export default function ConfigureAreaModal({
                       <p className="text-sm text-gray-500">Sin grados asignados</p>
                     )}
                   </div>
-                  <Button
+                  <ButtonModal
                     variant="outline"
                     size="sm"
                     onClick={() => handleRemoveLevel(level.id)}
                   >
                     Eliminar
-                  </Button>
+                  </ButtonModal>
                 </div>
               ))
             ) : (
@@ -282,12 +286,12 @@ export default function ConfigureAreaModal({
 
         {/* Botones inferiores */}
         <div className="flex justify-end gap-4 pt-4">
-          <Button variant="outline" onClick={onClose}>
+          <ButtonModal variant="outline" onClick={onClose}>
             Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
+          </ButtonModal>
+          <ButtonModal variant="primary" onClick={handleSave}>
             Guardar Configuración
-          </Button>
+          </ButtonModal>
         </div>
       </div>
     </Modal>

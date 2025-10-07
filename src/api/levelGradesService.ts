@@ -16,13 +16,13 @@ export const levelGradesService = {
     return response.data;
   },
 
-  removeLevelFromArea: async (olympiadId: number, areaId: number, data: any) => {
+  removeLevelFromArea: async (olympiadId: number, areaId: number, levelId: number) => {
     const response = await ohSansiApi.delete(
       `/olympiads/${olympiadId}/areas/${areaId}/level-grades`,
       {
-        data, // se envía el JSON con level_name y grade_ids
         headers: { "Content-Type": "application/json" },
-      }
+        data: { level_id: levelId } as any, // El cuerpo debe ir dentro de "data"
+      } as any
     );
     return response.data;
   },

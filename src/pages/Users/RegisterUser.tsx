@@ -8,7 +8,7 @@ import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { areaService } from "../../api/getAreas";
-import { registerApi} from "../../api/postRegisterUser"
+import { registerApi } from "../../api/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 
 
@@ -48,7 +48,7 @@ export default function RegisterUser() {
   }, []);
 
 
-  {/*Validaciones*/}
+  {/*Validaciones*/ }
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -105,19 +105,19 @@ export default function RegisterUser() {
     e.preventDefault();
 
     if (!validateForm()) {
-    return;
+      return;
     }
 
     try {
       const datos = {
-          first_name,
-          last_name,
-          ci,
-          phone_number,
-          email,
-          genre,
-          roles_id,
-          areas_id,
+        first_name,
+        last_name,
+        ci,
+        phone_number,
+        email,
+        genre,
+        roles_id,
+        areas_id,
       };
 
       const resultado = await registerApi.postRegister(datos);
@@ -126,24 +126,24 @@ export default function RegisterUser() {
         setIsModalOpen(true);
       }
 
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.response) {
-    const status = error.response.status;
-    const data = error.response.data;
+        const status = error.response.status;
+        const data = error.response.data;
 
-    if (status === 400) {
-      setErrors(data.error); 
-      //alert("Errores en el formulario, revisa los campos.");
-      //alert(data.message)
-    }
+        if (status === 400) {
+          setErrors(data.error);
+          //alert("Errores en el formulario, revisa los campos.");
+          //alert(data.message)
+        }
 
-    if (status === 500) {
-      //alert(data.message || "Error interno al crear el usuario");
-      alert(data.message)
-    }
-  } else {
-    alert("Error de conexión con el servidor");
-  }
+        if (status === 500) {
+          //alert(data.message || "Error interno al crear el usuario");
+          alert(data.message)
+        }
+      } else {
+        alert("Error de conexión con el servidor");
+      }
     }
   };
 
@@ -276,7 +276,7 @@ export default function RegisterUser() {
                       label="Evaluador"
                       checked={roles_id === "3"}
                       onChange={setroles_id}
-                    />      
+                    />
                   </div>
                   {errors.roles_id && (
                     <p className="text-sm text-red-500 mt-1">{errors.roles_id}</p>
