@@ -17,6 +17,8 @@ export interface ValidationResult {
 
 const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]+$/;
 
+const editionRegex = /^\d+-\d{4}$/;
+
 const todayISO = () => new Date().toISOString().split('T')[0];
 
 export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
@@ -31,6 +33,7 @@ export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
   // Edición
   const editionTrim = values.edition.trim();
   if (!editionTrim) errors.edition = 'La edición es obligatoria';
+  else if (!editionRegex.test(editionTrim)) errors.edition = 'Formato inválido. (Ejemplo: 1-2025)';
 
   // Número de fases
   const n = Number(values.number_of_phases);

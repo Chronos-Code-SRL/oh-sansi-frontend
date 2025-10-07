@@ -132,13 +132,36 @@ export default function AdminDefaultInputs() {
                         <Input
                             id="edition"
                             type="text"
-                            placeholder="10ma Edición"
+                            placeholder="Ej: 1-2025"
                             value={edition}
-                            onChange={(e) => setEdition(e.target.value)}
+                            // Sanitizamos para solo permitir dígitos y un guion, y evitar más de un guion.
+                            onChange={(e) => {
+                                let v = e.target.value;
+                                // eliminar caracteres que no sean dígitos o guion
+                                v = v.replace(/[^0-9-]/g, '');
+                                // si hay más de un guion, conservar solo el primero
+                                const firstDash = v.indexOf('-');
+                                if (firstDash !== -1) {
+                                    // quitar guiones extra
+                                    const before = v.slice(0, firstDash + 1).replace(/-/g, '-');
+                                    const after = v.slice(firstDash + 1).replace(/-/g, '');
+                                    v = before + after;
+                                }
+                                // limitar longitud total (ej: hasta 1-YYYY => máximo 6, pero permitimos quizá 2-YYYY => 7) => general: parte izquierda hasta 3 dígitos + '-' + 4 dígitos
+                                // No cortamos estrictamente antes del año para permitir escribir progresivamente
+                                if (v.length > 10) v = v.slice(0, 10);
+                                setEdition(v);
+                            }}
                             onBlur={() => handleBlurField("edition")}
                             error={!!errors.edition}
                             hint={errors.edition}
                             className="w-full border-gray-300 focus:border-blue-500"
+                            // Ayuda nativa
+                            // pattern no se valida automáticamente porque usamos noValidate en el form, pero sirve para mostrar hints en algunos navegadores
+                            // @ts-ignore: permitir atributo pattern
+                            pattern="^\\d+-\\d{4}$"
+                            // @ts-ignore: atributo title para fallback nativo
+                            title="Formato requerido: n-YYYY (ej: 1-2025)"
                         />
                     </div>
 
