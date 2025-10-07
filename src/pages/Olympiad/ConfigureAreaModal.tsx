@@ -28,11 +28,11 @@ export default function ConfigureAreaModal({
   const [endGrade, setEndGrade] = useState("");
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
 
-  // Cargar grados desde el backend
+  // 🔹 Cargar grados desde el backend
   const fetchGrades = async () => {
     try {
-      const gradesData = await gradesService.getGrades(); 
-      setGrades(gradesData); 
+      const gradesData = await gradesService.getGrades();
+      setGrades(gradesData);
     } catch (error) {
       console.error("Error al obtener los grados:", error);
     }
@@ -40,17 +40,49 @@ export default function ConfigureAreaModal({
 
   // Cargar niveles configurados desde el backend
   const fetchLevels = async () => {
+    if (!olympiadId || !areaId) return;
     try {
       const levelsData = await levelGradesService.getLevelsFromArea(
         olympiadId,
         areaId
       );
-      setLevels(levelsData);
+
+      const rawLevels = levelsData.level_grades || levelsData;
+
+      // Agrupamos por ID de nivel
+      const groupedLevels = rawLevels.reduce((acc: any[], item: any) => {
+        const levelId = item.level?.id || item.id;
+        const existing = acc.find((l) => l.id === levelId);
+
+        if (existing) {
+          existing.grades.push(...(item.grades || [item.grade]));
+        } else {
+          acc.push({
+            id: levelId,
+            name: item.level?.name || item.name,
+            grades: item.grades || [item.grade],
+          });
+        }
+        return acc;
+      }, []);
+
+      // Eliminamos posibles duplicados de grado dentro de cada nivel
+      const uniqueLevels = groupedLevels.map((level: any) => ({
+        ...level,
+        grades: level.grades.filter(
+          (grade: any, index: number, self: any[]) =>
+            index === self.findIndex((g: any) => g.id === grade.id)
+        ),
+      }));
+
+      setLevels(uniqueLevels);
     } catch (error) {
       console.error("Error al obtener los niveles:", error);
     }
   };
 
+
+  // 🔹 Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       fetchGrades();
@@ -58,33 +90,46 @@ export default function ConfigureAreaModal({
     }
   }, [isOpen]);
 
-  // Agregar nivel (POST)
+  // 🔹 Agregar nivel (POST)
   const handleAddLevel = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newLevelName || !startGrade || !endGrade) return;
+
+    if (!newLevelName || !startGrade || !endGrade) {
+      alert("Por favor completa todos los campos antes de agregar un nivel.");
+      return;
+    }
 
     try {
-      const olympiadId = 1;
-      const areaId = 1;
+      console.log("📡 Enviando nivel a:", olympiadId, areaId);
 
       const startIndex = grades.findIndex((g) => g.name === startGrade);
       const endIndex = grades.findIndex((g) => g.name === endGrade);
+
+      if (startIndex === -1 || endIndex === -1) {
+        alert("Grados seleccionados no válidos.");
+        return;
+      }
+
       const selectedGrades = grades
         .slice(startIndex, endIndex + 1)
         .map((g) => g.id);
 
       const newLevelData = {
         level_name: newLevelName,
-        grades: selectedGrades,
+        grade_ids: selectedGrades,
       };
+
+      console.log("📦 Datos enviados:", newLevelData);
 
       await levelGradesService.addLevelToArea(olympiadId, areaId, newLevelData);
       await fetchLevels();
+
       setNewLevelName("");
       setStartGrade("");
       setEndGrade("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al agregar nivel:", error);
+      alert("No se pudo agregar el nivel. Verifica la consola.");
     }
   };
 
@@ -94,18 +139,34 @@ export default function ConfigureAreaModal({
     if (!confirmDelete) return;
 
     try {
-      const olympiadId = 1;
-      const areaId = 1;
-      await levelGradesService.removeLevelFromArea(olympiadId, areaId, {
-        level_id: id,
-      });
+      const levelToDelete = levels.find((l) => l.id === id);
+      if (!levelToDelete) {
+        alert("No se encontró el nivel seleccionado.");
+        return;
+      }
+
+      // El backend espera este formato exacto:
+      const payload = {
+        level_name: levelToDelete.name,
+        grade_ids: levelToDelete.grades.map((g: any) => g.id),
+      };
+
+      console.log("🗑️ Eliminando nivel con payload:", payload);
+
+      await levelGradesService.removeLevelFromArea(olympiadId, areaId, payload);
+
       await fetchLevels();
+      alert("Nivel eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar nivel:", error);
+      alert("No se pudo eliminar el nivel. Verifica la consola.");
     }
   };
 
-  // Guardar configuración 
+
+
+
+  // Guardar configuración
   const handleSave = () => {
     console.log("Configuración actual:", levels);
     onClose();
@@ -175,7 +236,7 @@ export default function ConfigureAreaModal({
             </div>
 
             <div className="flex justify-center">
-              <Button variant="outline" className="px-6">
+              <Button type="submit" variant="outline" className="px-6">
                 + Agregar Nivel
               </Button>
             </div>
@@ -186,14 +247,21 @@ export default function ConfigureAreaModal({
         <ComponentCard title="Niveles Configurados">
           <div className="space-y-3">
             {levels.length > 0 ? (
-              levels.map((level) => (
+              levels.map((level: any, index: number) => (
                 <div
-                  key={level.id}
+                  key={`${level.id}-${index}`}
                   className="flex items-center justify-between border rounded-md px-4 py-2 bg-gray-50 dark:bg-gray-800"
                 >
                   <div>
                     <p className="font-semibold">{level.name}</p>
-                    <p className="text-sm text-gray-500">{level.range}</p>
+                    {level.grades?.length > 0 ? (
+                      <p className="text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full inline-block">
+                        {level.grades[0].name} -{" "}
+                        {level.grades[level.grades.length - 1].name}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-500">Sin grados asignados</p>
+                    )}
                   </div>
                   <Button
                     variant="outline"

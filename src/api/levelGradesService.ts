@@ -19,7 +19,10 @@ export const levelGradesService = {
   removeLevelFromArea: async (olympiadId: number, areaId: number, data: any) => {
     const response = await ohSansiApi.delete(
       `/olympiads/${olympiadId}/areas/${areaId}/level-grades`,
-      { data }
+      {
+        data, // se envía el JSON con level_name y grade_ids
+        headers: { "Content-Type": "application/json" },
+      }
     );
     return response.data;
   },
