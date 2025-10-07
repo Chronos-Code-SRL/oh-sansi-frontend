@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 // // Assume these icons are imported from an icon library
-import { ListIcon, ChevronDownIcon, HorizontaLDots } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
 type NavItem = {
@@ -14,20 +14,19 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <ListIcon />,
+    icon: <GridIcon />,
     name: "Olimpiadas",
     subItems: [
       { name: "Crear Olimpiada", path: "/Olimpiada", pro: false },
-      { name: "Ver Olimpiadas", path: "/VerOlimpiadas", pro: false },
     ],
   },
   {
-    icon: <ListIcon />,
+    icon: <UserIcon />,
     name: "Registrar Usuario",
     path: "user-register"
   },
   {
-    icon: <ListIcon />,
+    icon: <GroupIcon />,
     name: "Competidores",
     path: "/registration",
   },
@@ -212,15 +211,18 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          }`}
+
+        className={`py-8 flex ${
+          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        }`}
+        // className={`py-8 flex justify-center`}
       >
-        <Link to="/">
+        <Link to="/" className="flex justify-center">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/ohSansi.svg"
                 alt="Logo"
                 width={150}
                 height={40}
