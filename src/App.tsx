@@ -21,6 +21,7 @@ import RegisterUser from "./pages/Users/RegisterUser";
 import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
+import ConfigurationArea from "./pages/Olympiad/ConfigurationArea";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
 
 
@@ -46,6 +47,9 @@ export default function App() {
 
             <Route path="/Olimpiada" element={<FormOlympiad />} />
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
+            <Route path="/ConfiguracionArea/:id" element={<ConfigurationArea />} />
+            
+            {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
             {/* Tables */}
