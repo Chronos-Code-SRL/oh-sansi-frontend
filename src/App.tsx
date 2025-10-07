@@ -13,7 +13,6 @@ import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
-// import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -23,6 +22,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ConfigurationArea from "./pages/Olympiad/ConfigurationArea";
+import ViewAreas from "./pages/Olympiad/ViewAreas";
 
 
 export default function App() {
@@ -33,7 +33,7 @@ export default function App() {
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/" element={<FormOlympiad />} />
 
             {/* Aministration*/}
             <Route index path="/registration" element={<AdRegistration />} />
@@ -49,6 +49,9 @@ export default function App() {
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
             <Route path="/ConfiguracionArea/:id" element={<ConfigurationArea />} />
             
+            {/* Prueba Modal */}
+            <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
+
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
 

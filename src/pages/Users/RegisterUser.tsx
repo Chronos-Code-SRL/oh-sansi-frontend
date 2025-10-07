@@ -8,7 +8,9 @@ import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { areaService } from "../../api/getAreas";
-import { registerApi} from "../../api/postRegisterUser"
+import { registerApi } from "../../api/postRegisterUser"
+import { Modal } from "../../components/ui/modal/index";
+
 
 export default function RegisterUser() {
   const [first_name, setfirst_name] = useState("");
@@ -18,9 +20,10 @@ export default function RegisterUser() {
   const [email, setEmail] = useState("");
   const [genre, setgenre] = useState("");
   const [roles_id, setroles_id] = useState("");
-  const [areas, setAreas] = useState<string[]>([]);
+  const [areas_id, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -45,20 +48,20 @@ export default function RegisterUser() {
   }, []);
 
 
-  {/*Validaciones*/}
+  {/*Validaciones*/ }
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!first_name.trim()) {
       newErrors.firstName = "El nombre es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
-      newErrors.first_name = "El nombre debe tener solo letras.";
+      newErrors.first_name = "El nombre debe tener solo letras (2-50 caracteres).";
     }
 
     if (!last_name.trim()) {
       newErrors.lastName = "El apellido es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
-      newErrors.last_name = "El apellido debe tener solo letras.";
+      newErrors.last_name = "El apellido debe tener solo letras (2-50 caracteres).";
     }
 
     if (!ci.trim()) {
@@ -68,7 +71,7 @@ export default function RegisterUser() {
     }
 
     if (!phone_number.trim()) {
-      newErrors.phone_number = "El teléfono es obligatorio.";
+      newErrors.phone_number = "El teléfono debe contener solo números (7-15 dígitos).";
     } else if (!/^[0-9]{7,15}$/.test(phone_number)) {
       newErrors.phone_number = "El teléfono deben ser dígitos.";
     }
@@ -87,9 +90,9 @@ export default function RegisterUser() {
       newErrors.roles_id = "Debe seleccionar un rol.";
     }
 
-    if (areas.length === 0) {
+    if (areas_id.length === 0) {
       newErrors.areas = "Debe seleccionar al menos un área.";
-    } else if (roles_id === "responsable" && areas.length > 1) {
+    } else if (roles_id === "responsable" && areas_id.length > 1) {
       newErrors.areas = "El responsable académico solo puede tener un área.";
     }
 
@@ -102,45 +105,45 @@ export default function RegisterUser() {
     e.preventDefault();
 
     if (!validateForm()) {
-    return;
+      return;
     }
 
     try {
       const datos = {
-          first_name,
-          last_name,
-          ci,
-          phone_number,
-          email,
-          genre,
-          roles_id,
-          //areas,
+        first_name,
+        last_name,
+        ci,
+        phone_number,
+        email,
+        genre,
+        roles_id,
+        areas_id,
       };
 
       const resultado = await registerApi.postRegister(datos);
 
       if (resultado.status === 201) {
-        alert(resultado.data.message);
+        setIsModalOpen(true);
       }
 
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.response) {
-    const status = error.response.status;
-    const data = error.response.data;
+        const status = error.response.status;
+        const data = error.response.data;
 
-    if (status === 400) {
-      setErrors(data.error); 
-      //alert("Errores en el formulario, revisa los campos.");
-      //alert(data.message)
-    }
+        if (status === 400) {
+          setErrors(data.error);
+          //alert("Errores en el formulario, revisa los campos.");
+          //alert(data.message)
+        }
 
-    if (status === 500) {
-      //alert(data.message || "Error interno al crear el usuario");
-      alert(data.message)
-    }
-  } else {
-    alert("Error de conexión con el servidor");
-  }
+        if (status === 500) {
+          //alert(data.message || "Error interno al crear el usuario");
+          alert(data.message)
+        }
+      } else {
+        alert("Error de conexión con el servidor");
+      }
     }
   };
 
@@ -273,7 +276,7 @@ export default function RegisterUser() {
                       label="Evaluador"
                       checked={roles_id === "3"}
                       onChange={setroles_id}
-                    />      
+                    />
                   </div>
                   {errors.roles_id && (
                     <p className="text-sm text-red-500 mt-1">{errors.roles_id}</p>
@@ -302,6 +305,29 @@ export default function RegisterUser() {
           </div>
         </div>
       </form>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        showCloseButton={true}
+        isFullscreen={false}
+        className="max-w-md mx-auto shadow-lg"
+      >
+        <div className="p-6 text-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+            ¡Registro exitoso!
+          </h2>
+          <Label>Usuario registrado correctamente.</Label>
+          <Button
+            size="md"
+            variant="primary"
+            className="w-full"
+            onClick={() => setIsModalOpen(false)}
+          >
+            Aceptar
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
