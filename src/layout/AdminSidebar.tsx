@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
     name: "Olimpiadas",
     subItems: [
       { name: "Crear Olimpiada", path: "/Olimpiada", pro: false },
+      { name: "Configurar Olimpiada", path: "/VerOlimpiadas", pro: false },
     ],
   },
   {

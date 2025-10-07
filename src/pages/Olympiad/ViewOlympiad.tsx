@@ -28,7 +28,7 @@ export const ViewOlympiad = () => {
                 const data = response.data as { olympiads: Olympiad[] }; // Aseguramos el tipo de data
                 setOlympiads(data.olympiads); // Guardamos las olimpiadas en el estado
             } catch (err) {
-                setError("Error al obtener las olimpiadas.");
+                setError("No hay Olimpiadas creadas. Cree una olimpiada por favor");
             } finally {
                 setLoading(false); // Terminamos el estado de carga
             }
