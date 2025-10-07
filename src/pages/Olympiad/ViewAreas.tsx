@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { serviceGetOlympiads } from "../../api/getOlympiad";
 import { BoxArea } from "../../components/common/BoxArea";
 import { areaService } from "../../api/getAreas";
+import ConfigureAreaModal from "../../pages/Olympiad/ConfigureAreaModal";
+
 
 interface OlympiadData {
     name: string;
@@ -24,7 +26,11 @@ const ViewAreas = () => {
         startDate: "",
         endDate: "",
     });
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [areas, setAreas] = useState<Area[]>([]); // Estado para almacenar las áreas
+    
     useEffect(() => {
         const fetchOlympiadData = async () => {
             if (id) {
@@ -63,9 +69,23 @@ const ViewAreas = () => {
                         name={area.name} // Pasa el nombre del área
                         startDate={olympiadData.startDate} // Pasa la fecha de inicio de forma estática
                         endDate={olympiadData.endDate} // Pasa la fecha de fin de forma estática
+                        onConfigureClick={() => {
+                            setSelectedArea(area);
+                            setIsModalOpen(true);
+                        }}
                     />
                 ))}
             </div>
+
+            {selectedArea && (
+                <ConfigureAreaModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    areaName={selectedArea.name}
+                    olympiadId={Number(id)}
+                    areaId={selectedArea.id}
+                />
+                )}
         </>
     )
 }

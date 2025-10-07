@@ -1,13 +1,26 @@
 import { ohSansiApi } from "./ohSansiApi";
 
 export const levelGradesService = {
-  getLevelsFromArea: (olympiadId: number, areaId: number) =>
-    ohSansiApi.get(`/olympiads/${olympiadId}/areas/${areaId}/level-grades`),
+  getLevelsFromArea: async (olympiadId: number, areaId: number) => {
+    const response = await ohSansiApi.get(
+      `/olympiads/${olympiadId}/areas/${areaId}/level-grades`
+    );
+    return response.data;
+  },
 
-  addLevelToArea: (olympiadId: number, areaId: number, data: any) =>
-    ohSansiApi.post(`/olympiads/${olympiadId}/areas/${areaId}/level-grades`, data),
+  addLevelToArea: async (olympiadId: number, areaId: number, data: any) => {
+    const response = await ohSansiApi.post(
+      `/olympiads/${olympiadId}/areas/${areaId}/level-grades`,
+      data
+    );
+    return response.data;
+  },
 
-  removeLevelFromArea: (olympiadId: number, areaId: number, data: any) =>
-    ohSansiApi.delete(`$/olympiads/${olympiadId}/areas/${areaId}/level-grades`, { data }),
-
+  removeLevelFromArea: async (olympiadId: number, areaId: number, data: any) => {
+    const response = await ohSansiApi.delete(
+      `/olympiads/${olympiadId}/areas/${areaId}/level-grades`,
+      { data }
+    );
+    return response.data;
+  },
 };

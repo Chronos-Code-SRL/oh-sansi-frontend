@@ -10,13 +10,17 @@ import { levelGradesService } from "../../api/levelGradesService";
 interface ConfigureAreaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  areaName: string; // Ejemplo: "Robótica 2"
+  areaName: string;
+  olympiadId: number;
+  areaId: number;
 }
 
 export default function ConfigureAreaModal({
   isOpen,
   onClose,
   areaName,
+  olympiadId,
+  areaId,
 }: ConfigureAreaModalProps) {
   const [levels, setLevels] = useState<any[]>([]);
   const [newLevelName, setNewLevelName] = useState("");
@@ -37,13 +41,11 @@ export default function ConfigureAreaModal({
   // Cargar niveles configurados desde el backend
   const fetchLevels = async () => {
     try {
-      const olympiadId = 1; 
-      const areaId = 1; 
-      const response = await levelGradesService.getLevelsFromArea(
+      const levelsData = await levelGradesService.getLevelsFromArea(
         olympiadId,
         areaId
       );
-      setLevels(response.data);
+      setLevels(levelsData);
     } catch (error) {
       console.error("Error al obtener los niveles:", error);
     }

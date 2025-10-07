@@ -7,16 +7,23 @@ interface BoxAreaProps {
     name: string;
     startDate: string;
     endDate: string;
+    onConfigureClick: () => void;
 
 }
 
-export const BoxArea: React.FC<BoxAreaProps> = ({ id, name, startDate, endDate }) => {
+export const BoxArea: React.FC<BoxAreaProps> = ({
+  id,
+  name,
+  startDate,
+  endDate,
+  onConfigureClick,
+}) => {
+  const navigate = useNavigate();
 
-    //Las siguientes 4 lineas son para logica de Grisell
-    const navigate = useNavigate();
-    const handleButtonClick = () => {
-        //Aca iria la logica para Grissell
-    };
+  const handleButtonClick = () => {
+    // Lógica de Grissell (si más adelante redirigís o abrís modal)
+    onConfigureClick();
+  };
 
 
     return (
@@ -38,7 +45,7 @@ export const BoxArea: React.FC<BoxAreaProps> = ({ id, name, startDate, endDate }
             <div>
                 <Button size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleButtonClick}
+                    onClick={onConfigureClick}
                 >
                     Configurar Area
                 </Button>
