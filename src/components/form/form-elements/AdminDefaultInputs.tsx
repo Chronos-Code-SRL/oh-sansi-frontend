@@ -7,6 +7,7 @@ import AdminSelectInputs from "./AdminSelectInputs.tsx";
 import { createOlympiad } from "../../../api/postCreateOlympiad";
 import { useState } from "react";
 import { validateOlympiad, validateField as validateOneField } from "../../../validation/olympiadValidation";
+import { Modal } from "../../ui/modal/index";
 
 
 export default function AdminDefaultInputs() {
@@ -19,6 +20,7 @@ export default function AdminDefaultInputs() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const buildValues = () => ({
         name,
@@ -85,23 +87,25 @@ export default function AdminDefaultInputs() {
 
             const resp = await createOlympiad.postOlympiad(payload);
             if (resp.status === 201) {
-
-                alert("Olimpiada registrada");
+                // Limpiar formulario y mostrar modal de éxito
                 setName("");
                 setEdition("");
                 setStart_date("");
                 setEnd_date("");
                 setNumber_of_phases("");
                 setErrors({});
+                setIsModalOpen(true);
             }
         } catch (err: any) {
-            alert(err?.message || "Error al crear la olimpiada");
+            // Podríamos en el futuro usar un modal de error o toast centralizado
+            window.alert(err?.message || "Error al crear la olimpiada");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
+        <>
         <form onSubmit={handleSubmit} noValidate>
             <ComponentCard title="Completa la informacion básica para comenzar">
                 <div className="space-y-5 max-w-2xl mx-auto"> {/* space-y-5 para 20px de separación */}
@@ -160,7 +164,7 @@ export default function AdminDefaultInputs() {
                             // pattern no se valida automáticamente porque usamos noValidate en el form, pero sirve para mostrar hints en algunos navegadores
                             // @ts-ignore: permitir atributo pattern
                             pattern="^\\d+-\\d{4}$"
-                            // @ts-ignore: atributo title para fallback nativo
+                            //fallback nativo
                             title="Formato requerido: n-YYYY (ej: 1-2025)"
                         />
                     </div>
@@ -249,5 +253,31 @@ export default function AdminDefaultInputs() {
                 </div>
             </ComponentCard>
         </form>
+
+        <Modal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            showCloseButton={true}
+            isFullscreen={false}
+            className="max-w-md mx-auto shadow-lg"
+        >
+            <div className="p-6 text-center">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                    ¡Olimpiada registrada!
+                </h2>
+                <Label>La olimpiada se creó correctamente.</Label>
+                <div className="mt-5">
+                    <Button
+                        size="md"
+                        variant="primary"
+                        className="w-full"
+                        onClick={() => setIsModalOpen(false)}
+                    >
+                        Aceptar
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+        </>
     );
 }
