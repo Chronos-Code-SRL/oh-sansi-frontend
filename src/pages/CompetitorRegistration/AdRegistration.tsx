@@ -39,12 +39,18 @@ export default function AdRegistration() {
   },[])
   
   const handleFilesAdded = async (acceptedFiles: File[]) => {
-
     if (!selectedOlympiad) return alert("Selecciona una olimpiada primero");
+
+    const formatFileSize = (bytes: number) => {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+      if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(2) + " MB";
+      return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
+    };
 
     const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
       name: file.name,
-      size: (file.size / 1024).toFixed(2) + " KB",
+      size: formatFileSize(file.size),
       file,
     }));
 
@@ -65,7 +71,6 @@ export default function AdRegistration() {
 
       setFiles(prev => [
       ...filesWithResults,
-      // ...prev
       ...prev.filter(f => !acceptedFiles.some(a => a.name === f.name))
     ]);
     } catch (error) {
@@ -148,7 +153,7 @@ export default function AdRegistration() {
 
                                   {f.result?.header_errors && f.result.header_errors > 0 ? (
                                     <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
-                                      Error de formato en el encabezado. Revisa las columnas del CSV o verifica si el archivo es correcto.
+                                      Archivo inválido: revisa que el CSV tenga cabecera correcta.
                                     </Badge>
                                   ): f.result?.total_records === 0 ? (
                                     <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
@@ -158,15 +163,15 @@ export default function AdRegistration() {
                                     <div className="mt-1 space-x-2">
                                       <Badge color="info" startIcon={<InfoIcon className="size-5" />} >{f.result.total_records} registros totales</Badge>
                                       <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>{f.result.successful} exitosos</Badge>
-                                      <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>{f.result.competitor_errors + f.result.header_errors} errores</Badge>
+                                      <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>{f.result.competitor_errors} errores</Badge>
                                     </div>
                                   ):(
-                                    <p className="text-gray-400 text-sm mt-1">Pendiente de procesamiento...</p>
+                                    <p className="text-gray-400 text-sm mt-1">Cargando registros...</p>
                                   )}
                                 </div>
                               </div>
 
-                                  {f.result?.error_file && (
+                                  {f.result?.error_file && f.result.successful < f.result.total_records &&(
                                     <div className="sm:ml-auto">
                                       <Button
                                         size="sm"
