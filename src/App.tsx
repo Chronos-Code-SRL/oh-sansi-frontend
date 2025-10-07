@@ -32,7 +32,7 @@ export default function App() {
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/" element={<FormOlympiad />} />
 
             {/* Aministration*/}
             <Route index path="/registration" element={<AdRegistration />} />
