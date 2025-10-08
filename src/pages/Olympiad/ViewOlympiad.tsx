@@ -52,9 +52,9 @@ export const ViewOlympiad = () => {
                 description="Página para gestionar las olimpiadas."
             />
 
-            <TitleBreadCrumb pageTitle="Gestionar Olimpiadas" />
+            <TitleBreadCrumb pageTitle="Configurar Áreas" />
             <p className="text-sm text-gray-500 mb-4">
-                Selecciona una olimpiada para configurar sus áreas
+                Selecciona una olimpiada para configurar sus áreas respectivas
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

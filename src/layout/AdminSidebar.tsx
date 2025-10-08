@@ -28,15 +28,9 @@ const navItems: NavItem[] = [
   },
   {
     icon: <GroupIcon />,
-    name: "Competidores",
+    name: "Registrar Competidores",
     path: "/registration",
   },
-
-  // {
-  //   name: "Reportes",
-  //   icon: <ListIcon />,
-  //   path: "/",
-  // },
 ];
 const othersItems: NavItem[] = [];
 
@@ -262,12 +256,13 @@ const AppSidebar: React.FC = () => {
               />
             </>
           ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <div></div>
+            // <img
+            //   src="/images/logo/logo-icon.svg"
+            //   alt="Logo"
+            //   width={32}
+            //   height={32}
+            // />
           )}
         </Link>
       </div>
