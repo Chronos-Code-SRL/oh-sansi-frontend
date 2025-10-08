@@ -47,7 +47,7 @@ export const BoxArea: React.FC<BoxAreaProps> = ({
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={onConfigureClick}
                 >
-                    Configurar Area
+                    Configurar Área
                 </Button>
             </div>
 

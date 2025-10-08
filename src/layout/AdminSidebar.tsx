@@ -18,13 +18,13 @@ const navItems: NavItem[] = [
     name: "Olimpiadas",
     subItems: [
       { name: "Crear Olimpiada", path: "/Olimpiada", pro: false },
-      { name: "Configurar Olimpiada", path: "/VerOlimpiadas", pro: false },
+      { name: "Configurar Áreas", path: "/VerOlimpiadas", pro: false },
     ],
   },
   {
     icon: <UserIcon />,
     name: "Registrar Usuario",
-    path: "user-register"
+    path: "/user-register"
   },
   {
     icon: <GroupIcon />,
@@ -38,6 +38,7 @@ const navItems: NavItem[] = [
   //   path: "/",
   // },
 ];
+const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -57,6 +58,30 @@ const AppSidebar: React.FC = () => {
     (path: string) => location.pathname === path,
     [location.pathname]
   );
+
+   useEffect(() => {
+    let submenuMatched = false;
+    ["main", "others"].forEach((menuType) => {
+      const items = menuType === "main" ? navItems : othersItems;
+      items.forEach((nav, index) => {
+        if (nav.subItems) {
+          nav.subItems.forEach((subItem) => {
+            if (isActive(subItem.path)) {
+              setOpenSubmenu({
+                type: menuType as "main" | "others",
+                index,
+              });
+              submenuMatched = true;
+            }
+          });
+        }
+      });
+    });
+
+    if (!submenuMatched) {
+      setOpenSubmenu(null);
+    }
+  }, [location, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
