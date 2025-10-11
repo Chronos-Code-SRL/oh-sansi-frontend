@@ -53,13 +53,13 @@ export default function RegisterUser() {
     const newErrors: Record<string, string> = {};
 
     if (!first_name.trim()) {
-      newErrors.firstName = "El nombre es obligatorio.";
+      newErrors.first_name = "El nombre es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
       newErrors.first_name = "El nombre debe tener solo letras (2-50 caracteres).";
     }
 
     if (!last_name.trim()) {
-      newErrors.lastName = "El apellido es obligatorio.";
+      newErrors.last_name = "El apellido es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
       newErrors.last_name = "El apellido debe tener solo letras (2-50 caracteres).";
     }
@@ -169,7 +169,7 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu nombre(s)"
                     value={first_name}
                     onChange={(e) => setfirst_name(e.target.value)}
-                    error={!!errors.firstName}
+                    error={!!errors.first_name}
                     hint={errors.first_name}
                   />
                 </div>
