@@ -93,12 +93,6 @@ export default function RegisterUser() {
       newErrors.roles_id = "Debe seleccionar un rol.";
     }
 
-    if (areas_id.length === 0) {
-      newErrors.areas = "Debe seleccionar al menos un área.";
-    } else if (roles_id === "2" && areas_id.length > 1) {
-      newErrors.areas = "El responsable académico solo puede registrarse a un área.";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
