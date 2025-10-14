@@ -3,7 +3,6 @@
 
 export interface OlympiadFormValues {
   name: string;
-  edition: string;
   start_date: string; // YYYY-MM-DD
   end_date: string;   // YYYY-MM-DD
   number_of_phases: string | number; // se convierte a número al validar
@@ -17,8 +16,6 @@ export interface ValidationResult {
 
 const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 ]+$/;
 
-const editionRegex = /^\d+-\d{4}$/;
-
 const todayISO = () => new Date().toISOString().split('T')[0];
 
 export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
@@ -30,10 +27,6 @@ export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
   if (!nameTrim) errors.name = 'El nombre de la olimpiada es obligatorio';
   else if (!nameRegex.test(nameTrim)) errors.name = 'Solo se permiten letras, números y espacios';
 
-  // Edición
-  const editionTrim = values.edition.trim();
-  if (!editionTrim) errors.edition = 'La edición es obligatoria';
-  else if (!editionRegex.test(editionTrim)) errors.edition = 'Formato inválido. (Ejemplo: 1-2025)';
 
   // Número de fases
   const n = Number(values.number_of_phases);
