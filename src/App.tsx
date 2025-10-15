@@ -38,17 +38,12 @@ export default function App() {
             {/* Aministration*/}
             <Route index path="/registration" element={<AdRegistration />} />
 
-            {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-
             {/* Forms */}
 
             <Route path="/Olimpiada" element={<FormOlympiad />} />
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
             <Route path="/ConfiguracionArea/:id" element={<ConfigurationArea />} />
-            
+
             {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
@@ -57,18 +52,6 @@ export default function App() {
 
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
-
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
           </Route>
 
           {/* Auth Layout */}
