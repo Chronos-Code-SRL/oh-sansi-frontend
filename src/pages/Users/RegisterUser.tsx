@@ -24,6 +24,9 @@ export default function RegisterUser() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [registeredRole, setRegisteredRole] = useState<string>("");
+  const [multiSelectKey, setMultiSelectKey] = useState(0);
+
 
 
   useEffect(() => {
@@ -53,13 +56,13 @@ export default function RegisterUser() {
     const newErrors: Record<string, string> = {};
 
     if (!first_name.trim()) {
-      newErrors.firstName = "El nombre es obligatorio.";
+      newErrors.first_name = "El nombre es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(first_name)) {
       newErrors.first_name = "El nombre debe tener solo letras (2-50 caracteres).";
     }
 
     if (!last_name.trim()) {
-      newErrors.lastName = "El apellido es obligatorio.";
+      newErrors.last_name = "El apellido es obligatorio.";
     } else if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{2,50}$/.test(last_name)) {
       newErrors.last_name = "El apellido debe tener solo letras (2-50 caracteres).";
     }
@@ -71,9 +74,9 @@ export default function RegisterUser() {
     }
 
     if (!phone_number.trim()) {
-      newErrors.phone_number = "El teléfono debe contener solo números (7-15 dígitos).";
+      newErrors.phone_number = "El teléfono es obligatorio.";
     } else if (!/^[0-9]{7,15}$/.test(phone_number)) {
-      newErrors.phone_number = "El teléfono deben ser dígitos.";
+      newErrors.phone_number = "El teléfono debe contener solo números (7-15 dígitos).";
     }
 
     if (!email.trim()) {
@@ -90,16 +93,22 @@ export default function RegisterUser() {
       newErrors.roles_id = "Debe seleccionar un rol.";
     }
 
-    if (areas_id.length === 0) {
-      newErrors.areas = "Debe seleccionar al menos un área.";
-    } else if (roles_id === "responsable" && areas_id.length > 1) {
-      newErrors.areas = "El responsable académico solo puede tener un área.";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const resetForm = () => {
+    setfirst_name("");
+    setlast_name("");
+    setCi("");
+    setphone_number("");
+    setEmail("");
+    setgenre("");
+    setroles_id("");
+    setAreas([]);
+    setErrors({});
+    setMultiSelectKey((prev) => prev + 1);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +132,9 @@ export default function RegisterUser() {
       const resultado = await registerApi.postRegister(datos);
 
       if (resultado.status === 201) {
+        setRegisteredRole(roles_id);
         setIsModalOpen(true);
+        resetForm();
       }
 
     } catch (error: any) {
@@ -147,6 +158,14 @@ export default function RegisterUser() {
     }
   };
 
+  const getSuccessMessage = () => {
+    if (registeredRole === "2") return "El responsable académico ha sido registrado exitosamente.";
+    if (registeredRole === "3") return "El evaluador ha sido registrado exitosamente.";
+    return "El usuario ha sido registrado correctamente.";
+  };
+
+
+
   return (
     <>
       <PageMeta
@@ -157,7 +176,9 @@ export default function RegisterUser() {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          
           <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
+
             <ComponentCard title="Ingrese información">
               <div className="grid grid-cols-1 gap-6">
 
@@ -169,7 +190,7 @@ export default function RegisterUser() {
                     placeholder="Ingresa tu nombre(s)"
                     value={first_name}
                     onChange={(e) => setfirst_name(e.target.value)}
-                    error={!!errors.firstName}
+                    error={!!errors.first_name}
                     hint={errors.first_name}
                   />
                 </div>
@@ -297,9 +318,10 @@ export default function RegisterUser() {
 
                 <div>
                   <MultiSelect
+                    key={multiSelectKey}
                     label="Seleccionar Área(s)"
                     options={areaOptions}
-                    defaultSelected={[]}
+                    defaultSelected={areas_id}
                     onChange={setAreas}
                   />
                   {errors.areas && (
@@ -329,11 +351,11 @@ export default function RegisterUser() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
             ¡Registro exitoso!
           </h2>
-          <Label>Usuario registrado correctamente.</Label>
+          <Label>{getSuccessMessage()}</Label>
           <Button
             size="md"
             variant="primary"
-            className="w-full"
+            className="w-full mt-4"
             onClick={() => setIsModalOpen(false)}
           >
             Aceptar
