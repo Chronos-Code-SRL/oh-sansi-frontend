@@ -4,10 +4,11 @@ import Input from "../input/InputField";
 import DatePicker from "../date-picker.tsx";
 import Button from "../../ui/button/Button.tsx";
 import AdminSelectInputs from "./AdminSelectInputs.tsx";
-import { createOlympiad } from "../../../api/postCreateOlympiad";
 import { useState } from "react";
 import { validateOlympiad, validateField as validateOneField } from "../../../validation/olympiadValidation";
 import { Modal } from "../../ui/modal/index";
+import { postOlympiad } from "../../../services/olympiadService.ts";
+import { OlympiadPayload } from "../../../types/Olympiad.ts";
 
 
 export default function AdminDefaultInputs() {
@@ -74,21 +75,24 @@ export default function AdminDefaultInputs() {
         }
         setIsSubmitting(true);
         try {
-            const payload = {
+            const payload: OlympiadPayload = {
                 name: name.trim(),
-                start_date,
-                end_date,
-                number_of_phases: Number(number_of_phases),
-                areas: areas, // ahora es array de nombres (string) según valueType='name'
+                start_date: start_date.trim(), // Cambiar a `start_date` para coincidir con el backend
+                end_date: end_date.trim(), // Cambiar a `end_date` para coincidir con el backend
+                number_of_phases: parseInt(number_of_phases, 10), // Aseguramos que sea un número entero
+                areas: areas.length > 0 ? areas : [], // Validamos que sea un array de strings
             };
 
-            const resp = await createOlympiad.postOlympiad(payload);
-            if (resp.status === 201) {
+            //const resp = await createOlympiad.postOlympiad(payload);
+            const createdOlympiad = await postOlympiad(payload); // Usar la nueva función
+            console.log('[handleSubmit] Olimpiada creada:', createdOlympiad);
+            if (createdOlympiad) {
                 // Limpiar formulario y mostrar modal de éxito
                 setName("");
                 setStart_date("");
                 setEnd_date("");
                 setNumber_of_phases("");
+                setAreas([]);
                 setErrors({});
                 setIsModalOpen(true);
             }
