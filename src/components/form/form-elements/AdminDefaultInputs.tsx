@@ -146,41 +146,41 @@ export default function AdminDefaultInputs() {
                             />
                         </div>
 
-                        {/* Fechas */}
-                        <div className="space-y-1.5">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <DatePicker
-                                        id="date-start"
-                                        label="Fecha de inicio"
-                                        placeholder="yyyy-mm-dd"
-                                        onChange={(selectedDates) => {
-                                            if (selectedDates.length > 0) {
-                                                const value = selectedDates[0].toISOString().split("T")[0];
-                                                setStart_date(value);
-                                                handleBlurField("start_date", value);
-                                            }
-                                        }}
-                                    />
-                                    {errors.start_date && <p className="mt-1.5 text-xs text-error-500">{errors.start_date}</p>}
-                                </div>
-                                <div>
-                                    <DatePicker
-                                        id="end_date"
-                                        label="Fecha de finalización"
-                                        placeholder="yyyy-mm-dd"
-                                        onChange={(selectedDates) => {
-                                            if (selectedDates.length > 0) {
-                                                const value = selectedDates[0].toISOString().split("T")[0];
-                                                setEnd_date(value);
-                                                handleBlurField("end_date", value);
-                                            }
-                                        }}
-                                    />
-                                    {errors.end_date && <p className="mt-1.5 text-xs text-error-500">{errors.end_date}</p>}
-                                </div>
+                    {/* Fechas */}
+                    <div className="space-y-1.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <DatePicker
+                                    id="date-start"
+                                    label="Fecha de inicio"
+                                    placeholder="AAAA-MM-DD"
+                                    onChange={(selectedDates) => {
+                                        if (selectedDates.length > 0) {
+                                            const value = selectedDates[0].toISOString().split("T")[0];
+                                            setStart_date(value);
+                                            handleBlurField("start_date", value);
+                                        }
+                                    }}
+                                />
+                                {errors.start_date && <p className="mt-1.5 text-xs text-error-500">{errors.start_date}</p>}
+                            </div>
+                            <div>
+                                <DatePicker
+                                    id="end_date"
+                                    label="Fecha de finalización"
+                                    placeholder="AAAA-MM-DD"
+                                    onChange={(selectedDates) => {
+                                        if (selectedDates.length > 0) {
+                                            const value = selectedDates[0].toISOString().split("T")[0];
+                                            setEnd_date(value);
+                                            handleBlurField("end_date", value);
+                                        }
+                                    }}
+                                />
+                                {errors.end_date && <p className="mt-1.5 text-xs text-error-500">{errors.end_date}</p>}
                             </div>
                         </div>
+                    </div>
 
                         {/* Áreas */}
                         <div className="space-y-1.5">
@@ -204,14 +204,14 @@ export default function AdminDefaultInputs() {
                             </div>
                         )}
 
-                        <div className="pt-3">
-                            <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
-                                {isSubmitting ? "Creando..." : "Crear olimpiada"}
-                            </Button>
-                        </div>
+                    <div className="pt-3">
+                        <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
+                            {isSubmitting ? "Creando..." : "Crear olimpiada"}
+                        </Button>
                     </div>
-                </ComponentCard>
-            </form>
+                </div>
+            </ComponentCard>
+        </form>
 
             <Modal
                 isOpen={isModalOpen}
