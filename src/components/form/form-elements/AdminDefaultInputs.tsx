@@ -194,7 +194,7 @@ export default function AdminDefaultInputs() {
                                 <DatePicker
                                     id="date-start"
                                     label="Fecha de inicio"
-                                    placeholder="yyyy-mm-dd"
+                                    placeholder="AAAA-MM-DD"
                                     onChange={(selectedDates) => {
                                         if (selectedDates.length > 0) {
                                             const value = selectedDates[0].toISOString().split("T")[0];
@@ -209,7 +209,7 @@ export default function AdminDefaultInputs() {
                                 <DatePicker
                                     id="end_date"
                                     label="Fecha de finalización"
-                                    placeholder="yyyy-mm-dd"
+                                    placeholder="AAAA-MM-DD"
                                     onChange={(selectedDates) => {
                                         if (selectedDates.length > 0) {
                                             const value = selectedDates[0].toISOString().split("T")[0];
@@ -246,7 +246,7 @@ export default function AdminDefaultInputs() {
                     )}
 
                     <div className="pt-3">
-                        <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
                             {isSubmitting ? "Creando..." : "Crear olimpiada"}
                         </Button>
                     </div>

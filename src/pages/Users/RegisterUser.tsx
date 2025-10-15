@@ -176,7 +176,9 @@ export default function RegisterUser() {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <div className="space-y-6">
+          
+          <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
+
             <ComponentCard title="Ingrese información">
               <div className="grid grid-cols-1 gap-6">
 
@@ -248,13 +250,19 @@ export default function RegisterUser() {
             </ComponentCard>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6" tabIndex={2}> {/*Columna derecha*/}
             <ComponentCard title="Seleccione">
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
                   <Label>Género</Label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4" 
+                  onFocus={() => {
+                    if (!genre) {
+                      setgenre("femenino");
+                    }
+                  }}
+                  >
                     <Radio
                       id="genre-f"
                       name="genre"
@@ -279,7 +287,13 @@ export default function RegisterUser() {
 
                 <div>
                   <Label>Rol</Label>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4"
+                  onFocus={() => {
+                    if (!roles_id) {
+                      setroles_id("2");
+                    }
+                  }}
+                >
                     <Radio
                       id="roles_id-resp"
                       name="roles_id"
