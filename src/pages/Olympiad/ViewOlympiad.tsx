@@ -2,17 +2,8 @@ import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { SimpleBox } from "../../components/common/SimpleBox";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import { serviceGetOlympiads } from "../../api/getOlympiad";
-
-
-interface Olympiad {
-    id: number;
-    name: string;
-    status: string;
-    start_date: string;
-    end_date: string;
-    areas: string[];
-}
+import { Olympiad } from "../../types/Olympiad";
+import { getOlympiads } from "../../services/olympiadService";
 
 export const ViewOlympiad = () => {
 
@@ -24,9 +15,10 @@ export const ViewOlympiad = () => {
     useEffect(() => {
         const fetchOlympiads = async () => {
             try {
-                const response = await serviceGetOlympiads.getOlympiads(); // Llamamos a la API
-                const data = response.data as { olympiads: Olympiad[] }; // Aseguramos el tipo de data
-                setOlympiads(data.olympiads); // Guardamos las olimpiadas en el estado
+                //const response = await serviceGetOlympiads.getOlympiads(); // Llamamos a la API
+                const response = await getOlympiads();
+                const data = response as Olympiad[]; // Aseguramos el tipo de data
+                setOlympiads(data); // Guardamos las olimpiadas en el estado
             } catch (err) {
                 setError("No hay Olimpiadas creadas. Cree una olimpiada por favor");
             } finally {

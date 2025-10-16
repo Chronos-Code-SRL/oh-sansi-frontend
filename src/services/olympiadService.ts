@@ -16,7 +16,3 @@ export const postOlympiad = async (
   const res = await ohSansiApi.post<OlympiadPayload>(OLYMPIADS_URL, olympiadData);
   return res.data;
 };
-
-
-
-
