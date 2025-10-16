@@ -6,6 +6,7 @@ import InputField from "../../components/form/input/InputField";
 import { gradesService } from "../../api/grades";
 import { levelGradesService } from "../../api/levelGradesService";
 import ButtonModal from "../../components/ui/button/ButtonModal";
+import Select from "../../components/form/Select";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -245,21 +246,18 @@ export default function ConfigureAreaModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Curso Inicial</Label>
-                <select
-                  className="w-full rounded-md border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
-                  value={startGrade}
-                  onChange={(e) => {
-                    setStartGrade(e.target.value);
+                 <Select
+                  options={grades.map((grade) => ({
+                    value: grade.name,
+                    label: grade.name,
+                  }))}
+                  value={startGrade || ""}
+                  onChange={(val) => {
+                    setStartGrade(val);
                     setErrors({ ...errors, startGrade: undefined });
                   }}
-                >
-                  <option value="">Selecciona curso inicial</option>
-                  {grades.map((grade) => (
-                    <option key={grade.id} value={grade.name}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Selecciona curso inicial"
+                />
                 {errors.startGrade && (
                   <p className="text-sm text-red-500 mt-1">{errors.startGrade}</p>
                 )}
@@ -267,18 +265,15 @@ export default function ConfigureAreaModal({
 
               <div>
                 <Label>Curso Final</Label>
-                <select
-                  className="w-full rounded-md border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
-                  value={endGrade}
-                  onChange={(e) => setEndGrade(e.target.value)}
-                >
-                  <option value="">Selecciona curso final</option>
-                  {filteredEndGrades().map((grade) => (
-                    <option key={grade.id} value={grade.name}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={filteredEndGrades().map((grade) => ({
+                    value: grade.name,
+                    label: grade.name,
+                  }))}
+                  value={endGrade || ""}
+                  onChange={(val) => setEndGrade(val)}
+                  placeholder="Selecciona curso final"
+                />
               </div>
             </div>
 

@@ -4,13 +4,12 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
-import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import { areaService } from "../../api/getAreas";
+
 import { registerApi } from "../../api/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
-
+import AreaSelectInputs from "../../components/form/form-elements/AreaSelectInputs ";
 
 export default function RegisterUser() {
   const [first_name, setfirst_name] = useState("");
@@ -22,33 +21,9 @@ export default function RegisterUser() {
   const [roles_id, setroles_id] = useState("");
   const [areas_id, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [areaOptions, setAreaOptions] = useState<{ value: string; text: string }[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [registeredRole, setRegisteredRole] = useState<string>("");
   const [multiSelectKey, setMultiSelectKey] = useState(0);
-
-
-
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const res = await areaService.getAreas();
-        const data = res.data;
-
-        if (data.areas) {
-          const formatted = data.areas.map((area: any) => ({
-            value: area.id.toString(),
-            text: area.name,
-          }));
-          setAreaOptions(formatted);
-        }
-      } catch (error) {
-        console.error("Error al obtener las áreas:", error);
-      }
-    };
-
-    fetchAreas();
-  }, []);
 
 
   {/*Validaciones*/ }
@@ -92,6 +67,8 @@ export default function RegisterUser() {
     if (!roles_id) {
       newErrors.roles_id = "Debe seleccionar un rol.";
     }
+    
+    if (areas_id.length === 0) newErrors.areas = "Seleccione al menos un área.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -176,7 +153,7 @@ export default function RegisterUser() {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          
+
           <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
 
             <ComponentCard title="Ingrese información">
@@ -256,12 +233,12 @@ export default function RegisterUser() {
 
                 <div>
                   <Label>Género</Label>
-                  <div className="flex gap-4" 
-                  onFocus={() => {
-                    if (!genre) {
-                      setgenre("femenino");
-                    }
-                  }}
+                  <div className="flex gap-4"
+                    onFocus={() => {
+                      if (!genre) {
+                        setgenre("femenino");
+                      }
+                    }}
                   >
                     <Radio
                       id="genre-f"
@@ -288,12 +265,12 @@ export default function RegisterUser() {
                 <div>
                   <Label>Rol</Label>
                   <div className="flex gap-4"
-                  onFocus={() => {
-                    if (!roles_id) {
-                      setroles_id("2");
-                    }
-                  }}
-                >
+                    onFocus={() => {
+                      if (!roles_id) {
+                        setroles_id("2");
+                      }
+                    }}
+                  >
                     <Radio
                       id="roles_id-resp"
                       name="roles_id"
@@ -317,16 +294,18 @@ export default function RegisterUser() {
                 </div>
 
                 <div>
-                  <MultiSelect
-                    key={multiSelectKey}
-                    label="Seleccionar Área(s)"
-                    options={areaOptions}
-                    defaultSelected={areas_id}
-                    onChange={setAreas}
+                  <AreaSelectInputs
+                    onChange={(values) => {
+                      setAreas(values);
+                      setErrors(prev => {
+                        const draft = { ...prev };
+                        if (values.length > 0) delete draft.areas;
+                        return draft;
+                      });
+                    }}
+                    valueType="id"
+                    error={errors.areas}
                   />
-                  {errors.areas && (
-                    <p className="text-sm text-red-500 mt-1">{errors.areas}</p>
-                  )}
                 </div>
 
                 <div>

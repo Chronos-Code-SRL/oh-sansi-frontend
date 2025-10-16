@@ -8,14 +8,14 @@ interface Area {
     name: string;
 }
 
-interface AdminSelectInputsProps {
+interface AreaSelectInputsProps {
     onChange: (values: string[]) => void; // devolverá ids o nombres según valueType
     error?: string; // mensaje de error a mostrar (validación externa)
     initialSelected?: string[]; // para edición futura
     valueType?: 'id' | 'name'; // por defecto 'id'
 }
 
-export default function AdminSelectInputs({ onChange, error, initialSelected = [], valueType = 'id' }: AdminSelectInputsProps) {
+export default function AreaSelectInputs({ onChange, error, initialSelected = [], valueType = 'id' }: AreaSelectInputsProps) {
     const [selectedValues, setSelectedValues] = useState<string[]>(initialSelected);
     const [areas, setAreas] = useState<Area[]>([]);
     const [loading, setLoading] = useState(true);
