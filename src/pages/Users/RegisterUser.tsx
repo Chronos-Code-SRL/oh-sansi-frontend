@@ -7,10 +7,10 @@ import Radio from "../../components/form/input/Radio";
 import MultiSelect from "../../components/form/MultiSelectRegister";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import { areaService } from "../../api/getAreas";
+//import { areaService } from "../../api/getAreas";
 import { registerApi } from "../../api/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
-
+import { getAreas } from "../../services/areaServices"; // Importar la función desde areaServices
 
 export default function RegisterUser() {
   const [first_name, setfirst_name] = useState("");
@@ -29,16 +29,12 @@ export default function RegisterUser() {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const res = await areaService.getAreas();
-        const data = res.data;
-
-        if (data.areas) {
-          const formatted = data.areas.map((area: any) => ({
-            value: area.id.toString(),
-            text: area.name,
-          }));
-          setAreaOptions(formatted);
-        }
+        const areas = await getAreas(); // `getAreas` ya retorna el array de áreas
+        const formatted = areas.map((area) => ({
+          value: area.id.toString(),
+          text: area.name,
+        }));
+        setAreaOptions(formatted); // Actualiza el estado con las áreas formateadas
       } catch (error) {
         console.error("Error al obtener las áreas:", error);
       }
