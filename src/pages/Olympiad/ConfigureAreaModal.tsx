@@ -5,8 +5,9 @@ import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import { gradesService } from "../../api/grades";
 import { levelGradesService } from "../../api/levelGradesService";
-import ButtonModal from "../../components/ui/button/ButtonModal";
+// import ButtonModal from "../../components/ui/button/ButtonModal";
 import Select from "../../components/form/Select";
+import Button from "../../components/ui/button/Button";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -278,9 +279,9 @@ export default function ConfigureAreaModal({
             </div>
 
             <div className="flex justify-center">
-              <ButtonModal type="submit" variant="outline" className="px-6">
+              <Button type="submit" variant="outline" className="px-6">
                 + Agregar Nivel
-              </ButtonModal>
+              </Button>
             </div>
           </form>
         </ComponentCard>
@@ -305,13 +306,14 @@ export default function ConfigureAreaModal({
                       <p className="text-sm text-gray-500">Sin grados asignados</p>
                     )}
                   </div>
-                  <ButtonModal
-                    variant="outline"
+                  <Button
+                    variant="danger"
                     size="sm"
                     onClick={() => handleRemoveLevel(level.id)}
+                    type="button"
                   >
                     Eliminar
-                  </ButtonModal>
+                  </Button>
                 </div>
               ))
             ) : (
@@ -324,12 +326,12 @@ export default function ConfigureAreaModal({
 
         {/* Botones inferiores */}
         <div className="flex justify-end gap-4 pt-4">
-          <ButtonModal variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} type="button">
             Cancelar
-          </ButtonModal>
-          <ButtonModal variant="primary" onClick={handleSave}>
+          </Button>
+          <Button variant="primary" onClick={handleSave} type="button">
             Guardar Configuración
-          </ButtonModal>
+          </Button>
         </div>
       </div>
     </Modal>

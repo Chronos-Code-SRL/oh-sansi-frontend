@@ -193,7 +193,7 @@ export default function AdminDefaultInputs() {
                                         return draft;
                                     });
                                 }}
-                                valueType="id"
+                                valueType="name"
                                 error={errors.areas}
                             />
                         </div>
