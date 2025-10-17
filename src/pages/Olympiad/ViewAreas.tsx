@@ -3,15 +3,12 @@ import PageMeta from "../../components/common/PageMeta"
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb"
 import { useEffect, useState } from "react";
 import { BoxArea } from "../../components/common/BoxArea";
-import { areaService } from "../../api/getAreas";
+//import { areaService } from "../../api/getAreas";
 import ConfigureAreaModal from "../../pages/Olympiad/ConfigureAreaModal";
 import { Olympiad } from "../../types/Olympiad";
 import { getOlympiadById } from "../../services/olympiadService";
-
-interface Area {
-    id: number;
-    name: string;
-}
+import { Area } from "../../types/Area";
+import { getAreaByOlympiadId } from "../../services/areaServices";
 
 const ViewAreas = () => {
 
@@ -29,8 +26,8 @@ const ViewAreas = () => {
                     const response = await getOlympiadById(Number(id)); // Llama al método de la API
                     setOlympiadData(response); // Actualiza el estado con los datos de la olimpiada
                     // Llama al método para obtener las áreas de la olimpiada
-                    const areasResponse = await areaService.getAreasByOlympiadId(Number(id));
-                    setAreas(areasResponse); // Actualiza el estado con las áreas obtenidas
+                    const areas = await getAreaByOlympiadId(Number(id));
+                    setAreas(areas); // Actualiza el estado con las áreas obtenidas
                 } catch (error) {
                     console.error("Error al obtener los datos de la olimpiada:", error);
                 }
