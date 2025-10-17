@@ -3,7 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 import { SimpleBox } from "../../components/common/SimpleBox";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { Olympiad } from "../../types/Olympiad";
-import { getOlympiads } from "../../services/olympiadService";
+import { getOlympiads } from "../../api/services/olympiadService";
 
 export const ViewOlympiad = () => {
 

@@ -1,5 +1,5 @@
-import { ohSansiApi } from "../api/ohSansiApi";
-import { Olympiad, AllOlympiads, OlympiadPayload } from "../types/Olympiad";
+import { ohSansiApi } from "../ohSansiApi";
+import { Olympiad, AllOlympiads, OlympiadPayload } from "../../types/Olympiad";
 
 const OLYMPIADS_URL = `/olympiads`;
 

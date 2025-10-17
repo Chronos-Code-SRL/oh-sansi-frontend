@@ -1,4 +1,4 @@
-import { ohSansiApi } from "./ohSansiApi";
+import { ohSansiApi } from "../ohSansiApi";
 
 export const levelGradesService = {
   getLevelsFromArea: async (olympiadId: number, areaId: number) => {

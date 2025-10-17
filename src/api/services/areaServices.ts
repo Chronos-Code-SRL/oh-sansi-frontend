@@ -1,5 +1,5 @@
-import { ohSansiApi } from "../api/ohSansiApi";
-import { Area, AreasResponse } from "../types/Area";
+import { ohSansiApi } from "../ohSansiApi";
+import { Area, AreasResponse } from "../../types/Area";
 
 const AREAS_URL = `/areas`;
 

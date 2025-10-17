@@ -6,7 +6,7 @@ import Button from "../../ui/button/Button.tsx";
 import { useState } from "react";
 import { validateOlympiad, validateField as validateOneField } from "../../../validation/olympiadValidation";
 import { Modal } from "../../ui/modal/index";
-import { postOlympiad } from "../../../services/olympiadService.ts";
+import { postOlympiad } from "../../../api/services/olympiadService.ts";
 import { OlympiadPayload } from "../../../types/Olympiad.ts";
 import AreaSelectInputs from "./AreaSelectInputs .tsx";
 

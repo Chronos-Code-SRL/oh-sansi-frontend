@@ -6,9 +6,9 @@ import { BoxArea } from "../../components/common/BoxArea";
 //import { areaService } from "../../api/getAreas";
 import ConfigureAreaModal from "../../pages/Olympiad/ConfigureAreaModal";
 import { Olympiad } from "../../types/Olympiad";
-import { getOlympiadById } from "../../services/olympiadService";
+import { getOlympiadById } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
-import { getAreaByOlympiadId } from "../../services/areaServices";
+import { getAreaByOlympiadId } from "../../api/services/areaServices";
 
 const ViewAreas = () => {
 

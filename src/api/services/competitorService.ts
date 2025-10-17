@@ -1,5 +1,5 @@
-import { ohSansiApi } from "../api/ohSansiApi";
-import { UploadCsvResponse } from "../types/CompetitorUpload";
+import { ohSansiApi } from "../ohSansiApi";
+import { UploadCsvResponse } from "../../types/CompetitorUpload";
 
 const UPLOAD_CSV_URL = "/competitors/upload-csv";
 const DOWNLOAD_ERROR_URL = "/competitors/download-error-csv";

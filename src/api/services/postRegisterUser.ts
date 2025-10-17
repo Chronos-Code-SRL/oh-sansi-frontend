@@ -1,4 +1,4 @@
-import { ohSansiApi } from "./ohSansiApi";
+import { ohSansiApi } from "../ohSansiApi";
 
 const endpoint = "/register";
 

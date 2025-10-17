@@ -8,8 +8,8 @@ import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import Badge from "../../components/ui/badge/Badge";
 import Select from "../../components/form/Select";
 import { Olympiad } from "../../types/Olympiad";
-import { getOlympiads } from "../../services/olympiadService";
-import { uploadCompetitorCsv , downloadErrorCsv } from "../../services/competitorService"
+import { getOlympiads } from "../../api/services/olympiadService";
+import { uploadCompetitorCsv , downloadErrorCsv } from "../../api/services/competitorService"
 import { FileDetail } from "../../types/CompetitorUpload";
 
 type UploadedFile = {
