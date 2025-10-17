@@ -5,7 +5,9 @@ import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import { gradesService } from "../../api/grades";
 import { levelGradesService } from "../../api/levelGradesService";
-import ButtonModal from "../../components/ui/button/ButtonModal";
+// import ButtonModal from "../../components/ui/button/ButtonModal";
+import Select from "../../components/form/Select";
+import Button from "../../components/ui/button/Button";
 
 interface ConfigureAreaModalProps {
   isOpen: boolean;
@@ -245,21 +247,18 @@ export default function ConfigureAreaModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Curso Inicial</Label>
-                <select
-                  className="w-full rounded-md border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
-                  value={startGrade}
-                  onChange={(e) => {
-                    setStartGrade(e.target.value);
+                 <Select
+                  options={grades.map((grade) => ({
+                    value: grade.name,
+                    label: grade.name,
+                  }))}
+                  value={startGrade || ""}
+                  onChange={(val) => {
+                    setStartGrade(val);
                     setErrors({ ...errors, startGrade: undefined });
                   }}
-                >
-                  <option value="">Selecciona curso inicial</option>
-                  {grades.map((grade) => (
-                    <option key={grade.id} value={grade.name}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Selecciona curso inicial"
+                />
                 {errors.startGrade && (
                   <p className="text-sm text-red-500 mt-1">{errors.startGrade}</p>
                 )}
@@ -267,25 +266,22 @@ export default function ConfigureAreaModal({
 
               <div>
                 <Label>Curso Final</Label>
-                <select
-                  className="w-full rounded-md border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
-                  value={endGrade}
-                  onChange={(e) => setEndGrade(e.target.value)}
-                >
-                  <option value="">Selecciona curso final</option>
-                  {filteredEndGrades().map((grade) => (
-                    <option key={grade.id} value={grade.name}>
-                      {grade.name}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={filteredEndGrades().map((grade) => ({
+                    value: grade.name,
+                    label: grade.name,
+                  }))}
+                  value={endGrade || ""}
+                  onChange={(val) => setEndGrade(val)}
+                  placeholder="Selecciona curso final"
+                />
               </div>
             </div>
 
             <div className="flex justify-center">
-              <ButtonModal type="submit" variant="outline" className="px-6">
+              <Button type="submit" variant="outline" className="px-6">
                 + Agregar Nivel
-              </ButtonModal>
+              </Button>
             </div>
           </form>
         </ComponentCard>
@@ -310,13 +306,14 @@ export default function ConfigureAreaModal({
                       <p className="text-sm text-gray-500">Sin grados asignados</p>
                     )}
                   </div>
-                  <ButtonModal
-                    variant="outline"
+                  <Button
+                    variant="danger"
                     size="sm"
                     onClick={() => handleRemoveLevel(level.id)}
+                    type="button"
                   >
                     Eliminar
-                  </ButtonModal>
+                  </Button>
                 </div>
               ))
             ) : (
@@ -329,12 +326,12 @@ export default function ConfigureAreaModal({
 
         {/* Botones inferiores */}
         <div className="flex justify-end gap-4 pt-4">
-          <ButtonModal variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} type="button">
             Cancelar
-          </ButtonModal>
-          <ButtonModal variant="primary" onClick={handleSave}>
+          </Button>
+          <Button variant="primary" onClick={handleSave} type="button">
             Guardar Configuración
-          </ButtonModal>
+          </Button>
         </div>
       </div>
     </Modal>

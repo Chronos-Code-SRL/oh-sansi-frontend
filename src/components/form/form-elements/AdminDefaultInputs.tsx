@@ -3,12 +3,12 @@ import Label from "../Label";
 import Input from "../input/InputField";
 import DatePicker from "../date-picker.tsx";
 import Button from "../../ui/button/Button.tsx";
-import AdminSelectInputs from "./AdminSelectInputs.tsx";
 import { useState } from "react";
 import { validateOlympiad, validateField as validateOneField } from "../../../validation/olympiadValidation";
 import { Modal } from "../../ui/modal/index";
 import { postOlympiad } from "../../../services/olympiadService.ts";
 import { OlympiadPayload } from "../../../types/Olympiad.ts";
+import AreaSelectInputs from "./AreaSelectInputs .tsx";
 
 
 export default function AdminDefaultInputs() {
@@ -184,7 +184,7 @@ export default function AdminDefaultInputs() {
 
                         {/* Áreas */}
                         <div className="space-y-1.5">
-                            <AdminSelectInputs
+                            <AreaSelectInputs
                                 onChange={(values) => {
                                     setAreas(values);
                                     setErrors(prev => {

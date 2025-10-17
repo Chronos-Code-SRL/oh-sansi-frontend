@@ -1,16 +1,17 @@
 export interface Olympiad {
     id: number;
     name: string;
-    startDate: string;
-    endDate: string;
-    numberOfPhases: number;
-    createdAt: string;
-    updatedAt: string;
+    start_date: string;
+    end_date: string;
+    //numberOfPhases: number;
+    //createdAt: string;
+    //updatedAt: string;
+    status: string;
+    areas: string[];
 }
 
 export interface AllOlympiads {
     olympiads: Olympiad[];
-    status?: number;
 };
 
 export interface OlympiadPayload {

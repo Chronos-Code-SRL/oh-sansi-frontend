@@ -115,7 +115,7 @@ export default function AdRegistration() {
               <Select
                 options={olympiads.map((ol) => ({
                   value: ol.id.toString(),
-                  label: `${ol.name} - ${ol.edition}`,
+                  label: `${ol.name}`,
                 }))}
                  value={selectedOlympiad?.id.toString() || ""} 
                 onChange={(val) => {

@@ -17,6 +17,7 @@ export const postOlympiad = async (
   return res.data;
 };
 
-
-
-
+export const getOlympiadById = async (id: number): Promise<Olympiad> => {
+  const res = await ohSansiApi.get<{ olympiad: Olympiad }>(`${OLYMPIADS_URL}/${id}`);
+  return res.data.olympiad;
+}
