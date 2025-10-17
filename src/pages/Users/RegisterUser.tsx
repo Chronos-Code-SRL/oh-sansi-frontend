@@ -28,22 +28,22 @@ export default function RegisterUser() {
 
 
 
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const areas = await getAreas(); // `getAreas` ya retorna el array de áreas
-        const formatted = areas.map((area) => ({
-          value: area.id.toString(),
-          text: area.name,
-        }));
-        setAreaOptions(formatted); // Actualiza el estado con las áreas formateadas
-      } catch (error) {
-        console.error("Error al obtener las áreas:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchAreas = async () => {
+  //     try {
+  //       const areas = await getAreas(); // `getAreas` ya retorna el array de áreas
+  //       const formatted = areas.map((area) => ({
+  //         value: area.id.toString(),
+  //         text: area.name,
+  //       }));
+  //       setAreaOptions(formatted); // Actualiza el estado con las áreas formateadas
+  //     } catch (error) {
+  //       console.error("Error al obtener las áreas:", error);
+  //     }
+  //   };
 
-    fetchAreas();
-  }, []);
+  //   fetchAreas();
+  // }, []);
 
 
   {/*Validaciones*/ }
