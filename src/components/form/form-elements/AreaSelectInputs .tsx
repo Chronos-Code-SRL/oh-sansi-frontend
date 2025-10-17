@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import MultiSelect from "../MultiSelect";
-import { areaService } from "../../../api/getAreas";
+import { Area } from "../../../types/Area";
+import { getAreas } from "../../../services/areaServices"; // Importar la función desde areaServices
 
-// Tipado de un área según lo esperado del backend
-interface Area {
-    id: number | string;
-    name: string;
-}
 
 interface AreaSelectInputsProps {
     onChange: (values: string[]) => void; // devolverá ids o nombres según valueType
@@ -23,29 +19,16 @@ export default function AreaSelectInputs({ onChange, error, initialSelected = []
     useEffect(() => {
         const fetchAreas = async () => {
             try {
-                const response = await areaService.getAreas();
-                // response es un AxiosResponse; normalizamos varias posibles formas
-                // Esperadas: data.areas (array) o data.data (array) o data (array)
-                const raw = ((): unknown => {
-                    const d: any = response?.data;
-                    if (Array.isArray(d)) return d; // si el backend devuelve directamente un array
-                    if (Array.isArray(d?.areas)) return d.areas;
-                    if (Array.isArray(d?.data)) return d.data;
-                    return [];
-                })();
-
-                const parsed: Area[] = (raw as any[]).map((item, idx) => ({
-                    id: item.id ?? idx,
-                    name: item.name ?? item.nombre ?? `Área ${idx + 1}`,
-                }));
-                setAreas(parsed);
+                const response = await getAreas();
+                console.log("Áreas obtenidas:", response);
+                setAreas(response);
             } catch (error) {
-                console.error("Error fetching areas:", error);
+                console.error("Error al obtener áreas:", error);
             } finally {
                 setLoading(false);
+                console.log("Estado de carga actualizado:", loading);
             }
         };
-
         fetchAreas();
     }, []);
 
@@ -58,6 +41,9 @@ export default function AreaSelectInputs({ onChange, error, initialSelected = []
 
     if (loading) {
         return <p>Cargando áreas...</p>;
+    }
+    if (multiOptions.length === 0) {
+        return <p>No hay áreas disponibles.</p>;
     }
     return (
         <div className="space-y-2">
@@ -79,12 +65,15 @@ export default function AreaSelectInputs({ onChange, error, initialSelected = []
                 }}
                 disabled={multiOptions.length === 0}
             />
-            {multiOptions.length === 0 && (
+            {error && (
+                <p className="mt-1.5 text-xs text-error-500">{error}</p>
+            )}
+            {/* {multiOptions.length === 0 && (
                 <p className="mt-1 text-xs text-gray-500">No hay áreas disponibles.</p>
             )}
             {error && (
                 <p className="mt-1.5 text-xs text-error-500">{error}</p>
-            )}
+            )} */}
         </div>
     );
 }

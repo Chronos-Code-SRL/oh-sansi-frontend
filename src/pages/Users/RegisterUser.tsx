@@ -6,10 +6,11 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-
+import AreaSelectInputs from "../../components/form/form-elements/AreaSelectInputs ";
 import { registerApi } from "../../api/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
-import AreaSelectInputs from "../../components/form/form-elements/AreaSelectInputs ";
+import { getAreas } from "../../services/areaServices"; // Importar la función desde areaServices
+
 
 export default function RegisterUser() {
   const [first_name, setfirst_name] = useState("");
@@ -24,6 +25,25 @@ export default function RegisterUser() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [registeredRole, setRegisteredRole] = useState<string>("");
   const [multiSelectKey, setMultiSelectKey] = useState(0);
+
+
+
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const areas = await getAreas(); // `getAreas` ya retorna el array de áreas
+        const formatted = areas.map((area) => ({
+          value: area.id.toString(),
+          text: area.name,
+        }));
+        setAreaOptions(formatted); // Actualiza el estado con las áreas formateadas
+      } catch (error) {
+        console.error("Error al obtener las áreas:", error);
+      }
+    };
+
+    fetchAreas();
+  }, []);
 
 
   {/*Validaciones*/ }
