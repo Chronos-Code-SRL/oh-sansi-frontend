@@ -48,31 +48,27 @@ export default function AdRegistration() {
       return (bytes / 1024 / 1024 / 1024).toFixed(2) + " GB";
     };
 
-    const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
+       // Crear estructura para los archivos que vamos a subir
+    const timestamp = Date.now();
+    const newFiles: UploadedFile[] = acceptedFiles.map((file, index) => ({
+      id: `${timestamp}-${index}`, // id único para cada intento
       name: file.name,
       size: formatFileSize(file.size),
       file,
     }));
 
-    setFiles((prev) => [...newFiles, ...prev]); 
-
     try {
       setIsUploading(true);
-      const res = await uploadCompetitorCsv(
-        acceptedFiles,
-        selectedOlympiad.id
-      );
+      const res = await uploadCompetitorCsv(acceptedFiles, selectedOlympiad.id);
 
-      // Asignamos resultados solo a los nuevos archivos que subimos
+      // Asociamos los resultados recibidos del backend
       const filesWithResults = newFiles.map((f) => {
         const match = res.data.details.find(d => d.filename === f.name);
         return match ? { ...f, result: match } : f;
       });
 
-      setFiles(prev => [
-      ...filesWithResults,
-      ...prev.filter(f => !acceptedFiles.some(a => a.name === f.name))
-    ]);
+      //  Solo aquí actualizamos el estado, agregando al historial
+      setFiles(prev => [...filesWithResults, ...prev]);
     } catch (error) {
       console.error("Error al subir archivos CSV:", error);
     } finally {
