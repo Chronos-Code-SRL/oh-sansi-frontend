@@ -22,6 +22,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       const data = await login(email, password); 
       console.log("Sesión iniciada correctamente:", data);
+     
       navigate("/"); 
     } catch {
       setError("Credenciales incorrectas o error en el servidor");
@@ -38,19 +39,19 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
               Iniciar Sesión
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            {/* <p className="text-sm text-gray-500 dark:text-gray-400">
               Introduce tu email y contraseña para iniciar sesión
-            </p>
+            </p> */}
           </div>
           <div>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
-                    Nombre de Usuario <span className="text-error-500">*</span>{" "}
+                    Email <span className="text-error-500">*</span>{" "}
                   </Label>
                   <Input 
-                    placeholder="Introduce tu nombre de usuario" 
+                    placeholder="Introduce tu email" 
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}                 
