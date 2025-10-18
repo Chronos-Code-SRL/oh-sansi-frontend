@@ -22,10 +22,10 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route
             element={
-              <AppLayout />
-              // <ProtectedRoute>
-              //   <AppLayout />
-              // </ProtectedRoute>
+              // <AppLayout />
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
             }
           >
             <Route index path="/" element={<FormOlympiad />} />

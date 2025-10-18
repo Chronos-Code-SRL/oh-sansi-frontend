@@ -1,13 +1,16 @@
 import { ohSansiApi } from "../ohSansiApi";
+import { LoginResponse } from "../../types/LoginResponse";
 
 const TOKEN_KEY = "ohsansi_token";
 
 // Login
 export const login = async (email: string, password: string) => {
-  const res = await ohSansiApi.post("/login", { email, password });
-  const token = res.data.token;
-  localStorage.setItem(TOKEN_KEY, token); // Guardar token en localStorage
-  return token;
+  const res = await ohSansiApi.post<LoginResponse>("/login", {
+    email,
+    password,
+  });
+  localStorage.setItem(TOKEN_KEY, res.data.token);
+  return res.data;
 };
 
 // Logout
