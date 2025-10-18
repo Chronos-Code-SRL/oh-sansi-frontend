@@ -10,6 +10,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 
 export default function App() {
@@ -19,7 +20,14 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          <Route
+            element={
+              <AppLayout />
+              // <ProtectedRoute>
+              //   <AppLayout />
+              // </ProtectedRoute>
+            }
+          >
             <Route index path="/" element={<FormOlympiad />} />
 
             {/* Aministration*/}
