@@ -10,7 +10,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
-
+import StudentTable from "./components/Grade/StudentTable";
 
 export default function App() {
   return (
@@ -38,6 +38,9 @@ export default function App() {
 
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
+
+            <Route path="/calificaciones" element={<StudentTable />} />
+
           </Route>
 
           {/* Auth Layout */}
