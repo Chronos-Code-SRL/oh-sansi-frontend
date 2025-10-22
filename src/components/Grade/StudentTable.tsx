@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import ComponentCard from "../common/ComponentCard";
 import { fetchStudents, Student } from "../../api/services/studentService";
+import SearchBar from "./Searcher";
 
 
-export default function TableStudent() {
-
+export default function StudentTable() {
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         let alive = true;
@@ -15,6 +16,7 @@ export default function TableStudent() {
         async function cargarEstudiantes() {
             try {
                 const data = await fetchStudents();
+                console.log("Datos recibidos:", data);
                 if (alive) setStudents(data);
             } catch {
                 if (alive) setError("No se pudo cargar la lista de estudiantes.");
@@ -27,9 +29,23 @@ export default function TableStudent() {
         return () => { alive = false; };
     }, []);
 
+     // Filtrado según el texto recibido
+    const filteredStudents = students.filter((s) => {
+        const q = searchQuery.toLowerCase();
+        return (
+        s.nombre.toLowerCase().includes(q) ||
+        s.apellido.toLowerCase().includes(q) ||
+        s.ci.toString().includes(q)
+        );
+    });
+
     return (
         <>
             <ComponentCard title="Quimica">
+                 <SearchBar 
+                    onSearch={setSearchQuery} 
+                    placeholder="Buscar por nombre, apellido o CI..."
+                 />
                 <table className="w-full">
                     <thead className="border-b border-border bg-muted/50">
                         <tr>
@@ -54,7 +70,14 @@ export default function TableStudent() {
                                 <td colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</td>
                             </tr>
                         )}
-                        {!loading && !error && students.map((s) => (
+                         {!loading && !error && filteredStudents.length === 0 && (
+                            <tr>
+                            <td colSpan={8} className="px-6 py-4 text-sm text-gray-500">
+                                No se encontraron resultados.
+                            </td>
+                            </tr>
+          )}
+                        {!loading && !error && filteredStudents.map((s) => (
                             <tr key={s.ci} className="border-b border-border last:border-0">
                                 <td className="px-6 py-4 text-sm">{s.nombre}</td>
                                 <td className="px-6 py-4 text-sm">{s.apellido}</td>
