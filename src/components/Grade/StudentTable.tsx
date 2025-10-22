@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ComponentCard from "../common/ComponentCard";
 import { fetchStudents, Student } from "../../api/services/studentService";
+import Badge from "../ui/badge/Badge";
 
 
 export default function TableStudent() {
@@ -61,7 +62,11 @@ export default function TableStudent() {
                                 <td className="px-6 py-4 text-sm">{s.ci}</td>
                                 <td className="px-6 py-4 text-sm">{s.nivel}</td>
                                 <td className="px-6 py-4 text-sm">{s.grado}</td>
-                                <td className="px-6 py-4 text-sm">{s.estado}</td>
+                                <td className="px-6 py-4 text-sm">
+                                    <Badge color={s.estado === "Evaluado" ? "success" : "error"}>
+                                        {s.estado}
+                                    </Badge>
+                                </td>
                                 <td className="px-6 py-4 text-sm">{s.nota}</td>
                                 <td className="px-6 py-4 text-sm">{s.descripcion}</td>
                             </tr>
