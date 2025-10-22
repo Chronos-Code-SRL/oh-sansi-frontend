@@ -67,7 +67,7 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
             <h3 className="text-sm font-semibold text-gray-700">Estado</h3>
           </div>
           <div className="px-3 py-2 space-y-1">
-            {["Evaluado", "No evaluado"].map((estado) => (
+            {["Evaluado", "No Evaluado"].map((estado) => (
               <div key={estado} className="flex items-center gap-2">
                 <Checkbox
                   checked={selectedFilters.estado.includes(estado)}
