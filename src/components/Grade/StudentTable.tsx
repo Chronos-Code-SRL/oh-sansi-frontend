@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ComponentCard from "../common/ComponentCard";
 import { fetchStudents, Student } from "../../api/services/studentService";
 import SearchBar from "./Searcher";
+import Filter from "./Filter";
 
 
 export default function StudentTable() {
@@ -9,6 +10,10 @@ export default function StudentTable() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedFilters, setSelectedFilters] = useState({
+        estado: [] as string[],
+        nivel: [] as string[],
+    });
 
     useEffect(() => {
         let alive = true;
@@ -30,22 +35,40 @@ export default function StudentTable() {
     }, []);
 
      // Filtrado según el texto recibido
+    const normalize = (text: string) =>
+    text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     const filteredStudents = students.filter((s) => {
-        const q = searchQuery.toLowerCase();
-        return (
-        s.nombre.toLowerCase().includes(q) ||
-        s.apellido.toLowerCase().includes(q) ||
-        s.ci.toString().includes(q)
-        );
+        const q = normalize(searchQuery);
+        const matchesSearch =
+        normalize(s.nombre).includes(q) ||
+        normalize(s.apellido).includes(q) ||
+        s.ci.toString().includes(q);
+
+        const matchesEstado =
+      selectedFilters.estado.length === 0 ||
+      selectedFilters.estado.includes(s.estado);
+
+    const matchesNivel =
+      selectedFilters.nivel.length === 0 ||
+      selectedFilters.nivel.includes(s.nivel);
+
+        return matchesSearch && matchesEstado && matchesNivel;
     });
 
     return (
         <>
-            <ComponentCard title="Quimica">
-                 <SearchBar 
-                    onSearch={setSearchQuery} 
-                    placeholder="Buscar por nombre, apellido o CI..."
+        <ComponentCard title="Química">
+            <div className="flex items-center mb-3">
+                <SearchBar
+                onSearch={setSearchQuery}
+                placeholder="Buscar por nombre, apellido o CI..."
+                />
+                <Filter 
+                selectedFilters={selectedFilters}
+                setSelectedFilters={setSelectedFilters}
                  />
+            </div>
                 <table className="w-full">
                     <thead className="border-b border-border bg-muted/50">
                         <tr>
@@ -76,7 +99,7 @@ export default function StudentTable() {
                                 No se encontraron resultados.
                             </td>
                             </tr>
-          )}
+                        )}
                         {!loading && !error && filteredStudents.map((s) => (
                             <tr key={s.ci} className="border-b border-border last:border-0">
                                 <td className="px-6 py-4 text-sm">{s.nombre}</td>

@@ -4,7 +4,7 @@ export interface Student {
     ci: string;
     nivel: 'Primaria' | 'Secundaria' | string;
     grado: string;
-    estado: 'Activo' | 'Inactivo' | string;
+    estado: 'Evaluado' | 'No Evaluado' | string;
     nota: number;
     descripcion: string;
 }
@@ -14,9 +14,9 @@ const mockStudents: Student[] = [
         nombre: "Ana",
         apellido: "López",
         ci: "4923456",
-        nivel: "Primaria",
+        nivel: "Primero",
         grado: "3°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 88,
         descripcion: "Cumple tareas y participa en clase."
     },
@@ -24,9 +24,9 @@ const mockStudents: Student[] = [
         nombre: "Carlos",
         apellido: "González",
         ci: "7312098",
-        nivel: "Secundaria",
+        nivel: "Segundo",
         grado: "1°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 73,
         descripcion: "Buen desempeño general."
     },
@@ -36,7 +36,7 @@ const mockStudents: Student[] = [
         ci: "5689012",
         nivel: "Primaria",
         grado: "5°",
-        estado: "Activo",
+        estado: "No Evaluado",
         nota: 95,
         descripcion: "Excelente rendimiento."
     },
@@ -46,7 +46,7 @@ const mockStudents: Student[] = [
         ci: "8045671",
         nivel: "Secundaria",
         grado: "3°",
-        estado: "Inactivo",
+        estado: "No Evaluado",
         nota: 61,
         descripcion: "Pendiente de regularización."
     },
@@ -56,7 +56,7 @@ const mockStudents: Student[] = [
         ci: "6123450",
         nivel: "Primaria",
         grado: "1°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 82,
         descripcion: "Avances constantes."
     },
@@ -66,7 +66,7 @@ const mockStudents: Student[] = [
         ci: "7098123",
         nivel: "Secundaria",
         grado: "2°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 77,
         descripcion: "Mejora en trabajos prácticos."
     },
@@ -76,7 +76,7 @@ const mockStudents: Student[] = [
         ci: "4901765",
         nivel: "Primaria",
         grado: "6°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 90,
         descripcion: "Destaca en matemáticas."
     },
@@ -86,7 +86,7 @@ const mockStudents: Student[] = [
         ci: "8350192",
         nivel: "Secundaria",
         grado: "1°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 68,
         descripcion: "Necesita participar más."
     },
@@ -96,7 +96,7 @@ const mockStudents: Student[] = [
         ci: "5203984",
         nivel: "Primaria",
         grado: "4°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 86,
         descripcion: "Ordenada y responsable."
     },
@@ -106,7 +106,7 @@ const mockStudents: Student[] = [
         ci: "7776543",
         nivel: "Secundaria",
         grado: "3°",
-        estado: "Activo",
+        estado: "Evaluado",
         nota: 72,
         descripcion: "Buen trabajo en equipo."
     }

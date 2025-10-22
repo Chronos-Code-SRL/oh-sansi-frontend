@@ -9,7 +9,6 @@ export default function MarksStudents() {
                 title={"Calificaciones de Estudiantes"}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
-
             <StudentTable />
         </>
     )

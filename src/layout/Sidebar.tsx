@@ -38,6 +38,11 @@ const navItems: NavItem[] = [
     name: "Registrar Competidores",
     path: "/registration",
   },
+  {
+    icon: <GroupIcon />,
+    name: "Calificar Competidores",
+    path: "/calificaciones",
+  },
 ];
 const othersItems: NavItem[] = [];
 
