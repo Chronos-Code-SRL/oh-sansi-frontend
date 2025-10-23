@@ -13,6 +13,7 @@ export default function StudentTable() {
     const [selectedFilters, setSelectedFilters] = useState({
         estado: [] as string[],
         nivel: [] as string[],
+        grado: [] as string[],
     });
 
     useEffect(() => {
@@ -46,14 +47,18 @@ export default function StudentTable() {
         s.ci.toString().includes(q);
 
         const matchesEstado =
-      selectedFilters.estado.length === 0 ||
-      selectedFilters.estado.includes(s.estado);
+        selectedFilters.estado.length === 0 ||
+        selectedFilters.estado.includes(s.estado);
 
-    const matchesNivel =
-      selectedFilters.nivel.length === 0 ||
-      selectedFilters.nivel.includes(s.nivel);
+        const matchesNivel =
+        selectedFilters.nivel.length === 0 ||
+        selectedFilters.nivel.includes(s.nivel);
 
-        return matchesSearch && matchesEstado && matchesNivel;
+        const matchesGrado =
+        selectedFilters.grado.length === 0 ||
+        selectedFilters.grado.includes(s.grado);
+
+        return matchesSearch && matchesEstado && matchesNivel && matchesGrado;
     });
 
     return (
