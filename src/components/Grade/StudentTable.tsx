@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ComponentCard from "../common/ComponentCard";
 import { fetchStudents, Student } from "../../api/services/studentService";
 import Badge from "../ui/badge/Badge";
 import { CheckLineIcon, CloseLineIcon } from "../../icons";
+import Alert from "../ui/alert/Alert";
 
 
 export default function TableStudent() {
@@ -15,6 +16,11 @@ export default function TableStudent() {
     const [editingCi, setEditingCi] = useState<string | null>(null);
     const [draftNote, setDraftNote] = useState<number | "">("");
     const [saving, setSaving] = useState(false);
+
+    // Estado para el Alert
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState<string>("");
+    const [alertMessage, setAlertMessage] = useState<string>("");
 
     useEffect(() => {
         let alive = true;
@@ -34,11 +40,42 @@ export default function TableStudent() {
         return () => { alive = false; };
     }, []);
 
+
+    // Timer para autocerrar el Alert
+    const autoHideTimerRef = useRef<number | null>(null);
+
+    function showAlert(title: string, message: string): void {
+        // Limpia un timer previo si existiera
+        if (autoHideTimerRef.current !== null) {
+            window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = null;
+        }
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertOpen(true);
+
+        // Auto-cerrar a los 3 segundos (ajustable)
+        autoHideTimerRef.current = window.setTimeout(() => {
+            setAlertOpen(false);
+            autoHideTimerRef.current = null;
+        }, 3000);
+    }
+
     const startEdit = (s: Student) => {
 
         if (saving === true) {
             return
         };
+
+        // Si ya está Evaluado, muestra la alerta y no entres a edición
+        if (s.estado === "Evaluado") {
+            showAlert(
+                "Acción no permitida",
+                `El estudiante ${s.nombre} ${s.apellido} ya está Evaluado.`
+            );
+            return;
+        }
+
         setEditingCi(s.ci);
         if (typeof s.nota === "number") {
             setDraftNote(s.nota);
@@ -96,6 +133,16 @@ export default function TableStudent() {
         }
     };
 
+    // Limpia el timer del Alert al desmontar el componente
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current !== null) {
+                window.clearTimeout(autoHideTimerRef.current);
+                autoHideTimerRef.current = null;
+            }
+        };
+    }, []);
+
     const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
         if (e.key === "Enter") {
             const s = students.find((x) => x.ci === editingCi);
@@ -151,7 +198,9 @@ export default function TableStudent() {
                                     {/* Nota */}
                                     <td className={`px-6 py-4 text-sm ${isEditing === false && s.estado !== "Evaluado" ? "cursor-text" : ""}`}
                                         onClick={() => {
-                                            if (!isEditing && s.estado !== "Evaluado") startEdit(s);
+                                            if (isEditing === false) {
+                                                startEdit(s);
+                                            }
                                         }}
                                     >
                                         {isEditing === true ? (
@@ -173,7 +222,7 @@ export default function TableStudent() {
                                                 <button
                                                     type="button"
                                                     disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => saveNote(s)}
+                                                    onClick={() => saveNote(s)} //Aca en el end point patch
                                                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
                                                     title="Aceptar"
                                                 >
@@ -206,6 +255,20 @@ export default function TableStudent() {
 
                 </table>
             </ComponentCard>
+            {alertOpen && (
+                <div
+                    className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
+                    role="presentation"
+                >
+                    <div className="pointer-events-auto" role="alert" aria-live="polite">
+                        <Alert
+                            variant="error"
+                            title={alertTitle}
+                            message={alertMessage}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     )
 }
