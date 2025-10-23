@@ -11,7 +11,7 @@ export default function TableStudent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // edición en línea
+    // States for editing notes in time real
     const [editingCi, setEditingCi] = useState<string | null>(null);
     const [draftNote, setDraftNote] = useState<number | "">("");
     const [saving, setSaving] = useState(false);
@@ -35,16 +35,25 @@ export default function TableStudent() {
     }, []);
 
     const startEdit = (s: Student) => {
-        if (saving) return;
+
+        if (saving === true) {
+            return
+        };
         setEditingCi(s.ci);
-        setDraftNote(typeof s.nota === "number" ? s.nota : "");
+        if (typeof s.nota === "number") {
+            setDraftNote(s.nota);
+        } else {
+            setDraftNote("");
+        }
     };
 
-    const cancelEdit = () => {
-        if (saving) return;
-        setEditingCi(null);
-        setDraftNote("");
-    };
+    // const cancelEdit = () => {
+    //     if (saving === true) {
+    //         return;
+    //     }
+    //     setEditingCi(null);
+    //     setDraftNote("");
+    // };
 
     const saveNote = async (s: Student) => {
         if (saving) return;
@@ -92,9 +101,9 @@ export default function TableStudent() {
             const s = students.find((x) => x.ci === editingCi);
             if (s) void saveNote(s);
         }
-        if (e.key === "Escape") {
-            cancelEdit();
-        }
+        // if (e.key === "Escape") {
+        //     cancelEdit();
+        // }
     };
 
     return (
@@ -114,17 +123,17 @@ export default function TableStudent() {
                         </tr>
                     </thead>
                     <tbody>
-                        {loading && (
+                        {loading === true && (
                             <tr>
                                 <td colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
                             </tr>
                         )}
-                        {error && !loading && (
+                        {error !== null && loading === false && (
                             <tr>
                                 <td colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</td>
                             </tr>
                         )}
-                        {!loading && !error && students.map((s) => {
+                        {loading === false && error === null && students.map((s) => {
                             const isEditing = editingCi === s.ci;
                             return (
                                 <tr key={s.ci} className="border-b border-border last:border-0">
@@ -140,12 +149,12 @@ export default function TableStudent() {
                                     </td>
 
                                     {/* Nota */}
-                                    <td className={`px-6 py-4 text-sm ${!isEditing && s.estado !== "Evaluado" ? "cursor-text" : ""}`}
+                                    <td className={`px-6 py-4 text-sm ${isEditing === false && s.estado !== "Evaluado" ? "cursor-text" : ""}`}
                                         onClick={() => {
                                             if (!isEditing && s.estado !== "Evaluado") startEdit(s);
                                         }}
                                     >
-                                        {isEditing ? (
+                                        {isEditing === true ? (
                                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <input
                                                     type="number"
@@ -163,7 +172,7 @@ export default function TableStudent() {
                                                 />
                                                 <button
                                                     type="button"
-                                                    disabled={saving || draftNote === "" || isNaN(Number(draftNote))}
+                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
                                                     onClick={() => saveNote(s)}
                                                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
                                                     title="Aceptar"
@@ -172,7 +181,7 @@ export default function TableStudent() {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    disabled={saving}
+                                                    disabled={saving === true}
                                                     onClick={() => rejectNote(s)}
                                                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
                                                     title="Rechazar"
