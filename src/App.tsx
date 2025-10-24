@@ -10,6 +10,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import EditScoreCuts from "./pages/ScoreCuts/EditScoreCuts";
 
 
 export default function App() {
@@ -38,6 +39,9 @@ export default function App() {
 
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
+
+            {/*Editar Umbral*/}
+            < Route path="/edit-score-cut" element={<EditScoreCuts />} />
           </Route>
 
           {/* Auth Layout */}
