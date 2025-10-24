@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import ComponentCard from "../common/ComponentCard";
 import { fetchStudents, Student } from "../../api/services/studentService";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
+import CommentModal from "./CommentModal";
 
 
 export default function TableStudent() {
@@ -21,6 +22,51 @@ export default function TableStudent() {
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
+
+    // Estado del modal de comentario
+    const [commentModalOpen, setCommentModalOpen] = useState(false);
+    const [commentDraft, setCommentDraft] = useState<string>("");
+    const [commentSaving, setCommentSaving] = useState(false);
+    const [commentStudent, setCommentStudent] = useState<Student | null>(null);
+
+    function openCommentModal(student: Student): void {
+        setCommentStudent(student);
+        setCommentDraft(typeof student.descripcion === "string" ? student.descripcion : "");
+        setCommentModalOpen(true);
+    }
+    function closeCommentModal(): void {
+        if (commentSaving === true) return;
+        setCommentModalOpen(false);
+        setCommentStudent(null);
+        setCommentDraft("");
+    }
+
+    async function saveComment(): Promise<void> {
+        if (commentStudent === null) return;
+
+        const texto = commentDraft.trim();
+        // Si quieres permitir vacío como “sin descripción”, quita esta validación
+        // if (texto.length === 0) { showAlert("Dato inválido", "Escribe un comentario."); return; }
+
+        try {
+            setCommentSaving(true);
+            // TODO: Conecta tu endpoint real:
+            // await updateStudentDescription(commentStudent.ci, texto);
+
+            // Actualiza el estado local
+            setStudents((prev) =>
+                prev.map((st) => (st.ci === commentStudent.ci ? { ...st, descripcion: texto } : st)),
+            );
+
+            // Feedback visual (toast inferior)
+            showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
+            closeCommentModal();
+        } catch {
+            showAlert("Error", "No se pudo guardar el comentario. Intenta nuevamente.");
+        } finally {
+            setCommentSaving(false);
+        }
+    }
 
     useEffect(() => {
         let alive = true;
@@ -217,13 +263,13 @@ export default function TableStudent() {
                                                         const v = e.target.value;
                                                         setDraftNote(v === "" ? "" : Number(v));
                                                     }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 "
                                                 />
                                                 <button
                                                     type="button"
                                                     disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
                                                     onClick={() => saveNote(s)} //Aca en el end point patch
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                                                     title="Aceptar"
                                                 >
                                                     <CheckLineIcon className="size-5" />
@@ -232,7 +278,7 @@ export default function TableStudent() {
                                                     type="button"
                                                     disabled={saving === true}
                                                     onClick={() => rejectNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                                                     title="Rechazar"
                                                 >
                                                     <CloseLineIcon className="size-5" />
@@ -247,7 +293,16 @@ export default function TableStudent() {
                                         )}
                                     </td>
 
-                                    <td className="px-6 py-4 text-sm">{s.descripcion ?? "—"}</td>
+                                    <td className="px-6 py-4 text-sm">
+                                        <button
+                                            type="button"
+                                            onClick={() => openCommentModal(s)}
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+                                            title={s.descripcion && s.descripcion.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                        >
+                                            <CommentIcon className={`size-4 ${s.descripcion ? "text-black-500" : ""}`} />
+                                        </button>
+                                    </td>
                                 </tr>
                             );
                         })}
@@ -269,6 +324,16 @@ export default function TableStudent() {
                     </div>
                 </div>
             )}
+            {/* Modal de comentario */}
+            <CommentModal
+                open={commentModalOpen}
+                student={commentStudent}
+                draft={commentDraft}
+                saving={commentSaving}
+                onChangeDraft={setCommentDraft}
+                onSave={() => void saveComment()}
+                onClose={closeCommentModal}
+            />
         </>
     )
 }
