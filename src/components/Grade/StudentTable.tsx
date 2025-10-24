@@ -5,6 +5,8 @@ import Badge from "../ui/badge/Badge";
 import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
+import type { KeyboardEventHandler } from "react";
 
 
 export default function TableStudent() {
@@ -189,7 +191,7 @@ export default function TableStudent() {
         };
     }, []);
 
-    const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
         if (e.key === "Enter") {
             const s = students.find((x) => x.ci === editingCi);
             if (s) void saveNote(s);
@@ -202,9 +204,9 @@ export default function TableStudent() {
     return (
         <>
             <ComponentCard title="Quimica">
-                <table className="w-full">
-                    <thead className="border-b border-border bg-muted/50">
-                        <tr>
+                <Table>
+                    <TableHeader className="border-b border-border bg-muted/50">
+                        <TableRow>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nombre</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Apellido</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">CI</th>
@@ -213,23 +215,25 @@ export default function TableStudent() {
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Estado</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nota</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Descripción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {loading === true && (
-                            <tr>
+                            <TableRow>
+                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
                                 <td colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
-                            </tr>
+                            </TableRow>
                         )}
                         {error !== null && loading === false && (
-                            <tr>
+                            <TableRow>
+                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
                                 <td colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</td>
-                            </tr>
+                            </TableRow>
                         )}
                         {loading === false && error === null && students.map((s) => {
                             const isEditing = editingCi === s.ci;
                             return (
-                                <tr key={s.ci} className="border-b border-border last:border-0">
+                                <TableRow key={s.ci} className="border-b border-border last:border-0">
                                     <td className="px-6 py-4 text-sm">{s.nombre}</td>
                                     <td className="px-6 py-4 text-sm">{s.apellido}</td>
                                     <td className="px-6 py-4 text-sm">{s.ci}</td>
@@ -303,12 +307,12 @@ export default function TableStudent() {
                                             <CommentIcon className={`size-4 ${s.descripcion ? "text-black-500" : ""}`} />
                                         </button>
                                     </td>
-                                </tr>
+                                </TableRow>
                             );
                         })}
-                    </tbody>
+                    </TableBody>
 
-                </table>
+                </Table>
             </ComponentCard>
             {alertOpen && (
                 <div
