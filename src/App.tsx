@@ -5,11 +5,12 @@ import NotFound from "./pages/OtherPage/NotFound";
 import BasicTables from "./pages/Tables/BasicTables";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import RegisterUser from "./pages/Users/RegisterUser";
 import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
+import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 
 
 export default function App() {
@@ -37,7 +38,8 @@ export default function App() {
             <Route path="/basic-tables" element={<BasicTables />} />
 
             {/*Register User*/}
-            < Route path="/user-register" element={<RegisterUser />} />
+            < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
+            < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
           </Route>
 
           {/* Auth Layout */}

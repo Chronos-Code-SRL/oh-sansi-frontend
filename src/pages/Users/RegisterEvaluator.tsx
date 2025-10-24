@@ -10,7 +10,7 @@ import AreaSelectInputs from "../../components/form/form-elements/AreaSelectInpu
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 
-export default function RegisterUser() {
+export default function RegisterEvaluator() {
   const [first_name, setfirst_name] = useState("");
   const [last_name, setlast_name] = useState("");
   const [ci, setCi] = useState("");
@@ -145,10 +145,10 @@ export default function RegisterUser() {
   return (
     <>
       <PageMeta
-        title="Registrar Usuario | Oh! SanSi"
-        description="Página para registrar responsables académicos y evaluadores"
+        title="Registro | Oh! SanSi"
+        description="Página para registrar evaluadores"
       />
-      <TitleBreadCrumb pageTitle="Registrar Usuario" />
+      <TitleBreadCrumb pageTitle="Registrar Evaluador" />
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
