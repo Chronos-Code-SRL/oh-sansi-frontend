@@ -203,7 +203,8 @@ export default function TableStudent() {
 
     return (
         <>
-            <ComponentCard title="Quimica">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                <div className="max-w-full overflow-x-auto"></div>
                 <Table>
                     <TableHeader className="border-b border-border bg-muted/50">
                         <TableRow>
@@ -313,7 +314,9 @@ export default function TableStudent() {
                     </TableBody>
 
                 </Table>
-            </ComponentCard>
+
+            </div>
+
             {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
@@ -327,7 +330,8 @@ export default function TableStudent() {
                         />
                     </div>
                 </div>
-            )}
+            )
+            }
             {/* Modal de comentario */}
             <CommentModal
                 open={commentModalOpen}
