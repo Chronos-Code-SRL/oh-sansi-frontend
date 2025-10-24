@@ -9,6 +9,7 @@ import {
   GridIcon,
   GroupIcon,
   UserIcon,
+  Slider,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -38,6 +39,12 @@ const navItems: NavItem[] = [
     name: "Registrar Competidores",
     path: "/registration",
   },
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+  },
+  
 ];
 const othersItems: NavItem[] = [];
 

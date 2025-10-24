@@ -10,6 +10,7 @@ import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import FilterElements from "./pages/Filters/FilterElements";
 
 
 export default function App() {
@@ -38,7 +39,9 @@ export default function App() {
 
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
-          </Route>
+
+            {/*Filters on list */}
+            <Route index path="/filtros-de-lista" element={<FilterElements />} /></Route>
 
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
