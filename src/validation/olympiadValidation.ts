@@ -51,8 +51,8 @@ export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
     errors.default_score_cut = 'El umbral debe ser un número entero';
   } else if (cut < 1) {
     errors.default_score_cut = 'El umbral debe ser mayor a 0';
-  } else if (cut > 100) {
-    errors.default_score_cut = 'El umbral no puede ser mayor a 100';
+  } else if (cut > 1000) {
+    errors.default_score_cut = 'El umbral no puede ser mayor a 1000';
   }
 
   // Fechas
