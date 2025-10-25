@@ -295,7 +295,7 @@ export default function StudentTable() {
                                     <td className="px-6 py-4 text-sm">{s.grado}</td> */}
                                     <td className="px-6 py-4 text-sm">
                                         <Badge color={s.status === true ? "success" : "error"}>
-                                            {s.status ? "Calificado" : "No calificado"}
+                                            {s.status ? "Evaluado" : "No Evaluado"}
                                         </Badge>
                                     </td>
 
