@@ -1,8 +1,11 @@
-import { Student } from "../../api/services/studentService";
+
+import { createPortal } from "react-dom";
+import { Contestant } from "../../types/Contestant";
+import { useEffect } from "react";
 
 interface CommentModalProps {
     open: boolean;
-    student: Student | null;
+    student: Contestant | null;
     draft: string;
     saving: boolean;
     onChangeDraft: (value: string) => void;
@@ -22,17 +25,24 @@ export default function CommentModal({
 
     if (!open) return null;
 
-    return (
+    // Bloquea scroll del body mientras el modal está abierto
+    useEffect(() => {
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = prev;
+        };
+    }, []);
+
+    const modal = (
         <div
-            className="fixed inset-0 z-[1100] flex items-center justify-center"
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center" // z-index muy alto
             role="dialog"
             aria-modal="true"
             aria-labelledby="comment-title"
         >
-            {/* Fondo oscuro */}
             <div className="absolute inset-0 bg-black/55" onClick={onClose} />
 
-            {/* Contenido */}
             <div className="relative z-10 w-[640px] max-w-[92vw] rounded-xl border border-gray-200 bg-white p-5 shadow-2xl">
                 <div className="mb-3 flex items-start justify-between">
                     <div>
@@ -41,7 +51,7 @@ export default function CommentModal({
                         </h2>
                         {student && (
                             <p className="text-sm text-gray-600">
-                                {student.nombre} {student.apellido}
+                                {student.first_name} {student.last_name}
                             </p>
                         )}
                     </div>
@@ -62,9 +72,7 @@ export default function CommentModal({
                         placeholder="Escribir retroalimentación para el estudiante..."
                         className="block h-48 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10"
                     />
-                    <div className="mt-2 text-right text-xs text-gray-500">
-                        {draft.length} caracteres
-                    </div>
+                    <div className="mt-2 text-right text-xs text-gray-500">{draft.length} caracteres</div>
                 </div>
 
                 <div className="mt-5 flex items-center justify-end gap-2">
@@ -88,4 +96,6 @@ export default function CommentModal({
             </div>
         </div>
     );
+
+    return createPortal(modal, document.body);
 }

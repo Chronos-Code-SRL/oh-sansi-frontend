@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import ComponentCard from "../common/ComponentCard";
-import { fetchStudents, Student } from "../../api/services/studentService";
 import Badge from "../ui/badge/Badge";
 import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
+import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import type { KeyboardEventHandler } from "react";
+import { Contestant } from "../../types/Contestant";
+import { getContestantByPhaseOlympiadArea } from "../../api/services/contestantService";
+import clsx from "clsx";
 
 
 export default function TableStudent() {
 
-    const [students, setStudents] = useState<Student[]>([]);
+    const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,11 +30,11 @@ export default function TableStudent() {
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
-    const [commentStudent, setCommentStudent] = useState<Student | null>(null);
+    const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
 
-    function openCommentModal(student: Student): void {
+    function openCommentModal(student: Contestant): void {
         setCommentStudent(student);
-        setCommentDraft(typeof student.descripcion === "string" ? student.descripcion : "");
+        setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
     }
     function closeCommentModal(): void {
@@ -42,6 +43,26 @@ export default function TableStudent() {
         setCommentStudent(null);
         setCommentDraft("");
     }
+
+    useEffect(() => {
+        let alive = true;
+
+        async function loadContestants() {
+            try {
+                const data = await getContestantByPhaseOlympiadArea(1, 1, 2);
+                if (alive) setStudents(data);
+                console.log("Estudiantes cargados:", data);
+            } catch {
+                if (alive) setError("No se pudo cargar la lista de estudiantes.");
+            } finally {
+                if (alive) setLoading(false);
+            }
+        }
+
+        loadContestants();
+        return () => { alive = false; };
+    }, []);
+
 
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
@@ -57,7 +78,7 @@ export default function TableStudent() {
 
             // Actualiza el estado local
             setStudents((prev) =>
-                prev.map((st) => (st.ci === commentStudent.ci ? { ...st, descripcion: texto } : st)),
+                prev.map((st) => (st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st)),
             );
 
             // Feedback visual (toast inferior)
@@ -70,23 +91,7 @@ export default function TableStudent() {
         }
     }
 
-    useEffect(() => {
-        let alive = true;
 
-        async function cargarEstudiantes() {
-            try {
-                const data = await fetchStudents();
-                if (alive) setStudents(data);
-            } catch {
-                if (alive) setError("No se pudo cargar la lista de estudiantes.");
-            } finally {
-                if (alive) setLoading(false);
-            }
-        }
-
-        cargarEstudiantes();
-        return () => { alive = false; };
-    }, []);
 
 
     // Timer para autocerrar el Alert
@@ -109,24 +114,21 @@ export default function TableStudent() {
         }, 3000);
     }
 
-    const startEdit = (s: Student) => {
+    const startEdit = (s: Contestant) => {
 
         if (saving === true) {
             return
         };
 
         // Si ya está Evaluado, muestra la alerta y no entres a edición
-        if (s.estado === "Evaluado") {
-            showAlert(
-                "Acción no permitida",
-                `El estudiante ${s.nombre} ${s.apellido} ya está Evaluado.`
-            );
+        if (s.status === true) {
+            showAlert("Acción no permitida", `El estudiante ${s.first_name} ${s.last_name} ya está Evaluado.`);
             return;
         }
 
-        setEditingCi(s.ci);
-        if (typeof s.nota === "number") {
-            setDraftNote(s.nota);
+        setEditingCi(s.ci_document);
+        if (typeof s.score === "number") {
+            setDraftNote(s.score);
         } else {
             setDraftNote("");
         }
@@ -140,7 +142,7 @@ export default function TableStudent() {
     //     setDraftNote("");
     // };
 
-    const saveNote = async (s: Student) => {
+    const saveNote = async (s: Contestant) => {
         if (saving) return;
         if (draftNote === "" || isNaN(Number(draftNote))) return;
         const nota = Math.max(0, Math.min(100, Number(draftNote)));
@@ -151,7 +153,7 @@ export default function TableStudent() {
             // await updateStudentGrade(s.ci, nota);
             setStudents((prev) =>
                 prev.map((st) =>
-                    st.ci === s.ci ? { ...st, nota, estado: "Evaluado" } : st,
+                    st.contestant_id === s.contestant_id ? { ...st, nota, estado: "Evaluado" } : st,
                 ),
             );
             setEditingCi(null);
@@ -162,7 +164,7 @@ export default function TableStudent() {
         }
     };
 
-    const rejectNote = async (s: Student) => {
+    const rejectNote = async (s: Contestant) => {
         if (saving) return;
         try {
             setSaving(true);
@@ -193,7 +195,7 @@ export default function TableStudent() {
 
     const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
         if (e.key === "Enter") {
-            const s = students.find((x) => x.ci === editingCi);
+            const s = students.find((x) => x.ci_document === editingCi);
             if (s) void saveNote(s);
         }
         // if (e.key === "Escape") {
@@ -211,8 +213,8 @@ export default function TableStudent() {
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nombre</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Apellido</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">CI</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Grado</th>
+                            {/* <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nivel</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Grado</th> */}
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Estado</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nota</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Descripción</th>
@@ -222,32 +224,32 @@ export default function TableStudent() {
                         {loading === true && (
                             <TableRow>
                                 {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
-                                <td colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
+                                <td colSpan={6} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
                             </TableRow>
                         )}
                         {error !== null && loading === false && (
                             <TableRow>
                                 {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
-                                <td colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</td>
+                                <td colSpan={6} className="px-6 py-4 text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
                         {loading === false && error === null && students.map((s) => {
-                            const isEditing = editingCi === s.ci;
+                            const isEditing = editingCi === s.ci_document;
                             return (
-                                <TableRow key={s.ci} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm">{s.nombre}</td>
-                                    <td className="px-6 py-4 text-sm">{s.apellido}</td>
-                                    <td className="px-6 py-4 text-sm">{s.ci}</td>
-                                    <td className="px-6 py-4 text-sm">{s.nivel}</td>
-                                    <td className="px-6 py-4 text-sm">{s.grado}</td>
+                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                                    <td className="px-6 py-4 text-sm">{s.first_name}</td>
+                                    <td className="px-6 py-4 text-sm">{s.last_name}</td>
+                                    <td className="px-6 py-4 text-sm">{s.ci_document}</td>
+                                    {/* <td className="px-6 py-4 text-sm">{s.nivel}</td>
+                                    <td className="px-6 py-4 text-sm">{s.grado}</td> */}
                                     <td className="px-6 py-4 text-sm">
-                                        <Badge color={s.estado === "Evaluado" ? "success" : "error"}>
-                                            {s.estado}
+                                        <Badge color={s.status === true ? "success" : "error"}>
+                                            {s.status ? "Calificado" : "No calificado"}
                                         </Badge>
                                     </td>
 
                                     {/* Nota */}
-                                    <td className={`px-6 py-4 text-sm ${isEditing === false && s.estado !== "Evaluado" ? "cursor-text" : ""}`}
+                                    <td className={`px-6 py-4 text-sm ${isEditing === false && s.status !== true ? "cursor-text" : ""}`}
                                         onClick={() => {
                                             if (isEditing === false) {
                                                 startEdit(s);
@@ -291,7 +293,7 @@ export default function TableStudent() {
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-3">
-                                                <span>{typeof s.nota === "number" ? s.nota : "—"}</span>
+                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
                                                 {/* Solo permitir edición cuando no está evaluado */}
 
                                             </div>
@@ -303,9 +305,9 @@ export default function TableStudent() {
                                             type="button"
                                             onClick={() => openCommentModal(s)}
                                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
-                                            title={s.descripcion && s.descripcion.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                            title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                         >
-                                            <CommentIcon className={`size-4 ${s.descripcion ? "text-black-500" : ""}`} />
+                                            <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
                                         </button>
                                     </td>
                                 </TableRow>
@@ -345,3 +347,7 @@ export default function TableStudent() {
         </>
     )
 }
+function setContestants(data: Contestant[]) {
+    throw new Error("Function not implemented.");
+}
+
