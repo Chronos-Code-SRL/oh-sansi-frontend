@@ -8,10 +8,11 @@ import type { KeyboardEventHandler } from "react";
 import { Contestant } from "../../types/Contestant";
 import { getContestantByPhaseOlympiadArea } from "../../api/services/contestantService";
 import clsx from "clsx";
+import SearchBar from "./Searcher";
+import Filter from "./Filter";
 
 
-export default function TableStudent() {
-
+export default function StudentTable() {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,12 @@ export default function TableStudent() {
         setCommentStudent(null);
         setCommentDraft("");
     }
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedFilters, setSelectedFilters] = useState({
+        estado: [] as boolean[],
+        nivel: [] as string[],
+        grado: [] as string[],
+    });
 
     useEffect(() => {
         let alive = true;
@@ -62,6 +69,33 @@ export default function TableStudent() {
         loadContestants();
         return () => { alive = false; };
     }, []);
+
+    // Filtrado según el texto recibido
+    const normalize = (text: string) =>
+        text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const filteredStudents = students.filter((s) => {
+        const q = normalize(searchQuery);
+        const matchesSearch =
+            normalize(s.first_name).includes(q) ||
+            normalize(s.last_name).includes(q) ||
+            s.ci_document.toString().includes(q);
+
+        const matchesEstado =
+            selectedFilters.estado.length === 0 ||
+            selectedFilters.estado.includes(s.status);
+
+        // const matchesNivel =
+        // selectedFilters.nivel.length === 0 ||
+        //selectedFilters.nivel.includes(s.level);
+
+        // const matchesGrado =
+        // selectedFilters.grado.length === 0 ||
+        //selectedFilters.grado.includes(s.grade);
+
+        //return matchesSearch && matchesEstado && matchesNivel && matchesGrado; DESCONMENTAR CUANDO ESTE EL END POINT COMPLETO LO DE ABAJO LO USAREMOS DE MOMENTO
+        return matchesSearch && matchesEstado;
+    });
 
 
     async function saveComment(): Promise<void> {
@@ -205,6 +239,16 @@ export default function TableStudent() {
 
     return (
         <>
+            <div className="flex items-center mb-3">
+                <SearchBar
+                    onSearch={setSearchQuery}
+                    placeholder="Buscar por nombre, apellido o CI..."
+                />
+                <Filter
+                    selectedFilters={selectedFilters}
+                    setSelectedFilters={setSelectedFilters}
+                />
+            </div>
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table>
@@ -233,7 +277,14 @@ export default function TableStudent() {
                                 <td colSpan={6} className="px-6 py-4 text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
-                        {loading === false && error === null && students.map((s) => {
+                        {loading === false && error === null && filteredStudents.length === 0 && (
+                            <tr>
+                                <td colSpan={8} className="px-6 py-4 text-sm text-gray-500">
+                                    No se encontraron resultados.
+                                </td>
+                            </tr>
+                        )}
+                        {!loading && !error && filteredStudents.map((s) => {
                             const isEditing = editingCi === s.ci_document;
                             return (
                                 <TableRow key={s.contestant_id} className="border-b border-border last:border-0">

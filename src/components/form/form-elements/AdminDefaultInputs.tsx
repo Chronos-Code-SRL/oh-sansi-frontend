@@ -8,7 +8,7 @@ import { validateOlympiad, validateField as validateOneField } from "../../../va
 import { Modal } from "../../ui/modal/index";
 import { postOlympiad } from "../../../api/services/olympiadService.ts";
 import { OlympiadPayload } from "../../../types/Olympiad.ts";
-import AreaSelectInputs from "./AreaSelectInputs .tsx";
+import AreaSelectInputs from "../../common/AreaSelectInputs .tsx";
 
 
 export default function AdminDefaultInputs() {
