@@ -46,10 +46,13 @@ export default function StudentTable() {
     }
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilters, setSelectedFilters] = useState({
-        estado: [] as boolean[],
+        estado: [] as string[],
         nivel: [] as string[],
         grado: [] as string[],
     });
+
+    // Helper para mapear boolean -> etiqueta usada por el filtro
+    const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
 
     useEffect(() => {
         let alive = true;
@@ -83,7 +86,7 @@ export default function StudentTable() {
 
         const matchesEstado =
             selectedFilters.estado.length === 0 ||
-            selectedFilters.estado.includes(s.status);
+            selectedFilters.estado.includes(statusLabel(s.status)); // <- mapear boolean a string
 
         // const matchesNivel =
         // selectedFilters.nivel.length === 0 ||
