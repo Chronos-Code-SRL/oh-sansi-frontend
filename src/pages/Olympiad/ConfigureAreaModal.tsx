@@ -323,16 +323,6 @@ export default function ConfigureAreaModal({
             )}
           </div>
         </ComponentCard>
-
-        {/* Botones inferiores */}
-        <div className="flex justify-end gap-4 pt-4">
-          <Button variant="outline" onClick={onClose} type="button">
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleSave} type="button">
-            Guardar Configuración
-          </Button>
-        </div>
       </div>
     </Modal>
   );
