@@ -45,8 +45,35 @@ export interface FileDetail {
   error_file?: string;
 }
 
+//to get CSV's 
+export interface UploadCsv {
+  id: number;
+  original_file_name: string;
+  successful_records: number;
+  failed_records: number;
+  total_records: number;
+  success_rate: number;
+  has_errors: boolean;
+  has_error_file: boolean;
+  file_size: number;
+}
 
+export interface CsvUploadsResponse {
+  success: boolean;
+  data: {
+    // olympiad: OlympiadSummary;
+    csv_uploads: UploadCsv[];
+    // total_uploads: number;
+    // total_records_processed: number;
+    // total_successful_records: number;
+    // total_failed_records: number;
+  };
+}
 
+// export interface OlympiadSummary {
+//   id: number;
+//   name: string;
+// }
 
 
 
