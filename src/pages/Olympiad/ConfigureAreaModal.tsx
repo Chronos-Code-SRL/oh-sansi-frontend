@@ -31,7 +31,6 @@ export default function ConfigureAreaModal({
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
   const [errors, setErrors] = useState<{ name?: string; startGrade?: string; endGrade?:string }>({});
 
-  // Cargar grados desde el backend
   const fetchGrades = async () => {
     try {
       const gradesData = await gradesService.getGrades();
@@ -55,13 +54,11 @@ export default function ConfigureAreaModal({
         areaId
       ) as LevelsResponse;
 
-      // Verifica si levelsData.level_grades existe, de lo contrario lanza un error
       if (!levelsData || !Array.isArray(levelsData.level_grades)) {
         console.error("Error: La API no devolvió un array válido de niveles.");
         return;
       }
 
-      // Agrupamos por ID de nivel
       const groupedLevels = levelsData.level_grades.reduce((acc: any[], item: any) => {
         const levelId = item.level?.id || item.id;
         const existing = acc.find((l) => l.id === levelId);
@@ -78,7 +75,6 @@ export default function ConfigureAreaModal({
         return acc;
       }, []);
 
-      // Eliminamos posibles duplicados de grado dentro de cada nivel
       const uniqueLevels = groupedLevels.map((level: any) => ({
         ...level,
         grades: level.grades.filter(
@@ -92,7 +88,6 @@ export default function ConfigureAreaModal({
       console.error("Error al obtener los niveles:", error);
     }
   };
-  // Cargar datos cuando se abre el modal
   useEffect(() => {
     if (isOpen) {
       fetchGrades();
@@ -114,7 +109,6 @@ export default function ConfigureAreaModal({
     return grades.slice(startIndex);
   };
 
-  // Agregar nivel (POST)
   const handleAddLevel = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -139,7 +133,6 @@ export default function ConfigureAreaModal({
     }
 
     try {
-      // console.log("Enviando nivel a:", olympiadId, areaId);
       setErrors({}); 
 
       const startIndex = grades.findIndex((g) => g.name === startGrade);
@@ -159,7 +152,6 @@ export default function ConfigureAreaModal({
         grade_ids: selectedGrades,
       };
 
-      // console.log("Datos enviados:", newLevelData);
 
       await levelGradesService.addLevelToArea(olympiadId, areaId, newLevelData);
       await fetchLevels();
@@ -169,45 +161,31 @@ export default function ConfigureAreaModal({
       setEndGrade("");
     } catch (error: any) {
       console.error("Error al agregar nivel:", error);
-      alert("No se pudo agregar el nivel. Verifica la consola.");
+      alert("No se pudo agregar el nivel.");
     }
   };
 
-  // Eliminar nivel (DELETE)
   const handleRemoveLevel = async (id: number) => {
     const confirmDelete = window.confirm("¿Deseas eliminar este nivel?");
     if (!confirmDelete) return;
 
     try {
-      // Encuentra el nivel a eliminar
       const levelToDelete = levels.find((l) => l.id === id);
       if (!levelToDelete) {
         alert("No se encontró el nivel seleccionado.");
         return;
       }
 
-      // console.log("Eliminando nivel con ID:", id);
 
-      // Llama al servicio para eliminar el nivel
       await levelGradesService.removeLevelFromArea(olympiadId, areaId, id);
-
-      // Actualiza los niveles después de eliminar
       await fetchLevels();
       alert("Nivel eliminado correctamente");
     } catch (error) {
       console.error("Error al eliminar nivel:", error);
-      alert("No se pudo eliminar el nivel. Verifica la consola.");
+      alert("No se pudo eliminar el nivel.");
     }
   };
 
-
-
-
-  // Guardar configuración
-  const handleSave = () => {
-    console.log("Configuración actual:", levels);
-    onClose();
-  };
 
   return (
     <Modal
@@ -226,7 +204,6 @@ export default function ConfigureAreaModal({
           abarcar uno o varios cursos consecutivos.
         </Label>
 
-        {/* Agregar nuevo nivel */}
         <ComponentCard title="Agregar Nuevo Nivel">
           <form onSubmit={handleAddLevel} className="space-y-4">
             <div>
@@ -286,7 +263,6 @@ export default function ConfigureAreaModal({
           </form>
         </ComponentCard>
 
-        {/* Niveles configurados */}
         <ComponentCard title="Niveles Configurados">
           <div className="space-y-3">
             {levels.length > 0 ? (
