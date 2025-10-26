@@ -5,8 +5,8 @@ import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import type { KeyboardEventHandler } from "react";
-import { Contestant } from "../../types/Contestant";
-import { getContestantByPhaseOlympiadArea } from "../../api/services/contestantService";
+import { Contestant, Evaluation } from "../../types/Contestant";
+import { checkUpdates, getContestantByPhaseOlympiadArea, updatePartialEvaluation } from "../../api/services/contestantService";
 import SearchBar from "./Searcher";
 import Filter from "./Filter";
 
@@ -31,6 +31,18 @@ export default function StudentTable() {
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
+
+    const autoHideTimerRef = useRef<number | null>(null);
+
+    // Polling refs
+    const lastUpdateAtRef = useRef<string | null>(null);
+    const pollingRef = useRef<number | null>(null);
+
+    // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
+    const getEvaluationId = (s: Contestant): number | string => {
+        // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
+        return (s as any).evaluation_id ?? s.contestant_id;
+    };
 
     function openCommentModal(student: Contestant): void {
         setCommentStudent(student);
@@ -72,6 +84,91 @@ export default function StudentTable() {
         return () => { alive = false; };
     }, []);
 
+    useEffect(() => {
+        async function pollOnce() {
+            const since = lastUpdateAtRef.current ?? new Date().toISOString();
+            console.log(since);
+            
+            try {
+                console.debug("[poll] tick -> lastUpdateAt:", since);
+                const res = await checkUpdates(since);
+                console.debug("[poll] response:", {
+                    newCount: res?.new_evaluations?.length ?? 0,
+                    last_updated_at: res?.last_updated_at
+                });
+
+                if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
+                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
+                        id: (ev as any).id,
+                        contestant_id: (ev as any).contestant_id
+                    })));
+
+                    // Construimos dos índices: por contestant_id y por evaluation_id
+                    const byContestant = new Map<number, Evaluation>();
+                    const byEvaluation = new Map<number, Evaluation>();
+                    for (const ev of res.new_evaluations as any[]) {
+                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
+                        if (typeof ev.id === "number") byEvaluation.set(ev.id, ev);
+                    }
+
+                    setStudents((prev) =>
+                        prev.map((st) => {
+                            // No pisar si la fila está en edición en esta pestaña
+                            if (editingCi === st.ci_document) return st;
+
+                            const evalId = (st as any).evaluation_id as number | undefined;
+                            const ev = byContestant.get(st.contestant_id) ??
+                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
+
+                            if (!ev) return st;
+
+                            return {
+                                ...st,
+                                score: ev.score ?? st.score,
+                                status: typeof ev.status === "boolean" ? ev.status : st.status,
+                                description: typeof ev.description === "string" ? ev.description : st.description,
+                            };
+                        }),
+                    );
+                }
+
+                // Cursor seguro
+                const serverLast = res?.last_updated_at ?? since;
+                const t = new Date(serverLast);
+                const safe = new Date(t.getTime() - 1).toISOString();
+                lastUpdateAtRef.current = safe;
+                console.debug("[poll] next lastUpdateAt:", safe);
+            } catch (err) {
+                console.warn("[StudentTable] polling:error", err);
+            }
+        }
+
+        if (!lastUpdateAtRef.current) lastUpdateAtRef.current = new Date().toISOString();
+
+        // Iniciar intervalo
+        pollingRef.current = window.setInterval(pollOnce, 3000);
+        console.log("[poll] start (3000ms)");
+
+        // Tick inmediato para no esperar al primer intervalo
+        void pollOnce();
+
+        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
+        const onFocus = () => { void pollOnce(); };
+        const onVis = () => { if (!document.hidden) void pollOnce(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVis);
+
+        return () => {
+            if (pollingRef.current) {
+                window.clearInterval(pollingRef.current);
+                pollingRef.current = null;
+                console.log("[poll] stopped");
+            }
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVis);
+        };
+    }, [editingCi]);
+
     // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -98,25 +195,24 @@ export default function StudentTable() {
         return matchesSearch && matchesEstado && matchesNivel && matchesGrado;
     });
 
-
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
-
         const texto = commentDraft.trim();
-        // Si quieres permitir vacío como “sin descripción”, quita esta validación
-        // if (texto.length === 0) { showAlert("Dato inválido", "Escribe un comentario."); return; }
 
         try {
             setCommentSaving(true);
-            // TODO: Conecta tu endpoint real:
-            // await updateStudentDescription(commentStudent.ci, texto);
+            const id = getEvaluationId(commentStudent);
+            console.log("[saveComment] PATCH", { id, description: texto });
+            await updatePartialEvaluation(id, { description: texto });
+            console.log("[saveComment] OK", { id });
 
-            // Actualiza el estado local
+            // Actualiza estado local
             setStudents((prev) =>
-                prev.map((st) => (st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st)),
+                prev.map((st) =>
+                    st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st,
+                ),
             );
 
-            // Feedback visual (toast inferior)
             showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
             closeCommentModal();
         } catch {
@@ -126,11 +222,8 @@ export default function StudentTable() {
         }
     }
 
-
-
-
-    // Timer para autocerrar el Alert
-    const autoHideTimerRef = useRef<number | null>(null);
+    // // Timer para autocerrar el Alert
+    // const autoHideTimerRef = useRef<number | null>(null);
 
     function showAlert(title: string, message: string): void {
         // Limpia un timer previo si existiera
@@ -184,15 +277,22 @@ export default function StudentTable() {
 
         try {
             setSaving(true);
-            // TODO: descomenta cuando tengas el endpoint
-            // await updateStudentGrade(s.ci, nota);
+            const id = getEvaluationId(s);
+            console.log("[saveNote] PATCH", { id, score: nota });
+
+            await updatePartialEvaluation(id, { score: nota });
+
+            console.log("[saveNote] OK", { id, score: nota });
             setStudents((prev) =>
                 prev.map((st) =>
-                    st.contestant_id === s.contestant_id ? { ...st, nota, estado: "Evaluado" } : st,
+                    st.contestant_id === s.contestant_id
+                        ? { ...st, score: nota, status: true }
+                        : st,
                 ),
             );
             setEditingCi(null);
-        } catch {
+        } catch (e) {
+            console.error("[saveNote] ERROR", e);
             setError("No se pudo guardar la nota.");
         } finally {
             setSaving(false);
@@ -203,13 +303,18 @@ export default function StudentTable() {
         if (saving) return;
         try {
             setSaving(true);
-            // TODO: descomenta cuando tengas el endpoint
-            // await updateStudentGrade(s.ci, null);
-            // setStudents((prev) =>
-            //     prev.map((st) =>
-            //         st.ci === s.ci ? { ...st, nota: undefined, estado: "No evaluado" } : st,
-            //     ),
-            // );
+
+            // Opción A: limpiar score (ojo: tu backend hoy setea status=true si 'score' existe, incluso si es null)
+            // Idealmente el backend debería permitir poner status=false explícitamente.
+            await updatePartialEvaluation(getEvaluationId(s), { score: null });
+
+            setStudents((prev) =>
+                prev.map((st) =>
+                    st.contestant_id === s.contestant_id
+                        ? { ...st, score: null as any, status: false }
+                        : st,
+                ),
+            );
             setEditingCi(null);
         } catch {
             setError("No se pudo actualizar el estado.");
