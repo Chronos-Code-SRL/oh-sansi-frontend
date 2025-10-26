@@ -2,16 +2,16 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import BasicTables from "./pages/Tables/BasicTables";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import RegisterUser from "./pages/Users/RegisterUser";
-import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
+import AdRegistration from "./pages/UploadContestant/UploadContestant";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
 import EditScoreCuts from "./pages/ScoreCuts/EditScoreCuts";
 
+import GradingContestant from "./pages/Grade/GradingContestant";
 
 export default function App() {
   return (
@@ -34,14 +34,13 @@ export default function App() {
             {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
 
             {/*Editar Umbral*/}
             < Route path="/edit-score-cut" element={<EditScoreCuts />} />
+            <Route path="/calificaciones" element={<GradingContestant />} />
+
           </Route>
 
           {/* Auth Layout */}

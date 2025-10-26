@@ -1,0 +1,15 @@
+export interface Contestant {
+    evaluation_id: number,
+    contestant_id: number,
+    first_name: string,
+    last_name: string,
+    gender: string,
+    ci_document: string,
+    school_name: string,
+    department: string,
+    score: number | null,
+    description: string | null,
+    level_name: string,
+    grade_name: string,
+    status: boolean,
+}

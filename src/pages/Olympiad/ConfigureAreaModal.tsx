@@ -214,7 +214,7 @@ export default function ConfigureAreaModal({
       isOpen={isOpen}
       onClose={onClose}
       showCloseButton={true}
-      className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-lg"
+      className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg h-[95vh] overflow-y-auto"
       isFullscreen={false}
     >
       <div className="p-6 space-y-6">
@@ -288,7 +288,7 @@ export default function ConfigureAreaModal({
 
         {/* Niveles configurados */}
         <ComponentCard title="Niveles Configurados">
-          <div className="space-y-3">
+          <div className="space-y-3 h-48 overflow-y-auto pr-2">
             {levels.length > 0 ? (
               levels.map((level: any, index: number) => (
                 <div

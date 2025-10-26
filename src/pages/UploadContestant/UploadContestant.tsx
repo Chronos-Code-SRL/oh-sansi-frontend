@@ -1,4 +1,4 @@
-import DropzoneComponent from "../../components/form/form-elements/DropZone";
+import DropzoneComponent from "../../components/UploadContestant/DropZone";
 import PageMeta from "../../components/common/PageMeta";
 import { useEffect, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
