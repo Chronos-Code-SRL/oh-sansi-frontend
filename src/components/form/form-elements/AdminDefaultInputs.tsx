@@ -8,11 +8,12 @@ import { validateOlympiad, validateField as validateOneField } from "../../../va
 import { Modal } from "../../ui/modal/index";
 import { postOlympiad } from "../../../api/services/olympiadService.ts";
 import { OlympiadPayload } from "../../../types/Olympiad.ts";
-import AreaSelectInputs from "./AreaSelectInputs .tsx";
+import AreaSelectInputs from "../../common/AreaSelectInputs .tsx";
 
 
 export default function AdminDefaultInputs() {
     const [name, setName] = useState("");
+    const [default_score_cut, setDefault_score_cut] = useState("");
     const [start_date, setStart_date] = useState(""); // formato YYYY-MM-DD
     const [end_date, setEnd_date] = useState("");
     const [number_of_phases, setNumber_of_phases] = useState("");
@@ -24,6 +25,7 @@ export default function AdminDefaultInputs() {
 
     const buildValues = () => ({
         name,
+        default_score_cut,
         start_date,
         end_date,
         number_of_phases,
@@ -77,6 +79,7 @@ export default function AdminDefaultInputs() {
         try {
             const payload: OlympiadPayload = {
                 name: name.trim(),
+                default_score_cut: parseInt(default_score_cut, 10),
                 start_date: start_date.trim(), // Cambiar a `start_date` para coincidir con el backend
                 end_date: end_date.trim(), // Cambiar a `end_date` para coincidir con el backend
                 number_of_phases: parseInt(number_of_phases, 10), // Aseguramos que sea un número entero
@@ -145,42 +148,58 @@ export default function AdminDefaultInputs() {
                                 className="w-full border-gray-300 focus:border-blue-500"
                             />
                         </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="default_score_cut" className="block text-sm font-medium text-gray-700">
+                                Umbral de puntuación
+                            </Label>
+                            <Input
+                                id="default_score_cut"
+                                type="number"
+                                value={default_score_cut}
+                                onChange={(e) => setDefault_score_cut(e.target.value)}
+                                onBlur={() => handleBlurField("default_score_cut")}
+                                error={!!errors.default_score_cut}
+                                hint={errors.default_score_cut}
+                                placeholder="Ingrese el umbral de puntuación"
+                                className="w-full border-gray-300 focus:border-blue-500"
+                            />
+                        </div>
 
-                    {/* Fechas */}
-                    <div className="space-y-1.5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <DatePicker
-                                    id="date-start"
-                                    label="Fecha de inicio"
-                                    placeholder="AAAA-MM-DD"
-                                    onChange={(selectedDates) => {
-                                        if (selectedDates.length > 0) {
-                                            const value = selectedDates[0].toISOString().split("T")[0];
-                                            setStart_date(value);
-                                            handleBlurField("start_date", value);
-                                        }
-                                    }}
-                                />
-                                {errors.start_date && <p className="mt-1.5 text-xs text-error-500">{errors.start_date}</p>}
-                            </div>
-                            <div>
-                                <DatePicker
-                                    id="end_date"
-                                    label="Fecha de finalización"
-                                    placeholder="AAAA-MM-DD"
-                                    onChange={(selectedDates) => {
-                                        if (selectedDates.length > 0) {
-                                            const value = selectedDates[0].toISOString().split("T")[0];
-                                            setEnd_date(value);
-                                            handleBlurField("end_date", value);
-                                        }
-                                    }}
-                                />
-                                {errors.end_date && <p className="mt-1.5 text-xs text-error-500">{errors.end_date}</p>}
+                        {/* Fechas */}
+                        <div className="space-y-1.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <DatePicker
+                                        id="date-start"
+                                        label="Fecha de inicio"
+                                        placeholder="AAAA-MM-DD"
+                                        onChange={(selectedDates) => {
+                                            if (selectedDates.length > 0) {
+                                                const value = selectedDates[0].toISOString().split("T")[0];
+                                                setStart_date(value);
+                                                handleBlurField("start_date", value);
+                                            }
+                                        }}
+                                    />
+                                    {errors.start_date && <p className="mt-1.5 text-xs text-error-500">{errors.start_date}</p>}
+                                </div>
+                                <div>
+                                    <DatePicker
+                                        id="end_date"
+                                        label="Fecha de finalización"
+                                        placeholder="AAAA-MM-DD"
+                                        onChange={(selectedDates) => {
+                                            if (selectedDates.length > 0) {
+                                                const value = selectedDates[0].toISOString().split("T")[0];
+                                                setEnd_date(value);
+                                                handleBlurField("end_date", value);
+                                            }
+                                        }}
+                                    />
+                                    {errors.end_date && <p className="mt-1.5 text-xs text-error-500">{errors.end_date}</p>}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
                         {/* Áreas */}
                         <div className="space-y-1.5">
@@ -204,14 +223,14 @@ export default function AdminDefaultInputs() {
                             </div>
                         )}
 
-                    <div className="pt-3">
-                        <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
-                            {isSubmitting ? "Creando..." : "Crear olimpiada"}
-                        </Button>
+                        <div className="pt-3">
+                            <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
+                                {isSubmitting ? "Creando..." : "Crear olimpiada"}
+                            </Button>
+                        </div>
                     </div>
-                </div>
-            </ComponentCard>
-        </form>
+                </ComponentCard>
+            </form>
 
             <Modal
                 isOpen={isModalOpen}

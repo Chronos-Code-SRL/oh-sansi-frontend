@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import MultiSelect from "../MultiSelect";
-import { Area } from "../../../types/Area";
-import { getAreas } from "../../../api/services/areaServices"; // Importar la función desde areaServices
+import MultiSelect from "../form/MultiSelect";
+import { Area } from "../../types/Area";
+import { getAreas } from "../../api/services/areaServices"; // Importar la función desde areaServices
 
 
 interface AreaSelectInputsProps {

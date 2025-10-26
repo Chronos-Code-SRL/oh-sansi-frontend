@@ -2,14 +2,14 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import BasicTables from "./pages/Tables/BasicTables";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import RegisterUser from "./pages/Users/RegisterUser";
-import AdRegistration from "./pages/CompetitorRegistration/AdRegistration";
+import AdRegistration from "./pages/UploadContestant/UploadContestant";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import GradingContestant from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
 
 
@@ -34,11 +34,12 @@ export default function App() {
             {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-
             {/*Register User*/}
             < Route path="/user-register" element={<RegisterUser />} />
+
+            <Route path="/calificaciones" element={<GradingContestant />} />
+
+          </Route>
 
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} /></Route>

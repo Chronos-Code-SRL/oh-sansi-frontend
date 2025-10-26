@@ -40,6 +40,11 @@ const navItems: NavItem[] = [
     path: "/registration",
   },
   {
+    icon: <ListIcon />,
+    name: "Calificar Competidores",
+    path: "/calificaciones",
+  },
+  {
     icon: <Slider />,
     name: "Filtrar lista de Competidores",
     path: "/filtros-de-lista",

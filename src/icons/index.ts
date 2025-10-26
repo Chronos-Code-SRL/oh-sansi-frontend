@@ -54,6 +54,9 @@ import { ReactComponent as ChatIcon } from "./chat.svg?react";
 import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
+import { ReactComponent as CommentIcon } from "./comment.svg?react";
+import { ReactComponent as FilterIcon } from "./filter.svg?react";
+
 import { ReactComponent as Slider } from "./sliders.svg?react";
 
 export {
@@ -69,6 +72,7 @@ export {
   PlusIcon,
   BoxIcon,
   CloseIcon,
+  CommentIcon,
   CheckCircleIcon,
   AlertIcon,
   InfoIcon,
@@ -113,5 +117,6 @@ export {
   ChatIcon,
   AngleLeftIcon,
   AngleRightIcon,
+  FilterIcon
   Slider,
 };

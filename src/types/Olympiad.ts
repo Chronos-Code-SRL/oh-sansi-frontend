@@ -17,6 +17,7 @@ export interface AllOlympiads {
 export interface OlympiadPayload {
     name: string;
     start_date: string;
+    default_score_cut: number;
     end_date: string;
     number_of_phases: number;
     areas: string[];
