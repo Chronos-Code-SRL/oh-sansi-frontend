@@ -1,4 +1,5 @@
 export interface Contestant {
+    evaluation_id: number,
     contestant_id: number,
     first_name: string,
     last_name: string,
@@ -8,7 +9,7 @@ export interface Contestant {
     department: string,
     score: number | null,
     description: string | null,
-    //level: string | null,
-    //grade: string | null,
+    level_name: string,
+    grade_name: string,
     status: boolean,
 }

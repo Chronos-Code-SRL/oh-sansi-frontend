@@ -7,7 +7,6 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import type { KeyboardEventHandler } from "react";
 import { Contestant } from "../../types/Contestant";
 import { getContestantByPhaseOlympiadArea } from "../../api/services/contestantService";
-import clsx from "clsx";
 import SearchBar from "./Searcher";
 import Filter from "./Filter";
 
@@ -88,16 +87,15 @@ export default function StudentTable() {
             selectedFilters.estado.length === 0 ||
             selectedFilters.estado.includes(statusLabel(s.status)); // <- mapear boolean a string
 
-        // const matchesNivel =
-        // selectedFilters.nivel.length === 0 ||
-        //selectedFilters.nivel.includes(s.level);
+        const matchesNivel =
+            selectedFilters.nivel.length === 0 ||
+            selectedFilters.nivel.includes(s.level_name);
 
-        // const matchesGrado =
-        // selectedFilters.grado.length === 0 ||
-        //selectedFilters.grado.includes(s.grade);
+        const matchesGrado =
+            selectedFilters.grado.length === 0 ||
+            selectedFilters.grado.includes(s.grade_name);
 
-        //return matchesSearch && matchesEstado && matchesNivel && matchesGrado; DESCONMENTAR CUANDO ESTE EL END POINT COMPLETO LO DE ABAJO LO USAREMOS DE MOMENTO
-        return matchesSearch && matchesEstado;
+        return matchesSearch && matchesEstado && matchesNivel && matchesGrado;
     });
 
 
@@ -260,8 +258,8 @@ export default function StudentTable() {
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nombre</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Apellido</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">CI</th>
-                            {/* <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Grado</th> */}
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nivel</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Grado</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Estado</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Nota</th>
                             <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Descripción</th>
@@ -271,13 +269,13 @@ export default function StudentTable() {
                         {loading === true && (
                             <TableRow>
                                 {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
-                                <td colSpan={6} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
+                                <td colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</td>
                             </TableRow>
                         )}
                         {error !== null && loading === false && (
                             <TableRow>
                                 {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
-                                <td colSpan={6} className="px-6 py-4 text-sm text-red-600">{error}</td>
+                                <td colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
                         {loading === false && error === null && filteredStudents.length === 0 && (
@@ -294,8 +292,8 @@ export default function StudentTable() {
                                     <td className="px-6 py-4 text-sm">{s.first_name}</td>
                                     <td className="px-6 py-4 text-sm">{s.last_name}</td>
                                     <td className="px-6 py-4 text-sm">{s.ci_document}</td>
-                                    {/* <td className="px-6 py-4 text-sm">{s.nivel}</td>
-                                    <td className="px-6 py-4 text-sm">{s.grado}</td> */}
+                                    <td className="px-6 py-4 text-sm">{s.level_name}</td>
+                                    <td className="px-6 py-4 text-sm">{s.grade_name}</td>
                                     <td className="px-6 py-4 text-sm">
                                         <Badge color={s.status === true ? "success" : "error"}>
                                             {s.status ? "Evaluado" : "No Evaluado"}
@@ -401,7 +399,3 @@ export default function StudentTable() {
         </>
     )
 }
-function setContestants(data: Contestant[]) {
-    throw new Error("Function not implemented.");
-}
-
