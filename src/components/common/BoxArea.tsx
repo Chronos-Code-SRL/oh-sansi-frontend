@@ -42,7 +42,7 @@ export const BoxArea: React.FC<BoxAreaProps> = ({
                     {startDate} - {endDate}  {/*Aca tengo que consumir de la Api las fechas para ponerlo*/}
                 </p>
             </div>
-            <div>
+            <div >
                 <Button size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={onConfigureClick}

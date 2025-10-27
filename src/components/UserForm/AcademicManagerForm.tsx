@@ -6,7 +6,7 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import AreaSelectInputs from "../../components/form/form-elements/AreaSelectInputs ";
+import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 

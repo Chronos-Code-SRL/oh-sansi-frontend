@@ -6,6 +6,7 @@ export interface OlympiadFormValues {
   start_date: string; // YYYY-MM-DD
   end_date: string;   // YYYY-MM-DD
   number_of_phases: string | number; // se convierte a número al validar
+  default_score_cut: string | number; // se convierte a número al validar
   areas: string[]; // nombres de áreas
 }
 
@@ -38,6 +39,20 @@ export function validateOlympiad(values: OlympiadFormValues): ValidationResult {
     errors.number_of_phases = 'Debe ser al menos 2';
   } else if (n > 50) {
     errors.number_of_phases = 'El máximo permitido es 50';
+  }
+
+  // Umbral de puntuación (>1 y ≤100, entero, obligatorio)
+  const cut = Number(values.default_score_cut);
+  if (values.default_score_cut === '' || values.default_score_cut === null || values.default_score_cut === undefined) {
+    errors.default_score_cut = 'El umbral de puntuación es obligatorio';
+  } else if (Number.isNaN(cut)) {
+    errors.default_score_cut = 'El umbral debe ser un número';
+  } else if (!Number.isInteger(cut)) {
+    errors.default_score_cut = 'El umbral debe ser un número entero';
+  } else if (cut < 1) {
+    errors.default_score_cut = 'El umbral debe ser mayor a 0';
+  } else if (cut > 1000) {
+    errors.default_score_cut = 'El umbral no puede ser mayor a 1000';
   }
 
   // Fechas

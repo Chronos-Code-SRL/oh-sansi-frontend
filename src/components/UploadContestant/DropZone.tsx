@@ -1,4 +1,4 @@
-import Badge from "../../ui/badge/Badge";
+import Badge from "../ui/badge/Badge";
 import { useDropzone } from "react-dropzone";
 //import DropZone from "react-dropzone";
 
@@ -77,10 +77,6 @@ const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
               Formato permitido:
               <Badge color="primary"> csv</Badge>
             </span>
-            
-                
-
-
           </div>
         </form>
       </div>

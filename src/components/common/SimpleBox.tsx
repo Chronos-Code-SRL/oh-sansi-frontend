@@ -24,13 +24,14 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
 
     return (
 
-        <div className="bg-white rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow">
+         <div className="bg-white rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow 
+                    flex flex-col justify-between h-full min-h-[300px]">
             <div className="flex items-start justify-between mb-3">
                 <h3 className="text-lg font-semibold text-card-foreground leading-tight">
                     {/* Aca tenemos que consumir de la Api el nombre de la olimpiada */}
                     {name}
                 </h3>
-                <Badge color={status === "Activo" ? "success" : "error"}>
+                <Badge color={status === "Activa" ? "success" : "error"}>
                     {status}
                 </Badge>  {/*Aca tengo que consumir de la Api si esta activo o inactivo */}
             </div>
@@ -42,7 +43,7 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
                 </p>
             </div>
 
-            <div className="mb-5">
+             <div className="mb-5">
                 <p className="text-sm font-medium text-card-foreground mb-2">
                     Áreas asignadas:
                 </p>
@@ -57,7 +58,7 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
                     ))}
                 </div>
             </div>
-            <div>
+            <div className="mt-auto">
                 <Button size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleButtonClick}
