@@ -117,6 +117,6 @@ export {
   ChatIcon,
   AngleLeftIcon,
   AngleRightIcon,
-  FilterIcon
+  FilterIcon,
   Slider,
 };

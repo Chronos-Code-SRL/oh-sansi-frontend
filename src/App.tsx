@@ -39,10 +39,10 @@ export default function App() {
 
             <Route path="/calificaciones" element={<GradingContestant />} />
 
-          </Route>
-
             {/*Filters on list */}
-            <Route index path="/filtros-de-lista" element={<FilterElements />} /></Route>
+            <Route index path="/filtros-de-lista" element={<FilterElements />} />
+
+          </Route>
 
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
@@ -50,6 +50,7 @@ export default function App() {
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
+
         </Routes>
       </Router>
     </>

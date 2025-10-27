@@ -47,7 +47,7 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-between min-w-[140px] gap-2 rounded-md bg-[#3756A6] px-4 py-2 text-white hover:bg-[#2F55B8] disabled:bg-gray-300 transition"
+        className="inline-flex items-center justify-between min-w-[130px] gap-2 rounded-md bg-[#3756A6] px-4 py-2 text-white hover:bg-[#2F55B8] disabled:bg-gray-300 transition"
       >
         {label}
         <ChevronDownIcon
