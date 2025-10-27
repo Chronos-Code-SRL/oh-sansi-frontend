@@ -6,9 +6,9 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
+import AreaSelectInputs from "../common/AreaSelectInputs ";
 
 export default function EvaluatorForm() {
   const [first_name, setfirst_name] = useState("");
