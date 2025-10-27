@@ -41,12 +41,15 @@ export default function AdRegistration() {
         ...f,
         details: [
           {
+            id:f.id,
             filename: f.original_file_name,
             successful: f.successful_records,
             competitor_errors: f.failed_records,
-            header_errors: 0,
+            header_errors: f.header_errors,
             total_records: f.total_records,
-            error_file: f.has_error_file ? f.original_file_name.replace(".csv", "-errores.csv") : undefined
+            error_file: f.has_error_file ? f.original_file_name.replace(".csv", "-errores.csv") : undefined,
+            uploaded_at_human:  f.uploaded_at_human,
+            file_size:f.file_size,
           }
         ]
       }));
@@ -78,9 +81,9 @@ export default function AdRegistration() {
     try {
       const res = await uploadCompetitorCsv(acceptedFiles, selectedOlympiad.id);
 
-      // 🔹 mapear detalles de la respuesta POST
+      //  mapear detalles de la respuesta POST
       const uploadedFiles: FileWithDetails[] = res.data.details.map(d => ({
-        id: Math.random(), // solo para key, el backend no da id en POST
+        id: d.id,
         original_file_name: d.filename,
         successful_records: d.successful,
         failed_records: d.competitor_errors,
@@ -88,14 +91,15 @@ export default function AdRegistration() {
         success_rate: d.total_records > 0 ? Math.round((d.successful / d.total_records) * 100) : 0,
         has_errors: d.competitor_errors > 0 || d.header_errors > 0,
         has_error_file: !!d.error_file,
-        file_size: 0, // no disponible
+        header_errors:d.header_errors,
+        uploaded_at_human: d.uploaded_at_human,
+        file_size: d.file_size, 
         details: [d]
       }));
 
-      // 🔹 unir con los anteriores sin duplicar
       setFiles(prev => [
         ...uploadedFiles,
-        ...prev.filter(f => !uploadedFiles.some(u => u.original_file_name === f.original_file_name))
+        ...prev
       ]);
 
     } catch (error) {
@@ -104,7 +108,6 @@ export default function AdRegistration() {
       setIsUploading(false);
     }
   };
-
   // Descargar CSV de errores
   const handleDownloadError = async (filename: string) => {
     try {
@@ -160,11 +163,8 @@ export default function AdRegistration() {
               <div className="mx-auto w-full text-center space-y-6">
 
                 <DropzoneComponent onFilesAdded={handleFilesAdded} />
-                {/* disabled={isUploading} */}
                 {/* Lista de archivos subidos */}
-
                 <ComponentCard title="Archivos subidos">
-
 
                   {isLoadingUploads ? (
                   <p className="text-gray-500">Cargando archivos...</p>
@@ -183,10 +183,8 @@ export default function AdRegistration() {
                             <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
                             <div>
                               <p className="font-medium mb-1">{f.original_file_name}</p>
-                              <p className="text-sm text-gray-500 mb-2">{f.file_size}</p>
-                              {/* <p className="text-sm text-gray-500 mb-2">
-                              {f.total_records} registros — {f.success_rate}% éxito
-                            </p> */}
+                              <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
+                              
 
                               {f.details[0].header_errors > 0 ? (
                                 <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
@@ -202,7 +200,7 @@ export default function AdRegistration() {
                                     {f.details[0].total_records} registros totales
                                   </Badge>
                                   <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>
-                                    {f.details[0].successful} exitosos
+                                    {f.details[0].successful} exitosos  ({f.success_rate})%
                                   </Badge>
                                   <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
                                     {f.details[0].competitor_errors} errores
@@ -222,7 +220,14 @@ export default function AdRegistration() {
                               >
                                 Descargar CSV de errores
                               </Button>
+                              <div className="text-right mt-3 mr-2">
+                                <p className="text-sm text-gray-500 mb-2">
+                              {/* {f.uploaded_at} */}
+                               {f.uploaded_at_human} 
+                            </p>
+                              </div>
                             </div>
+                            
                           )}
                         </div>
                       ))}
