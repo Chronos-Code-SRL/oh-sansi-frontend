@@ -1,3 +1,5 @@
+import { Area } from "./Area";
+
 export interface User{
   id: number;
   first_name:string;
@@ -12,3 +14,9 @@ export interface LoginResponse {
   user:User;
 }
 
+export interface UserAreasResponse {
+  id_user: number;
+  olympiad: string;
+  areas: Area[];
+  status: number;
+}

@@ -3,7 +3,7 @@ import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
-import { login } from "../../api/services/authServices";
+import { getToken, login } from "../../api/services/authServices";
 import { useNavigate } from "react-router";
 
 export default function SignInForm() {
@@ -22,7 +22,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     try {
       const data = await login(email, password); 
       console.log("Sesión iniciada correctamente:", data);
-     
+      // console.log(getToken())
       navigate("/"); 
     } catch {
       setError("Credenciales incorrectas o error en el servidor");

@@ -1,10 +1,11 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { LoginResponse,User } from "../../types/User";
+import { LoginResponse,User, UserAreasResponse } from "../../types/User";
 
 const TOKEN_KEY = "ohsansi_token";
 const USER_KEY = "ohsansi_user";
 const LOGIN = `/login`;
 const LOGOUT = `/logout`;
+const USER_AREAS_URL = "/user/areas";
 
 
 // Login
@@ -67,4 +68,15 @@ export const getRoleName = (user: User | null): string  => {
 export const getRole = (requiredRoleId: number): boolean => {
   const user = getUser();
   return user?.roles_id === requiredRoleId;
+};
+
+export const getUserAreas = async (): Promise<UserAreasResponse> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No se encontró token. El usuario no está autenticado.");
+  }
+  const res = await ohSansiApi.get<UserAreasResponse>(USER_AREAS_URL, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
 };
