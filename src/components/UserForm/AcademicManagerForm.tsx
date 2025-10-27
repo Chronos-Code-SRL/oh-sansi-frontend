@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
@@ -10,19 +10,20 @@ import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 
-export default function RegisterUser() {
+export default function AcademicManagerForm() {
   const [first_name, setfirst_name] = useState("");
   const [last_name, setlast_name] = useState("");
   const [ci, setCi] = useState("");
   const [phone_number, setphone_number] = useState("");
   const [email, setEmail] = useState("");
   const [genre, setgenre] = useState("");
-  const [roles_id, setroles_id] = useState("");
+  const [roles_id] = useState("2");
   const [areas_id, setAreas] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [registeredRole, setRegisteredRole] = useState<string>("");
   const [multiSelectKey, setMultiSelectKey] = useState(0);
+  const [profesion, setProfesion] = useState("");
+
 
 
   {/*Validaciones*/ }
@@ -59,12 +60,15 @@ export default function RegisterUser() {
       newErrors.email = "Formato de correo no válido.";
     }
 
-    if (!genre) {
-      newErrors.genre = "Debe seleccionar un género.";
+    if (!profesion.trim()) {
+      newErrors.profesion = "La profesión es obligatoria.";
+    } else if (!/^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]{3,100}$/.test(profesion)) {
+      newErrors.profesion = "La profesión solo debe contener letras y tener entre 3 y 100 caracteres.";
     }
 
-    if (!roles_id) {
-      newErrors.roles_id = "Debe seleccionar un rol.";
+
+    if (!genre) {
+      newErrors.genre = "Debe seleccionar un género.";
     }
     
     if (areas_id.length === 0) newErrors.areas = "Seleccione al menos un área.";
@@ -79,8 +83,8 @@ export default function RegisterUser() {
     setCi("");
     setphone_number("");
     setEmail("");
+    setProfesion("");
     setgenre("");
-    setroles_id("");
     setAreas([]);
     setErrors({});
     setMultiSelectKey((prev) => prev + 1);
@@ -103,12 +107,12 @@ export default function RegisterUser() {
         genre,
         roles_id,
         areas_id,
+        profesion,
       };
 
       const resultado = await registerApi.postRegister(datos);
 
       if (resultado.status === 201) {
-        setRegisteredRole(roles_id);
         setIsModalOpen(true);
         resetForm();
       }
@@ -134,21 +138,14 @@ export default function RegisterUser() {
     }
   };
 
-  const getSuccessMessage = () => {
-    if (registeredRole === "2") return "El responsable académico ha sido registrado exitosamente.";
-    if (registeredRole === "3") return "El evaluador ha sido registrado exitosamente.";
-    return "El usuario ha sido registrado correctamente.";
-  };
-
-
-
+  
   return (
     <>
       <PageMeta
-        title="Registrar Usuario | Oh! SanSi"
-        description="Página para registrar responsables académicos y evaluadores"
+        title="Registro | Oh! SanSi"
+        description="Página para registrar evaluadores"
       />
-      <TitleBreadCrumb pageTitle="Registrar Usuario" />
+      <TitleBreadCrumb pageTitle="Registrar Evaluador" />
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -222,6 +219,19 @@ export default function RegisterUser() {
                     hint={errors.email}
                   />
                 </div>
+
+                <div>
+                  <Label htmlFor="profesion">Profesión</Label>
+                  <InputField
+                    id="profesion"
+                    type="text"
+                    placeholder="Ejemplo: Licenciado en Matemáticas"
+                    value={profesion}
+                    onChange={(e) => setProfesion(e.target.value)}
+                    error={!!errors.profesion}
+                    hint={errors.profesion}
+                  />
+                </div>
               </div>
             </ComponentCard>
           </div>
@@ -262,38 +272,8 @@ export default function RegisterUser() {
                 </div>
 
                 <div>
-                  <Label>Rol</Label>
-                  <div className="flex gap-4"
-                    onFocus={() => {
-                      if (!roles_id) {
-                        setroles_id("2");
-                      }
-                    }}
-                  >
-                    <Radio
-                      id="roles_id-resp"
-                      name="roles_id"
-                      value="2"
-                      label="Responsable Académico"
-                      checked={roles_id === "2"}
-                      onChange={setroles_id}
-                    />
-                    <Radio
-                      id="roles_id-eval"
-                      name="roles_id"
-                      value="3"
-                      label="Evaluador"
-                      checked={roles_id === "3"}
-                      onChange={setroles_id}
-                    />
-                  </div>
-                  {errors.roles_id && (
-                    <p className="text-sm text-red-500 mt-1">{errors.roles_id}</p>
-                  )}
-                </div>
-
-                <div>
                   <AreaSelectInputs
+                    key={multiSelectKey}
                     onChange={(values) => {
                       setAreas(values);
                       setErrors(prev => {
@@ -329,7 +309,7 @@ export default function RegisterUser() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
             ¡Registro exitoso!
           </h2>
-          <Label>{getSuccessMessage()}</Label>
+          <Label>El Responsable Académico ha sido registrado exitosamente.</Label>
           <Button
             size="md"
             variant="primary"

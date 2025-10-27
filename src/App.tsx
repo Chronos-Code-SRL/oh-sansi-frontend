@@ -4,7 +4,6 @@ import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import RegisterUser from "./pages/Users/RegisterUser";
 import AdRegistration from "./pages/UploadContestant/UploadContestant";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
@@ -12,6 +11,9 @@ import ViewAreas from "./pages/Olympiad/ViewAreas";
 import EditScoreCuts from "./pages/ScoreCuts/EditScoreCuts";
 
 import GradingContestant from "./pages/Grade/GradingContestant";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
+import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 
 export default function App() {
   return (
@@ -20,7 +22,14 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          <Route
+            element={
+              // <AppLayout />
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index path="/" element={<FormOlympiad />} />
 
             {/* Aministration*/}
@@ -35,7 +44,8 @@ export default function App() {
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
             {/*Register User*/}
-            < Route path="/user-register" element={<RegisterUser />} />
+            < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
+            < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
             {/*Editar Umbral*/}
             < Route path="/edit-score-cut" element={<EditScoreCuts />} />
