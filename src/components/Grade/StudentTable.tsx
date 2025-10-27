@@ -88,7 +88,7 @@ export default function StudentTable() {
         async function pollOnce() {
             const since = lastUpdateAtRef.current ?? new Date().toISOString();
             console.log(since);
-            
+
             try {
                 console.debug("[poll] tick -> lastUpdateAt:", since);
                 const res = await checkUpdates(since);
@@ -212,7 +212,6 @@ export default function StudentTable() {
                     st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st,
                 ),
             );
-
             showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
             closeCommentModal();
         } catch {
@@ -243,17 +242,10 @@ export default function StudentTable() {
     }
 
     const startEdit = (s: Contestant) => {
-
         if (saving === true) {
             return
         };
-
-        // Si ya está Evaluado, muestra la alerta y no entres a edición
-        if (s.status === true) {
-            showAlert("Acción no permitida", `El estudiante ${s.first_name} ${s.last_name} ya está Evaluado.`);
-            return;
-        }
-
+        // Permitir editar incluso si está Evaluado
         setEditingCi(s.ci_document);
         if (typeof s.score === "number") {
             setDraftNote(s.score);
@@ -299,29 +291,37 @@ export default function StudentTable() {
         }
     };
 
-    const rejectNote = async (s: Contestant) => {
+    // const rejectNote = async (s: Contestant) => {
+    //     if (saving) return;
+    //     try {
+    //         setSaving(true);
+
+    //         // Opción A: limpiar score (ojo: tu backend hoy setea status=true si 'score' existe, incluso si es null)
+    //         // Idealmente el backend debería permitir poner status=false explícitamente.
+    //         await updatePartialEvaluation(getEvaluationId(s), { score: null });
+
+    //         setStudents((prev) =>
+    //             prev.map((st) =>
+    //                 st.contestant_id === s.contestant_id
+    //                     ? { ...st, score: null as any, status: false }
+    //                     : st,
+    //             ),
+    //         );
+    //         setEditingCi(null);
+    //     } catch {
+    //         setError("No se pudo actualizar el estado.");
+    //     } finally {
+    //         setSaving(false);
+    //     }
+    // };
+
+    const rejectNote = (_s: Contestant) => {
         if (saving) return;
-        try {
-            setSaving(true);
-
-            // Opción A: limpiar score (ojo: tu backend hoy setea status=true si 'score' existe, incluso si es null)
-            // Idealmente el backend debería permitir poner status=false explícitamente.
-            await updatePartialEvaluation(getEvaluationId(s), { score: null });
-
-            setStudents((prev) =>
-                prev.map((st) =>
-                    st.contestant_id === s.contestant_id
-                        ? { ...st, score: null as any, status: false }
-                        : st,
-                ),
-            );
-            setEditingCi(null);
-        } catch {
-            setError("No se pudo actualizar el estado.");
-        } finally {
-            setSaving(false);
-        }
+        // Cancelar edición sin modificar nota ni estado
+        setEditingCi(null);
+        setDraftNote("");
     };
+
 
     // Limpia el timer del Alert al desmontar el componente
     useEffect(() => {
@@ -452,7 +452,6 @@ export default function StudentTable() {
                                             <div className="flex items-center gap-3">
                                                 <span>{typeof s.score === "number" ? s.score : "—"}</span>
                                                 {/* Solo permitir edición cuando no está evaluado */}
-
                                             </div>
                                         )}
                                     </td>
@@ -483,7 +482,7 @@ export default function StudentTable() {
                 >
                     <div className="pointer-events-auto" role="alert" aria-live="polite">
                         <Alert
-                            variant="error"
+                            variant="success"
                             title={alertTitle}
                             message={alertMessage}
                         />
