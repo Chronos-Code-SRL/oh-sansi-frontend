@@ -1,3 +1,4 @@
+import { LevelOption } from "../../types/Level";
 import { ohSansiApi } from "../ohSansiApi";
 
 export const levelGradesService = {
@@ -26,4 +27,9 @@ export const levelGradesService = {
     );
     return response.data;
   },
+};
+
+export const getLevelsOlympiad = async (): Promise<LevelOption[]> => {
+  const res = await ohSansiApi.get<LevelOption[]>("/levels-olympiad");
+  return res.data;
 };

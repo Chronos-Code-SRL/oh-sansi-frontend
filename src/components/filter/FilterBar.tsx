@@ -3,6 +3,11 @@ import { FilterDropdown } from "./FilterDropdown";
 import { getContestantByFilters } from "../../api/services/contestantService";
 import { FilterList } from "../../types/Contestant";
 import { FilterDropdownNota } from "./FilterDropDownNota";
+import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
+import Badge from "../ui/badge/Badge";
+import { getLevelsOlympiad } from "../../api/services/levelGradesService";
+import { LevelOption } from "../../types/Level";
+import { Clean } from "../../icons";
 
 export const FilterBar: React.FC = () => {
   const [contestants, setContestants] = useState<FilterList[]>([]);
@@ -17,6 +22,9 @@ export const FilterBar: React.FC = () => {
   const [selectedNivel, setSelectedNivel] = useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
   const [notaRange, setNotaRange] = useState<{ min: number; max: number } | null>(null);
+
+  //Niveles
+  const [levels, setLevels] = useState<LevelOption[]>([]);
 
   // 🔹 Llamada a la API
   useEffect(() => {
@@ -34,6 +42,20 @@ export const FilterBar: React.FC = () => {
     };
 
     fetchContestants();
+  }, []);
+
+  // Llamada a la API de niveles
+  useEffect(() => {
+    const fetchLevels = async () => {
+      try {
+        const data = await getLevelsOlympiad();
+        setLevels(data);
+      } catch (err) {
+        console.error("Error al cargar los niveles:", err);
+      }
+    };
+
+    fetchLevels();
   }, []);
 
   // 🔹 Filtros en memoria
@@ -74,105 +96,108 @@ export const FilterBar: React.FC = () => {
       <div className="mx-auto w-full space-y-8">
         <p className="block text-left text-lg font-semibold mb-3">Filtrar por:</p>
 
-        {/* 🔸 Dropdowns de filtro */}
-        <div className="">
-          <FilterDropdown
-            label="Género"
-            options={[
-              { label: "Masculino", value: "m" },
-              { label: "Femenino", value: "f" },
-            ]}
-            selectedValues={selectedGender}
-            onChange={setSelectedGender}
-          />
+        {/* Dropdowns de filtro */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          {/* Contenedor izquierdo (filtros) */}
+          <div className="flex flex-wrap items-center ">
+            <FilterDropdown
+              label="Género"
+              options={[
+                { label: "Masculino", value: "m" },
+                { label: "Femenino", value: "f" },
+              ]}
+              selectedValues={selectedGender}
+              onChange={setSelectedGender}
+            />
 
-          <FilterDropdown
-            label="Departamento"
-            options={[
-              { label: "La Paz", value: "la paz" },
-              { label: "Cochabamba", value: "cochabamba" },
-              { label: "Santa Cruz", value: "santa cruz" },
-              { label: "Potosí", value: "potosi" },
-              { label: "Chuquisaca", value: "chuquisaca" },
-              { label: "Tarija", value: "tarija" },
-              { label: "Oruro", value: "oruro" },
-              { label: "Beni", value: "beni" },
-              { label: "Pando", value: "pando" },
-            ]}
-            selectedValues={selectedDepartamento}
-            onChange={setSelectedDepartamento}
-          />
+            <FilterDropdown
+              label="Departamento"
+              options={[
+                { label: "La Paz", value: "la paz" },
+                { label: "Cochabamba", value: "cochabamba" },
+                { label: "Santa Cruz", value: "santa cruz" },
+                { label: "Potosí", value: "potosi" },
+                { label: "Chuquisaca", value: "chuquisaca" },
+                { label: "Tarija", value: "tarija" },
+                { label: "Oruro", value: "oruro" },
+                { label: "Beni", value: "beni" },
+                { label: "Pando", value: "pando" },
+              ]}
+              selectedValues={selectedDepartamento}
+              onChange={setSelectedDepartamento}
+            />
 
-          <FilterDropdown
-            label="Área"
-            options={[
-              { label: "Física", value: "física" },
-              { label: "Química", value: "química" },
-              { label: "Biología", value: "biología" },
-              { label: "Matemática", value: "matemática" },
-              { label: "Informática", value: "informática" },
-              { label: "Astronomía", value: "astronomía" },
-              { label: "Robótica", value: "robótica" },
-              { label: "Astrofísica", value: "astrofísica" },
-            ]}
-            selectedValues={selectedArea}
-            onChange={setSelectedArea}
-          />
+            <FilterDropdown
+              label="Área"
+              options={[
+                { label: "Física", value: "física" },
+                { label: "Química", value: "química" },
+                { label: "Biología", value: "biología" },
+                { label: "Matemática", value: "matemática" },
+                { label: "Informática", value: "informática" },
+                { label: "Astronomía", value: "astronomía" },
+                { label: "Robótica", value: "robótica" },
+                { label: "Astrofísica", value: "astrofísica" },
+              ]}
+              selectedValues={selectedArea}
+              onChange={setSelectedArea}
+            />
 
-          <FilterDropdown
-            label="Grado"
-            options={[
-              { label: "Primero de Primaria", value: "primero de primaria" },
-              { label: "Segundo de Primaria", value: "segundo de primaria" },
-              { label: "Tercero de Primaria", value: "tercero de primaria" },
-              { label: "Cuarto de Primaria", value: "cuarto de primaria" },
-              { label: "Quinto de Primaria", value: "quinto de primaria" },
-              { label: "Sexto de Primaria", value: "sexto de primaria" },
-              { label: "Primero de Secundaria", value: "primero de secundaria" },
-              { label: "Segundo de Secundaria", value: "segundo de secundaria" },
-              { label: "Tercero de Secundaria", value: "tercero de secundaria" },
-              { label: "Cuarto de Secundaria", value: "cuarto de secundaria" },
-              { label: "Quinto de Secundaria", value: "quinto de secundaria" },
-              { label: "Sexto de Secundaria", value: "sexto de secundaria" },
-            ]}
-            selectedValues={selectedGrado}
-            onChange={setSelectedGrado}
-          />
+            <FilterDropdown
+              label="Grado"
+              options={[
+                { label: "Primero de Primaria", value: "primero de primaria" },
+                { label: "Segundo de Primaria", value: "segundo de primaria" },
+                { label: "Tercero de Primaria", value: "tercero de primaria" },
+                { label: "Cuarto de Primaria", value: "cuarto de primaria" },
+                { label: "Quinto de Primaria", value: "quinto de primaria" },
+                { label: "Sexto de Primaria", value: "sexto de primaria" },
+                { label: "Primero de Secundaria", value: "primero de secundaria" },
+                { label: "Segundo de Secundaria", value: "segundo de secundaria" },
+                { label: "Tercero de Secundaria", value: "tercero de secundaria" },
+                { label: "Cuarto de Secundaria", value: "cuarto de secundaria" },
+                { label: "Quinto de Secundaria", value: "quinto de secundaria" },
+                { label: "Sexto de Secundaria", value: "sexto de secundaria" },
+              ]}
+              selectedValues={selectedGrado}
+              onChange={setSelectedGrado}
+            />
 
-          <FilterDropdown
-            label="Nivel"
-            options={[
-              { label: "Booster", value: "booster" },
-              { label: "Master", value: "Master" },
-              { label: "Noob", value: "Noob" },
-            ]}
-            selectedValues={selectedNivel}
-            onChange={setSelectedNivel}
-          />
+            <FilterDropdown
+              label="Nivel"
+              options={levels.map((lvl) => ({
+                label: lvl.name,
+                value: lvl.name.toLowerCase(),
+              }))}
+              selectedValues={selectedNivel}
+              onChange={setSelectedNivel}
+            />
 
-          <FilterDropdown
-            label="Estado"
-            options={[
-              { label: "Evaluado", value: "evaluado" },
-              { label: "No evaluado", value: "no evaluado" },
-            ]}
-            selectedValues={selectedEstado}
-            onChange={setSelectedEstado}
-          />
+            <FilterDropdown
+              label="Estado"
+              options={[
+                { label: "Evaluado", value: "evaluado" },
+                { label: "No evaluado", value: "no evaluado" },
+              ]}
+              selectedValues={selectedEstado}
+              onChange={setSelectedEstado}
+            />
 
-          <FilterDropdownNota onConfirm={handleFilterNota} />
+            <FilterDropdownNota onConfirm={handleFilterNota} />
+          </div>
 
-          {/* 🟢 Botón limpiar filtros */}
+          {/* Botón limpiar filtros */}
           <button
             onClick={handleClearFilters}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition flex items-center gap-2"
           >
-            Limpiar filtros
+            <Clean className="w-5 h-5" />
           </button>
         </div>
 
+
         {/* 🔹 Tabla de resultados */}
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-6 overflow-x-auto rounded-xl ">
           {loading ? (
             <p className="text-gray-500 text-center">Cargando datos...</p>
           ) : error ? (
@@ -180,46 +205,44 @@ export const FilterBar: React.FC = () => {
           ) : filteredContestants.length === 0 ? (
             <p className="text-gray-500 text-center">No se encontraron concursantes.</p>
           ) : (
-            <table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 border text-center">Nombre</th>
-                  <th className="px-4 py-2 border text-center">Apellido</th>
-                  <th className="px-4 py-2 border text-center">C.I.</th>
-                  <th className="px-4 py-2 border text-center">Género</th>
-                  <th className="px-4 py-2 border text-center">Departamento</th>
-                  <th className="px-4 py-2 border text-center">Área</th>
-                  <th className="px-4 py-2 border text-center">Grado</th>
-                  <th className="px-4 py-2 border text-center">Nivel</th>
-                  <th className="px-4 py-2 border text-center">Nota</th>
-                  <th className="px-4 py-2 border text-center">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
+              <TableHeader className="bg-gray-100 border-b border-border bg-muted/50 ">
+                <TableRow className="">
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Género</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredContestants.map((c) => (
-                  <tr key={c.contestant_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 border text-center">{c.first_name}</td>
-                    <td className="px-4 py-2 border text-center">{c.last_name}</td>
-                    <td className="px-4 py-2 border text-center">{c.ci_document}</td>
-                    <td className="px-4 py-2 border capitalize text-center">{c.gender}</td>
-                    <td className="px-4 py-2 border capitalize text-center ">{c.department}</td>
-                    <td className="px-4 py-2 border capitalize text-center">{c.area_name}</td>
-                    <td className="px-4 py-2 border capitalize text-center">{c.grade_name}</td>
-                    <td className="px-4 py-2 border capitalize text-center">{c.level_name}</td>
-                    <td className="px-4 py-2 border text-center">
+                  <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
+                    <td className="px-6 py-4 text-sm text-center">{c.first_name}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.last_name}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.ci_document}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.gender}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.department}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.area_name}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.grade_name}</td>
+                    <td className="px-6 py-4 text-sm text-center">{c.level_name}</td>
+                    <td className="px-6 py-4 text-sm text-center">
                       {c.score !== null ? c.score : "—"}
                     </td>
-                    <td
-                      className={`px-4 py-2 border text-center font-medium ${
-                        c.status ? "text-green-600" : "text-gray-400"
-                      }`}
-                    >
-                      {c.status ? "Evaluado" : "No evaluado"}
+                    <td className="px-6 py-4 text-sm text-center">
+                        <Badge color={c.status === true ? "success" : "error"}>
+                             {c.status ? "Evaluado" : "No Evaluado"}
+                        </Badge>
                     </td>
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           )}
         </div>
       </div>

@@ -58,6 +58,8 @@ import { ReactComponent as CommentIcon } from "./comment.svg?react";
 import { ReactComponent as FilterIcon } from "./filter.svg?react";
 
 import { ReactComponent as Slider } from "./sliders.svg?react";
+import { ReactComponent as Clean } from "./clean-b.svg?react";
+
 
 export {
   ErrorHexaIcon,
@@ -119,4 +121,5 @@ export {
   AngleRightIcon,
   FilterIcon,
   Slider,
+  Clean,
 };
