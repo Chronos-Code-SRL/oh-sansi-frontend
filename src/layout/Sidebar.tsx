@@ -28,8 +28,11 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserIcon />,
-    name: "Registrar Usuario",
-    path: "/user-register",
+    name: "Registro",
+    subItems: [
+      { name: "Registrar Responsable Académico", path: "/Academic-Manager-register", pro: false },
+      { name: "Registrar Evaluador", path: "/Evaluator-register", pro: false },
+    ],
   },
   {
     icon: <GroupIcon />,
