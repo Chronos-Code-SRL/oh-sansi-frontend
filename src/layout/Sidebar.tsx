@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { getUserAreas } from "../api/services/authServices";
 
 // // Assume these icons are imported from an icon library
 import {
-  ListIcon,
-  ChevronDownIcon,
-  HorizontaLDots,
-  GridIcon,
-  GroupIcon,
-  UserIcon,
+  ListIcon,ChevronDownIcon,HorizontaLDots,GridIcon,GroupIcon,UserIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -18,6 +14,8 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
+
+
 
 const navItems: NavItem[] = [
   {
@@ -42,13 +40,56 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Calificar Competidores",
     path: "/calificaciones",
+    subItems: [], 
+
   },
 ];
 const othersItems: NavItem[] = [];
 
+ 
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+
+  const [userAreas, setUserAreas] = useState<{ name: string; path: string }[]>(
+    []
+  );
+  const [menuItems, setMenuItems] = useState(navItems);
+
+  useEffect(() => {
+    const fetchUserAreas = async () => {
+      try {
+        const res = await getUserAreas();
+        // Convertimos las áreas a formato compatible con NavItem.subItems
+        const formatted = res.areas.map((area) => ({
+          name: area.name,
+          path: `/calificaciones/${area.name.toLowerCase()}`,
+        }));
+        setUserAreas(formatted);
+      } catch (error) {
+        console.error("Error obteniendo áreas del usuario:", error);
+      }
+    };
+
+    fetchUserAreas();
+  }, []);
+
+
+  useEffect(() => {
+    // Solo actualizamos si ya tenemos las áreas
+    if (userAreas.length > 0) {
+      const updated = navItems.map((item) => {
+        if (item.name === "Calificaciones") {
+          return { ...item, subItems: userAreas };
+        }
+        return item;
+      });
+      setMenuItems(updated);
+    } else {
+      setMenuItems(navItems);
+    }
+  }, [userAreas]);
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -305,7 +346,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(menuItems, "main")}
             </div>
           </div>
         </nav>
