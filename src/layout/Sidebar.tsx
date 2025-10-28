@@ -83,6 +83,8 @@ const AppSidebar: React.FC = () => {
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
 
   const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
+  // Nota: si en el futuro necesitamos almacenar el id de la olimpiada a nivel de Sidebar,
+  // podemos agregar un estado aquí. Por ahora lo omitimos para evitar variables sin uso.
   const [menuItems, setMenuItems] = useState(navItems);
 
   useEffect(() => {
@@ -93,7 +95,8 @@ const AppSidebar: React.FC = () => {
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          path: `/calificaciones/${area.id}/${area.name.toLowerCase()}`,
+          // Incluir el olympiad_id proveniente de UserAreasResponse en el path
+          path: `/calificaciones/${res.olympiad_id}/${area.id}/${area.name.toLowerCase()}`,
         }));
         setUserAreas(formatted);
       } catch (error) {
