@@ -7,12 +7,15 @@ import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { Modal } from "../../components/ui/modal";
 import { scoreCutsService } from "../../api/services/ScoreCutsService";
 
-export default function ScoreInput() {
-  const olympiadId = 1;
-  const areaId = 2;
+interface ScoreInputProps {
+  olympiadId: number;
+  areaId: number;
+  onChangeScoreCut?: (value: number) => void;
+}
 
+export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: ScoreInputProps) {
   const [data, setData] = useState<any>(null);
-  const [scoreCut, setScoreCut] = useState<number | "">("");
+  const [scoreCut, setScoreCut] = useState<number>(0);
   const [error, setError] = useState("");
   const [confirmModal, setConfirmModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
@@ -25,18 +28,21 @@ export default function ScoreInput() {
         setData(result);
 
         const firstScore =
-          result?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || "";
+          Array.isArray(result) && result.length > 0
+            ? result?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
+            : 0;
 
-        setScoreCut(firstScore);
+        setScoreCut(Number(firstScore));
+        onChangeScoreCut?.(Number(firstScore));
       } catch (error) {
         console.error("Error al obtener los umbrales:", error);
       }
     };
     fetchScoreCuts();
-  }, []);
+  }, [olympiadId, areaId]);
 
   const validate = () => {
-    if (scoreCut === "" || scoreCut === null) {
+    if (scoreCut === null || isNaN(Number(scoreCut))) {
       setError("El umbral es obligatorio.");
       return false;
     }
@@ -65,29 +71,25 @@ export default function ScoreInput() {
           fase.level_grades || fase.olympiad_area_phase_level_grades || [];
 
         const uniqueLevels: number[] = Array.from(
-          new Set(
-            levelGrades.map((lg: any) =>
-              Number(lg?.level_grade?.level?.id || 0)
-            )
-          )
+          new Set(levelGrades.map((lg: any) => Number(lg?.level_grade?.level?.id || 0)))
         ).filter((id) => id !== 0);
 
         const phaseId = fase.id || fase.phase_id;
 
         if (phaseId && uniqueLevels.length > 0) {
-          console.log("🌀 Actualizando Fase ID:", phaseId);
           for (const levelId of uniqueLevels) {
-            console.log("   → Nivel:", levelId, "Nuevo umbral:", scoreCut);
             await scoreCutsService.updateScoreCut(olympiadId, areaId, {
-              phase_id: phaseId, 
+              phase_id: phaseId,
               level_id: levelId,
               score_cut: Number(scoreCut),
             });
           }
         }
       }
+
       setConfirmModal(false);
       setSuccessModal(true);
+      onChangeScoreCut?.(Number(scoreCut));
     } catch (error) {
       console.error("Error al actualizar los umbrales:", error);
     } finally {
@@ -108,19 +110,25 @@ export default function ScoreInput() {
                 id="scoreCut"
                 type="number"
                 value={scoreCut}
-                onChange={(e) =>
-                  setScoreCut(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  setScoreCut(value);
+                  onChangeScoreCut?.(value);
+                }}
                 placeholder="Ej. 60"
                 error={!!error}
                 hint={error}
               />
             </div>
 
-            <Button size="md" variant="primary" className="w-full" type="submit">
-              Guardar cambios
+            <Button
+              size="md"
+              variant="primary"
+              className="w-full"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </ComponentCard>
@@ -150,19 +158,16 @@ export default function ScoreInput() {
         </div>
       </Modal>
 
+      {/* Modal de éxito */}
       <Modal isOpen={successModal} onClose={() => setSuccessModal(false)}>
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
             ¡Umbral actualizado!
           </h2>
           <Label>
-            El nuevo umbral ha sido aplicado correctamente a todos los niveles
-            del área.
+            El nuevo umbral ha sido aplicado correctamente a todos los niveles del área.
           </Label>
-          <Button
-            className="w-full mt-4"
-            onClick={() => setSuccessModal(false)}
-          >
+          <Button className="w-full mt-4" onClick={() => setSuccessModal(false)}>
             Aceptar
           </Button>
         </div>
