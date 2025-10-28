@@ -15,8 +15,6 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-
-
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
@@ -81,7 +79,7 @@ const AppSidebar: React.FC = () => {
     // Solo actualizamos si ya tenemos las áreas
     if (userAreas.length > 0) {
       const updated = navItems.map((item) => {
-        if (item.name === "Calificaciones") {
+        if (item.name === "Calificar Competidores") {
           return { ...item, subItems: userAreas };
         }
         return item;
