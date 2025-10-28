@@ -47,8 +47,8 @@ export default function App() {
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
             <Route path="/calificaciones" element={<GradingContestant />} />
-            {/* Calificaciones por area */}
-            <Route path="/calificaciones/:areaId/:areaName" element={<MarksStudents />} />
+            {/* Calificaciones por area (incluye id de olimpiada) */}
+            <Route path="/calificaciones/:idOlympiad/:areaId/:areaName" element={<MarksStudents />} />
 
           </Route>
 

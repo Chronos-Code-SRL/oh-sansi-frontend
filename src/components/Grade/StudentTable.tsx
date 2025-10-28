@@ -12,9 +12,10 @@ import Filter from "./Filter";
 
 interface Props {
     idArea: number;
+    idOlympiad:number;
 }
 
-export default function StudentTable({ idArea }: Props) {
+export default function StudentTable({ idArea, idOlympiad}: Props) {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export default function StudentTable({ idArea }: Props) {
 
         async function loadContestants() {
             try {
-                const data = await getContestantByPhaseOlympiadArea(1, 2, idArea);
+                const data = await getContestantByPhaseOlympiadArea(1, idOlympiad, idArea);
                 if (alive) setStudents(data);
                 console.log("Estudiantes cargados:", data);
             } catch {
