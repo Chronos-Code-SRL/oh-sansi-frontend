@@ -12,6 +12,7 @@ import GradingContestant from "./pages/Grade/GradingContestant";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
 import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
+import MarksStudents from "./pages/Grade/GradingContestant";
 
 export default function App() {
   return (
@@ -46,6 +47,8 @@ export default function App() {
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
             <Route path="/calificaciones" element={<GradingContestant />} />
+            {/* Calificaciones por area */}
+            <Route path="/calificaciones/:areaId/:areaName" element={<MarksStudents />} />
 
           </Route>
 
