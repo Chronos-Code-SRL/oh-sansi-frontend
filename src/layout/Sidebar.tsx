@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { getUserAreas } from "../api/services/authServices";
+import { getUser, getUserAreas } from "../api/services/authServices";
 import { UPermission } from "../types/enums/UPermissions";
-
-
-// // Assume these icons are imported from an icon library
 import {
   ListIcon,ChevronDownIcon,HorizontaLDots,GridIcon,GroupIcon,UserIcon,
 } from "../icons";
@@ -14,8 +11,34 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean;  permission?: UPermission}[];
+  subItems?: { 
+    name: string; 
+    path: string; 
+    pro?: boolean; 
+    new?: boolean;  
+    permission?: UPermission
+  }[];
   permission?: UPermission;
+};
+
+const rolePermissions: Record<number, UPermission[]> = {
+  1: [ // Admin
+    UPermission.CREATE_OLYMPIAD,
+    UPermission.CONFIGURE_AREAS,
+    UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
+    UPermission.REGISTER_EVALUATOR,
+    UPermission.REGISTER_COMPETITOR,
+    UPermission.GRADE_COMPETITOR,
+  ],
+  2: [ // Responsable Académico
+    
+    UPermission.REGISTER_EVALUATOR,
+    UPermission.REGISTER_COMPETITOR,
+    UPermission.GRADE_COMPETITOR,
+  ],
+  3: [ // Evaluador
+    UPermission.GRADE_COMPETITOR,
+  ],
 };
 
 const navItems: NavItem[] = [
@@ -47,7 +70,7 @@ const navItems: NavItem[] = [
     name: "Calificar Competidores",
     path: "/calificaciones",
     subItems: [], 
-    permission: UPermission.REGISTER_COMPETITOR
+    permission: UPermission.GRADE_COMPETITOR
   },
 ];
 const othersItems: NavItem[] = [];
@@ -56,9 +79,10 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
-  const [userAreas, setUserAreas] = useState<{ name: string; path: string }[]>(
-    []
-  );
+  const user = getUser();
+  const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
+
+  const [userAreas, setUserAreas] = useState<{ name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);
 
   useEffect(() => {
@@ -94,6 +118,47 @@ const AppSidebar: React.FC = () => {
       setMenuItems(navItems);
     }
   }, [userAreas]);
+
+  useEffect(() => {
+  const filteredMenu = navItems
+    .map((item) => {
+      // Filtrar subitems según permisos
+      const visibleSubItems = item.subItems
+        ? item.subItems.filter(
+            (sub) => !sub.permission || userPerms.includes(sub.permission)
+          )
+        : [];
+
+      // Evaluar visibilidad del ítem principal
+      const canSeeItem =
+        // Si tiene permiso propio y el usuario lo posee
+        (item.permission && userPerms.includes(item.permission)) ||
+        // O si no requiere permiso pero tiene subitems visibles
+        (!item.permission && visibleSubItems.length > 0) ||
+        // O si no requiere permiso ni subitems (menú libre)
+        (!item.permission && !item.subItems);
+
+      if (!canSeeItem) return null;
+
+      // Solo añadir subItems si realmente hay visibles
+      const cleanedItem = {
+        ...item,
+        ...(visibleSubItems.length > 0 ? { subItems: visibleSubItems } : {}),
+      };
+
+      return cleanedItem;
+    })
+    .filter(Boolean) as NavItem[];
+
+  // Insertar áreas dinámicas si aplica
+  const updatedMenu = filteredMenu.map((item) =>
+    item.name === "Calificar Competidores"
+      ? { ...item, subItems: userAreas.length > 0 ? userAreas : item.subItems }
+      : item
+  );
+
+  setMenuItems(updatedMenu);
+}, [userPerms, userAreas]);
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
