@@ -10,8 +10,11 @@ import { checkUpdates, getContestantByPhaseOlympiadArea, updatePartialEvaluation
 import SearchBar from "./Searcher";
 import Filter from "./Filter";
 
+interface Props {
+    idArea: number;
+}
 
-export default function StudentTable() {
+export default function StudentTable({ idArea }: Props) {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -70,11 +73,11 @@ export default function StudentTable() {
 
         async function loadContestants() {
             try {
-                const data = await getContestantByPhaseOlympiadArea(1, 1, 2);
+                const data = await getContestantByPhaseOlympiadArea(1, 2, idArea);
                 if (alive) setStudents(data);
                 console.log("Estudiantes cargados:", data);
             } catch {
-                if (alive) setError("No se pudo cargar la lista de estudiantes.");
+                if (alive) setError("No existen estudiantes para esta área.");
             } finally {
                 if (alive) setLoading(false);
             }
