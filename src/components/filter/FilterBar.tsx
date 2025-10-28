@@ -7,7 +7,12 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import Badge from "../ui/badge/Badge";
 import { getLevelsOlympiad } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
-import { Clean } from "../../icons";
+import { Clean, DownloadIcon } from "../../icons";
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import Button from "../ui/button/Button";
+import ScrollToTopButton from "../ui/button/ScrollToTopButton";
 
 export const FilterBar: React.FC = () => {
   const [contestants, setContestants] = useState<FilterList[]>([]);
@@ -25,6 +30,42 @@ export const FilterBar: React.FC = () => {
 
   //Niveles
   const [levels, setLevels] = useState<LevelOption[]>([]);
+
+
+
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(14);
+    doc.text("Reporte de Concursantes Filtrados", 14, 15);
+
+    const tableData = filteredContestants.map((c) => [
+      c.first_name,
+      c.last_name,
+      c.ci_document,
+      c.gender,
+      c.department,
+      c.area_name,
+      c.grade_name,
+      c.level_name,
+      c.score !== null ? c.score : "—",
+      c.status ? "Evaluado" : "No Evaluado",
+    ]);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [[
+        "Nombre", "Apellido", "C.I", "Género", "Departamento",
+        "Área", "Grado", "Nivel", "Nota", "Estado",
+      ]],
+      body: tableData,
+      styles: { halign: "center", valign: "middle" },
+      headStyles: { halign: "center", fillColor: [23, 86, 166] },
+    });
+
+    doc.save("reporte_concursantes_filtrados.pdf");
+  };
+
 
   // 🔹 Llamada a la API
   useEffect(() => {
@@ -208,33 +249,33 @@ export const FilterBar: React.FC = () => {
             <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
               <TableHeader className="bg-gray-100 border-b border-border bg-muted/50 ">
                 <TableRow className="">
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Género</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Área</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Género</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContestants.map((c) => (
                   <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
-                    <td className="px-6 py-4 text-sm text-center">{c.first_name}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.last_name}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.ci_document}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.gender}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.department}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.area_name}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.grade_name}</td>
-                    <td className="px-6 py-4 text-sm text-center">{c.level_name}</td>
-                    <td className="px-6 py-4 text-sm text-center">
+                    <td className="px-5 py-4 text-sm text-center">{c.first_name}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.last_name}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.ci_document}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.gender}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.department}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.area_name}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.grade_name}</td>
+                    <td className="px-5 py-4 text-sm text-center">{c.level_name}</td>
+                    <td className="px-5 py-4 text-sm text-center">
                       {c.score !== null ? c.score : "—"}
                     </td>
-                    <td className="px-6 py-4 text-sm text-center">
+                    <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
                         <Badge color={c.status === true ? "success" : "error"}>
                              {c.status ? "Evaluado" : "No Evaluado"}
                         </Badge>
@@ -244,6 +285,20 @@ export const FilterBar: React.FC = () => {
               </TableBody>
             </Table>
           )}
+        </div>
+        {/* Botón de descargar PDF y Scroll to Top */}
+        <div >
+          <div >
+            <Button
+              onClick={handleDownloadPDF}
+              startIcon={<DownloadIcon className="w-5 h-5" />}
+            >
+              Descargar PDF
+            </Button>
+          </div>
+          <div>
+            <ScrollToTopButton />
+          </div>
         </div>
       </div>
     </div>

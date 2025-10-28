@@ -59,6 +59,7 @@ import { ReactComponent as FilterIcon } from "./filter.svg?react";
 
 import { ReactComponent as Slider } from "./sliders.svg?react";
 import { ReactComponent as Clean } from "./clean-b.svg?react";
+import { ReactComponent as UpWhiteArrow } from "./arrow-up-white.svg?react";
 
 
 export {
@@ -122,4 +123,5 @@ export {
   FilterIcon,
   Slider,
   Clean,
+  UpWhiteArrow,
 };
