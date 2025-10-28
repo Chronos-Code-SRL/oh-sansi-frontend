@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, Evaluation, EvaluationUpdatePayload } from "../../types/Contestant";
+import { Contestant, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -11,6 +11,11 @@ export const getContestantByPhaseOlympiadArea = async (
     const res = await ohSansiApi.get<Contestant[]>(
         `${CONTESTANTS_URL}/${IdPhase}/${idOlympiad}/${idArea}`
     );
+    return res.data;
+}
+
+export const getContestantByFilters = async (): Promise<FilterList[]> => {
+    const res = await ohSansiApi.get<FilterList[]>(`${CONTESTANTS_URL}`);
     return res.data;
 }
 

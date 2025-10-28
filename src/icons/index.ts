@@ -57,6 +57,10 @@ import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 import { ReactComponent as CommentIcon } from "./comment.svg?react";
 import { ReactComponent as FilterIcon } from "./filter.svg?react";
 
+import { ReactComponent as Slider } from "./sliders.svg?react";
+import { ReactComponent as Clean } from "./clean-b.svg?react";
+import { ReactComponent as UpWhiteArrow } from "./arrow-up-white.svg?react";
+
 
 export {
   ErrorHexaIcon,
@@ -116,5 +120,8 @@ export {
   ChatIcon,
   AngleLeftIcon,
   AngleRightIcon,
-  FilterIcon
+  FilterIcon,
+  Slider,
+  Clean,
+  UpWhiteArrow,
 };

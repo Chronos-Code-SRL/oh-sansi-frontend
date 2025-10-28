@@ -3,7 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 import { SimpleBox } from "../../components/common/SimpleBox";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { Olympiad } from "../../types/Olympiad";
-import { getOlympiads } from "../../api/services/olympiadService";
+import { getOlympiads, putOlympiadIdActivate } from "../../api/services/olympiadService";
 
 export const ViewOlympiad = () => {
 
@@ -28,6 +28,36 @@ export const ViewOlympiad = () => {
 
         fetchOlympiads();
     }, []);
+
+    const refreshOlympiads = async () => {
+        const data = await getOlympiads();
+        setOlympiads((prev) => {
+        const orderMap = new Map(prev.map((o, i) => [o.id, i]));
+        return [...data].sort(
+            (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+        );
+    })
+    };
+
+    const handleToggleActive = async (id: number) => {
+        try {
+
+            // Actualización optimista: marcamos como "Activa" la seleccionada
+            setOlympiads((prev) =>
+                prev.map((o) => (o.id === id ? { ...o, status: "Activa" } : o))
+            );
+
+            await putOlympiadIdActivate(id);
+
+            // Refrescamos desde el backend para reflejar el estado real de TODAS
+            await refreshOlympiads();
+        } catch (e) {
+            // En caso de error, volvemos a sincronizar con el backend y mostramos mensaje
+            await refreshOlympiads();
+            setError("No se pudo actualizar el estado. Intenta nuevamente.");
+        } finally {
+        }
+    };
     // Mostrar un mensaje de carga mientras se obtienen los datos
     if (loading) {
         return <p>Cargando olimpiadas...</p>;
@@ -59,6 +89,7 @@ export const ViewOlympiad = () => {
                         startDate={olympiad.start_date} // Pasamos la fecha de inicio
                         endDate={olympiad.end_date} // Pasamos la fecha de fin
                         areas={olympiad.areas} // Pasamos las áreas
+                        onToggleActive={handleToggleActive}
                     />
                 ))}
             </div>

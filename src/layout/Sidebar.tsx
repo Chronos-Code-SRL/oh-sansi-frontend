@@ -3,7 +3,13 @@ import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas } from "../api/services/authServices";
 import { UPermission } from "../types/enums/UPermissions";
 import {
-  ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon,
+  ListIcon,
+  ChevronDownIcon,
+  HorizontaLDots,
+  GridIcon,
+  GroupIcon,
+  UserIcon,
+  Slider,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -80,7 +86,12 @@ const navItems: NavItem[] = [
     subItems: [], 
     permission: UPermission.EDIT_SCORE_CUT, 
   },
-
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+  },
+  
 ];
 const othersItems: NavItem[] = [];
 
@@ -91,7 +102,9 @@ const AppSidebar: React.FC = () => {
   const user = getUser();
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
 
-  const [userAreas, setUserAreas] = useState<{ name: string; path: string }[]>([]);
+  const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
+  // Nota: si en el futuro necesitamos almacenar el id de la olimpiada a nivel de Sidebar,
+  // podemos agregar un estado aquí. Por ahora lo omitimos para evitar variables sin uso.
   const [menuItems, setMenuItems] = useState(navItems);
 
   useEffect(() => {
@@ -102,7 +115,8 @@ const AppSidebar: React.FC = () => {
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          path: `/calificaciones/${area.id}/${area.name.toLowerCase()}`,
+          // Incluir el olympiad_id proveniente de UserAreasResponse en el path
+          path: `/calificaciones/${res.olympiad_id}/${area.id}/${area.name.toLowerCase()}`,
         }));
         setUserAreas(formatted);
       } catch (error) {

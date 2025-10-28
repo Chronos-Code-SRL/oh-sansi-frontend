@@ -16,6 +16,7 @@ export interface LoginResponse {
 
 export interface UserAreasResponse {
   id_user: number;
+  olympiad_id:number;
   olympiad: string;
   areas: Area[];
   status: number;
