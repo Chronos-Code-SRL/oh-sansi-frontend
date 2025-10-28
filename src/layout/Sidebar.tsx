@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { getUserAreas } from "../api/services/authServices";
+import { UPermission } from "../types/enums/UPermissions";
+
 
 // // Assume these icons are imported from an icon library
 import {
@@ -12,7 +14,8 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean;  permission?: UPermission}[];
+  permission?: UPermission;
 };
 
 const navItems: NavItem[] = [
@@ -20,29 +23,31 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Olimpiadas",
     subItems: [
-      { name: "Crear Olimpiada", path: "/Olimpiada", pro: false },
-      { name: "Configurar Áreas", path: "/VerOlimpiadas", pro: false },
+      { name: "Crear Olimpiada", path: "/Olimpiada", pro: false, permission: UPermission.CREATE_OLYMPIAD },
+      { name: "Configurar Áreas", path: "/VerOlimpiadas", pro: false, permission: UPermission.CONFIGURE_AREAS },
     ],
+    
   },
   {
     icon: <UserIcon />,
     name: "Registro",
     subItems: [
-      { name: "Registrar Responsable Académico", path: "/Academic-Manager-register", pro: false },
-      { name: "Registrar Evaluador", path: "/Evaluator-register", pro: false },
+      { name: "Registrar Responsable Académico", path: "/Academic-Manager-register", pro: false, permission: UPermission.REGISTER_ACADEMIC_RESPONSIBLE },
+      { name: "Registrar Evaluador", path: "/Evaluator-register", pro: false, permission: UPermission.REGISTER_EVALUATOR },
     ],
   },
   {
     icon: <GroupIcon />,
     name: "Registrar Competidores",
     path: "/registration",
+    permission: UPermission.REGISTER_COMPETITOR
   },
   {
     icon: <ListIcon />,
     name: "Calificar Competidores",
     path: "/calificaciones",
     subItems: [], 
-
+    permission: UPermission.REGISTER_COMPETITOR
   },
 ];
 const othersItems: NavItem[] = [];
