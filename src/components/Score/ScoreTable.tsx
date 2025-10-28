@@ -43,11 +43,18 @@ export default function ScoreTable({ olympiadId, areaId, phaseId = 1, scoreCut }
   }, [olympiadId, areaId, phaseId]);
 
   const processedStudents = useMemo(() => {
-    return students.map((s) => ({
-      ...s,
-      isClassified: typeof s.score === "number" && s.score >= scoreCut,
+    const sorted = [...students].sort((a, b) => {
+        const scoreA = typeof a.score === "number" ? a.score : -1;
+        const scoreB = typeof b.score === "number" ? b.score : -1;
+        return scoreB - scoreA;
+    });
+
+    return sorted.map((s) => ({
+        ...s,
+        isClassified: typeof s.score === "number" && s.score >= scoreCut,
     }));
-  }, [students, scoreCut]);
+    }, [students, scoreCut]);
+    
 
   if (loading) {
     return <p className="text-gray-600 text-sm px-4">Cargando competidores...</p>;
@@ -63,11 +70,8 @@ export default function ScoreTable({ olympiadId, areaId, phaseId = 1, scoreCut }
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="px-6 py-3 border-b border-gray-100 text-sm text-gray-700">
-        <span className="font-medium">Umbral actual:</span> {scoreCut}
-      </div>
-
       <div className="max-w-full overflow-x-auto"></div>
+      
       <Table>
         <TableHeader className="border-b border-border bg-muted/50">
           <TableRow>

@@ -16,6 +16,7 @@ interface ScoreInputProps {
 export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: ScoreInputProps) {
   const [data, setData] = useState<any>(null);
   const [scoreCut, setScoreCut] = useState<number>(0);
+  const [currentCut, setCurrentCut] = useState<number>(0);
   const [error, setError] = useState("");
   const [confirmModal, setConfirmModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
@@ -33,6 +34,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
             : 0;
 
         setScoreCut(Number(firstScore));
+        setCurrentCut(firstScore);
         onChangeScoreCut?.(Number(firstScore));
       } catch (error) {
         console.error("Error al obtener los umbrales:", error);
@@ -89,6 +91,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
 
       setConfirmModal(false);
       setSuccessModal(true);
+      setCurrentCut(Number(scoreCut));
       onChangeScoreCut?.(Number(scoreCut));
     } catch (error) {
       console.error("Error al actualizar los umbrales:", error);
@@ -102,34 +105,52 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
       <TitleBreadCrumb pageTitle="Editar Umbral de Calificación" />
 
       <form onSubmit={handleSubmit}>
-        <ComponentCard title="Modificar Umbral de Clasificación">
-          <div className="grid grid-cols-1 gap-6">
-            <div>
-              <Label htmlFor="scoreCut">Nuevo umbral de calificación</Label>
-              <InputField
-                id="scoreCut"
-                type="number"
-                value={scoreCut}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setScoreCut(value);
-                  onChangeScoreCut?.(value);
-                }}
-                placeholder="Ej. 60"
-                error={!!error}
-                hint={error}
-              />
+        <ComponentCard title="Umbral de Clasificación">
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div>
+                <Label htmlFor="currentCut">Umbral actual</Label>
+                <InputField
+                  id="currentCut"
+                  type="number"
+                  value={currentCut}
+                  disabled
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full md:w-90"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="scoreCut">Nuevo umbral de calificación</Label>
+                <div className="flex items-center gap-3">
+                  <InputField
+                    id="scoreCut"
+                    type="number"
+                    value={scoreCut}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setScoreCut(value);
+                      onChangeScoreCut?.(value);
+                    }}
+                    placeholder="Ej. 60"
+                    error={!!error}
+                    hint={error}
+                    className="flex-1"
+                  />
+
+                  <Button
+                    size="md"
+                    variant="primary"
+                    type="submit"
+                    disabled={loading}
+                    className="shrink-0"
+                  >
+                    {loading ? "Guardando..." : "Guardar"}
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            <Button
-              size="md"
-              variant="primary"
-              className="w-full"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Guardando..." : "Guardar"}
-            </Button>
+            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
           </div>
         </ComponentCard>
       </form>
@@ -137,7 +158,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
       <Modal isOpen={confirmModal} onClose={() => setConfirmModal(false)}>
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-            ¿Desea aplicar el nuevo umbral a todos los niveles del área?
+            ¿Desea aplicar el nuevo umbral?
           </h2>
           <div className="flex justify-center gap-4 mt-4">
             <Button
@@ -158,14 +179,13 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
         </div>
       </Modal>
 
-      {/* Modal de éxito */}
       <Modal isOpen={successModal} onClose={() => setSuccessModal(false)}>
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
             ¡Umbral actualizado!
           </h2>
           <Label>
-            El nuevo umbral ha sido aplicado correctamente a todos los niveles del área.
+            El nuevo umbral ha sido aplicado correctamente.
           </Label>
           <Button className="w-full mt-4" onClick={() => setSuccessModal(false)}>
             Aceptar
