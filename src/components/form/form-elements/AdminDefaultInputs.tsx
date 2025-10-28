@@ -18,6 +18,7 @@ export default function AdminDefaultInputs() {
     const [end_date, setEnd_date] = useState("");
     const [number_of_phases, setNumber_of_phases] = useState("");
     const [areas, setAreas] = useState<string[]>([]);
+    const [resetKey, setResetKey] = useState(0);
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,8 +96,10 @@ export default function AdminDefaultInputs() {
                 setStart_date("");
                 setEnd_date("");
                 setNumber_of_phases("");
+                setDefault_score_cut("");
                 setAreas([]);
                 setErrors({});
+                setResetKey((k) => k + 1);
                 setIsModalOpen(true);
             }
         } catch (err: any) {
@@ -170,6 +173,7 @@ export default function AdminDefaultInputs() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <DatePicker
+                                        key={`start-${resetKey}`}
                                         id="date-start"
                                         label="Fecha de inicio"
                                         placeholder="AAAA-MM-DD"
@@ -178,6 +182,9 @@ export default function AdminDefaultInputs() {
                                                 const value = selectedDates[0].toISOString().split("T")[0];
                                                 setStart_date(value);
                                                 handleBlurField("start_date", value);
+                                            } else {
+                                                setStart_date("");
+                                                handleBlurField("start_date", "");
                                             }
                                         }}
                                     />
@@ -185,6 +192,7 @@ export default function AdminDefaultInputs() {
                                 </div>
                                 <div>
                                     <DatePicker
+                                        key={`end-${resetKey}`}
                                         id="end_date"
                                         label="Fecha de finalización"
                                         placeholder="AAAA-MM-DD"
@@ -193,6 +201,9 @@ export default function AdminDefaultInputs() {
                                                 const value = selectedDates[0].toISOString().split("T")[0];
                                                 setEnd_date(value);
                                                 handleBlurField("end_date", value);
+                                            } else {
+                                                setEnd_date("");
+                                                handleBlurField("end_date", "");
                                             }
                                         }}
                                     />
@@ -204,6 +215,7 @@ export default function AdminDefaultInputs() {
                         {/* Áreas */}
                         <div className="space-y-1.5">
                             <AreaSelectInputs
+                                key={`areas-${resetKey}`}
                                 onChange={(values) => {
                                     setAreas(values);
                                     setErrors(prev => {
