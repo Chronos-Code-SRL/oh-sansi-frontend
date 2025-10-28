@@ -82,7 +82,7 @@ const AppSidebar: React.FC = () => {
   const user = getUser();
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
 
-  const [userAreas, setUserAreas] = useState<{ name: string; path: string }[]>([]);
+  const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);
 
   useEffect(() => {
