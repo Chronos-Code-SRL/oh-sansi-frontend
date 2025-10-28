@@ -3,7 +3,13 @@ import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas } from "../api/services/authServices";
 import { UPermission } from "../types/enums/UPermissions";
 import {
-  ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon,
+  ListIcon,
+  ChevronDownIcon,
+  HorizontaLDots,
+  GridIcon,
+  GroupIcon,
+  UserIcon,
+  Slider,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -72,6 +78,12 @@ const navItems: NavItem[] = [
     subItems: [], 
     permission: UPermission.GRADE_COMPETITOR
   },
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+  },
+  
 ];
 const othersItems: NavItem[] = [];
 

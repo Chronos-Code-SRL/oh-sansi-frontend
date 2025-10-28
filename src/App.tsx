@@ -13,6 +13,8 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
 import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
+import FilterElements from "./pages/Filters/FilterElements";
+
 
 export default function App() {
   return (
@@ -50,6 +52,11 @@ export default function App() {
             {/* Calificaciones por area (incluye id de olimpiada) */}
             <Route path="/calificaciones/:idOlympiad/:areaId/:areaName" element={<MarksStudents />} />
 
+            {/*Filters on list */}
+            <Route index path="/filtros-de-lista" element={<FilterElements />} />
+
+            
+
           </Route>
 
           {/* Auth Layout */}
@@ -58,6 +65,7 @@ export default function App() {
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
+
         </Routes>
       </Router>
     </>
