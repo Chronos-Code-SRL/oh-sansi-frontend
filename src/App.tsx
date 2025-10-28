@@ -49,7 +49,7 @@ export default function App() {
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
             {/*Editar Umbral*/}
-            < Route path="/edit-score-cut" element={<EditScoreCuts />} />
+            <Route path="/editar-umbral/:areaId/:areaName" element={<EditScoreCuts />} />
             <Route path="/calificaciones" element={<GradingContestant />} />
             {/* Calificaciones por area */}
             <Route path="/calificaciones/:areaId/:areaName" element={<MarksStudents />} />

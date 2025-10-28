@@ -35,6 +35,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
     UPermission.GRADE_COMPETITOR,
+    UPermission.EDIT_SCORE_CUT,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -72,6 +73,14 @@ const navItems: NavItem[] = [
     subItems: [], 
     permission: UPermission.GRADE_COMPETITOR
   },
+  {
+    icon: <ListIcon />,
+    name: "Editar Umbral",
+    path: "/editar-umbral",
+    subItems: [], 
+    permission: UPermission.EDIT_SCORE_CUT, 
+  },
+
 ];
 const othersItems: NavItem[] = [];
 
@@ -161,7 +170,12 @@ const AppSidebar: React.FC = () => {
   setMenuItems(updatedMenu);
 }, [userPerms, userAreas]);
 
-  const [openSubmenu, setOpenSubmenu] = useState<{
+  
+
+//Editar
+
+
+const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
