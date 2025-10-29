@@ -264,7 +264,7 @@ export default function ConfigureAreaModal({
         </ComponentCard>
 
         <ComponentCard title="Niveles Configurados">
-          <div className="space-y-3 h-48 overflow-y-auto pr-2">
+          <div className="space-y-3 h-60 overflow-y-auto pr-2">
             {levels.length > 0 ? (
               levels.map((level: any, index: number) => (
                 <div
