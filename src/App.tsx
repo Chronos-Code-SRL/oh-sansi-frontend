@@ -8,6 +8,8 @@ import AdRegistration from "./pages/UploadContestant/UploadContestant";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
+import EditScoreCuts from "./pages/ScoreCuts/EditScoreCuts";
+
 import GradingContestant from "./pages/Grade/GradingContestant";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
@@ -48,6 +50,9 @@ export default function App() {
             < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
+            {/*Editar Umbral*/}
+            <Route path="/editar-umbral/:idOlympiad/:areaId/:areaName" element={<EditScoreCuts />} />
+            
             <Route path="/calificaciones" element={<GradingContestant />} />
             {/* Calificaciones por area (incluye id de olimpiada) */}
             <Route path="/calificaciones/:idOlympiad/:areaId/:areaName" element={<MarksStudents />} />

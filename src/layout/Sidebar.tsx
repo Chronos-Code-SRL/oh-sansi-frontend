@@ -10,6 +10,7 @@ import {
   GroupIcon,
   UserIcon,
   Slider,
+  PencilIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -41,6 +42,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
     UPermission.GRADE_COMPETITOR,
+    UPermission.EDIT_SCORE_CUT,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -77,6 +79,13 @@ const navItems: NavItem[] = [
     path: "/calificaciones",
     subItems: [], 
     permission: UPermission.GRADE_COMPETITOR
+  },
+  {
+    icon: <PencilIcon />,
+    name: "Editar Umbral",
+    path: "/editar-umbral",
+    subItems: [], 
+    permission: UPermission.EDIT_SCORE_CUT, 
   },
   {
     icon: <Slider />,
@@ -135,48 +144,64 @@ const AppSidebar: React.FC = () => {
     }
   }, [userAreas]);
 
+  // Filtrar ítems visibles según permisos
   useEffect(() => {
-  const filteredMenu = navItems
-    .map((item) => {
-      // Filtrar subitems según permisos
-      const visibleSubItems = item.subItems
-        ? item.subItems.filter(
-            (sub) => !sub.permission || userPerms.includes(sub.permission)
-          )
-        : [];
+    const filteredMenu = navItems
+      .map((item) => {
+        // Filtrar subitems según permisos
+        const visibleSubItems = item.subItems
+          ? item.subItems.filter(
+              (sub) => !sub.permission || userPerms.includes(sub.permission)
+            )
+          : [];
 
-      // Evaluar visibilidad del ítem principal
-      const canSeeItem =
-        // Si tiene permiso propio y el usuario lo posee
-        (item.permission && userPerms.includes(item.permission)) ||
-        // O si no requiere permiso pero tiene subitems visibles
-        (!item.permission && visibleSubItems.length > 0) ||
-        // O si no requiere permiso ni subitems (menú libre)
-        (!item.permission && !item.subItems);
+        const canSeeItem =
+          (item.permission && userPerms.includes(item.permission)) ||
+          (!item.permission && visibleSubItems.length > 0) ||
+          (!item.permission && !item.subItems);
 
-      if (!canSeeItem) return null;
+        if (!canSeeItem) return null;
 
-      // Solo añadir subItems si realmente hay visibles
-      const cleanedItem = {
-        ...item,
-        ...(visibleSubItems.length > 0 ? { subItems: visibleSubItems } : {}),
-      };
+        return {
+          ...item,
+          ...(visibleSubItems.length > 0 ? { subItems: visibleSubItems } : {}),
+        };
+      })
+      .filter(Boolean) as NavItem[];
 
-      return cleanedItem;
-    })
-    .filter(Boolean) as NavItem[];
+    // Agregar dinámicamente las áreas a los menús que las necesitan
+    const updatedMenu = filteredMenu.map((item) => {
+      if (item.name === "Calificar Competidores") {
+        return { ...item, subItems: userAreas.length > 0 ? userAreas : item.subItems };
+      }
+      if (item.name === "Editar Umbral") {
+        return {
+          ...item,
+          subItems:
+            userAreas.length > 0
+              ? userAreas.map((area) => {
+                  const olympiadId = area.path.split("/")[2]; 
+                  return {
+                    id: area.id,
+                    name: area.name,
+                    path: `/editar-umbral/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
+                  };
+                })
+              : item.subItems,
+        };
+      }
+      return item;
+    });
 
-  // Insertar áreas dinámicas si aplica
-  const updatedMenu = filteredMenu.map((item) =>
-    item.name === "Calificar Competidores"
-      ? { ...item, subItems: userAreas.length > 0 ? userAreas : item.subItems }
-      : item
-  );
+    setMenuItems(updatedMenu);
+  }, [userPerms, userAreas]);
 
-  setMenuItems(updatedMenu);
-}, [userPerms, userAreas]);
+  
 
-  const [openSubmenu, setOpenSubmenu] = useState<{
+//Editar
+
+
+const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
