@@ -35,16 +35,17 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
-    UPermission.FILTER_COMPETITOR_BY_AREA,
   ],
   2: [ // Responsable Académico
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
     UPermission.GRADE_COMPETITOR,
     UPermission.EDIT_SCORE_CUT,
+    UPermission.FILTER_COMPETITOR_BY_AREA,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
+    UPermission.FILTER_COMPETITOR_BY_AREA,
   ],
 };
 
