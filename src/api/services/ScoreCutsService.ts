@@ -11,12 +11,15 @@ export const scoreCutsService = {
   updateScoreCut: async (
     olympiadId: number,
     areaId: number,
-    payload: { phase_id: number; level_id: number; score_cut: number }
+    data:
+      | { phase_id: number; level_id: number; score_cut: number } 
+      | { phase_id: number; score_cut: number }                   
   ) => {
     const response = await ohSansiApi.post(
       `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`,
-      payload
+      data
     );
     return response.data;
   },
+
 };

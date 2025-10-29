@@ -13,7 +13,11 @@ interface ScoreInputProps {
   onChangeScoreCut?: (value: number) => void;
 }
 
-export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: ScoreInputProps) {
+export default function ScoreInput({
+  olympiadId,
+  areaId,
+  onChangeScoreCut,
+}: ScoreInputProps) {
   const [data, setData] = useState<any>(null);
   const [scoreCut, setScoreCut] = useState<number>(0);
   const [currentCut, setCurrentCut] = useState<number>(0);
@@ -67,34 +71,45 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
       if (!data) return;
 
       const fases = Array.isArray(data) ? data : data.phases || [data];
+      const nivelesUnicos = new Set<number>();
 
       for (const fase of fases) {
         const levelGrades: any[] =
           fase.level_grades || fase.olympiad_area_phase_level_grades || [];
 
-        const uniqueLevels: number[] = Array.from(
-          new Set(levelGrades.map((lg: any) => Number(lg?.level_grade?.level?.id || 0)))
-        ).filter((id) => id !== 0);
+        for (const lg of levelGrades) {
+          const levelId =
+            lg?.level_id ||
+            lg?.level_grade?.level?.id ||
+            lg?.level_grade_id;
 
-        const phaseId = fase.id || fase.phase_id;
-
-        if (phaseId && uniqueLevels.length > 0) {
-          for (const levelId of uniqueLevels) {
-            await scoreCutsService.updateScoreCut(olympiadId, areaId, {
-              phase_id: phaseId,
-              level_id: levelId,
-              score_cut: Number(scoreCut),
-            });
-          }
+          if (levelId) nivelesUnicos.add(Number(levelId));
         }
       }
 
+      for (const levelId of nivelesUnicos) {
+        const payload = {
+          phase_id: 1,
+          level_id: Number(levelId),
+          score_cut: Number(scoreCut),
+        };
+        await scoreCutsService.updateScoreCut(olympiadId, areaId, payload);
+      }
+
+      const updated = await scoreCutsService.getScoreCuts(olympiadId, areaId);
+      setData(updated);
+
+      const newCut =
+        Array.isArray(updated) && updated.length > 0
+          ? updated?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
+          : scoreCut;
+
+      setCurrentCut(Number(newCut));
       setConfirmModal(false);
       setSuccessModal(true);
-      setCurrentCut(Number(scoreCut));
       onChangeScoreCut?.(Number(scoreCut));
-    } catch (error) {
-      console.error("Error al actualizar los umbrales:", error);
+    } catch (error: any) {
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -104,24 +119,24 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
     <>
       <TitleBreadCrumb pageTitle="Editar Umbral de Calificación" />
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="w-full">
         <ComponentCard title="Umbral de Clasificación">
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-              <div>
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="w-full">
                 <Label htmlFor="currentCut">Umbral actual</Label>
                 <InputField
                   id="currentCut"
                   type="number"
                   value={currentCut}
                   disabled
-                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full md:w-90"
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full"
                 />
               </div>
 
-              <div>
+              <div className="w-full">
                 <Label htmlFor="scoreCut">Nuevo umbral de calificación</Label>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full">
                   <InputField
                     id="scoreCut"
                     type="number"
@@ -134,7 +149,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
                     placeholder="Ej. 60"
                     error={!!error}
                     hint={error}
-                    className="flex-1"
+                    className="w-full sm:flex-1"
                   />
 
                   <Button
@@ -142,7 +157,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
                     variant="primary"
                     type="submit"
                     disabled={loading}
-                    className="shrink-0"
+                    className="w-full sm:w-auto"
                   >
                     {loading ? "Guardando..." : "Guardar"}
                   </Button>
@@ -160,11 +175,12 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
             ¿Desea aplicar el nuevo umbral?
           </h2>
-          <div className="flex justify-center gap-4 mt-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
             <Button
               variant="outline"
               onClick={() => setConfirmModal(false)}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Cancelar
             </Button>
@@ -172,6 +188,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
               variant="primary"
               onClick={handleUpdateAll}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               {loading ? "Guardando..." : "Confirmar"}
             </Button>
@@ -184,9 +201,7 @@ export default function ScoreInput({ olympiadId, areaId, onChangeScoreCut }: Sco
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
             ¡Umbral actualizado!
           </h2>
-          <Label>
-            El nuevo umbral ha sido aplicado correctamente.
-          </Label>
+          <Label>El nuevo umbral ha sido aplicado correctamente.</Label>
           <Button className="w-full mt-4" onClick={() => setSuccessModal(false)}>
             Aceptar
           </Button>
