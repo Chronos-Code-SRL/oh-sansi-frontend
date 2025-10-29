@@ -35,10 +35,9 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
-    UPermission.GRADE_COMPETITOR,
+    UPermission.FILTER_COMPETITOR_BY_AREA,
   ],
   2: [ // Responsable Académico
-    
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
     UPermission.GRADE_COMPETITOR,
@@ -91,6 +90,7 @@ const navItems: NavItem[] = [
     icon: <Slider />,
     name: "Filtrar lista de Competidores",
     path: "/filtros-de-lista",
+    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
   
 ];

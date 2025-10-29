@@ -170,7 +170,11 @@ export default function ScoreInput({
         </ComponentCard>
       </form>
 
-      <Modal isOpen={confirmModal} onClose={() => setConfirmModal(false)}>
+      <Modal 
+        isOpen={confirmModal} 
+        onClose={() => setConfirmModal(false)}
+        className="max-w-md mx-auto shadow-lg"
+      >
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
             ¿Desea aplicar el nuevo umbral?
@@ -196,7 +200,11 @@ export default function ScoreInput({
         </div>
       </Modal>
 
-      <Modal isOpen={successModal} onClose={() => setSuccessModal(false)}>
+      <Modal 
+        isOpen={successModal} 
+        onClose={() => setSuccessModal(false)}
+        className="max-w-md mx-auto shadow-lg"
+      >
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
             ¡Umbral actualizado!
