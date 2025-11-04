@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import Badge from "../ui/badge/Badge"
 import Button from "../ui/button/Button"
+import { useOlympiad } from "../../context/OlympiadContext";
 
 interface BoxOlympiadProps {
     id: number; //Para que pasemo el ID Como parametro id tiene que ser obligario
@@ -13,11 +14,11 @@ interface BoxOlympiadProps {
 
 export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, startDate, endDate, areas }) => {
     const navigate = useNavigate(); // Hook para manejar la navegación
-
+    const { setSelectedOlympiad } = useOlympiad();
 
     // Función para manejar el clic en el botón
     const handleButtonClick = () => {
-        // Redirigimos a la página de registro con el id de la olimpiada
+        setSelectedOlympiad({ id, name, status });
         navigate(`/OlimpiadaAreas/${id}`);
     };
 
