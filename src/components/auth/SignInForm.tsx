@@ -5,7 +5,9 @@ import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
 import { getToken, login } from "../../api/services/authServices";
 import { useNavigate } from "react-router";
-
+type Props = {
+  onSuccess?: () => void;
+};
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -14,16 +16,16 @@ export default function SignInForm() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const data = await login(email, password); 
+      const data = await login(email, password);
       console.log("Sesión iniciada correctamente:", data);
       // console.log(getToken())
-      navigate("/"); 
+      navigate("/seleccionar-olimpiada", { replace: true });
     } catch {
       setError("Credenciales incorrectas o error en el servidor");
     } finally {
@@ -50,11 +52,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input 
-                    placeholder="Introduce tu email" 
+                  <Input
+                    placeholder="Introduce tu email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}                 
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div>

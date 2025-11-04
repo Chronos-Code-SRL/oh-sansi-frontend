@@ -13,6 +13,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
 import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
+import LadingPage from "./pages/Users/LadingPageOlympiad";
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/seleccionar-olimpiada" element={<LadingPage />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
