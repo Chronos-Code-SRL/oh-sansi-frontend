@@ -2,9 +2,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { getUserAreas } from "../api/services/authServices";
 import {
-  ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon,
+  ListIcon,
+  ChevronDownIcon,
+  HorizontaLDots,
+  GridIcon,
+  GroupIcon,
+  UserIcon,
+  Slider,
+  PencilIcon,
+  HomeIcon
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+
 
 type NavItem = {
   name: string;
@@ -14,6 +23,11 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+   {
+    icon: <HomeIcon/>,
+     name:"Inicio",
+     path:"/seleccionar-olimpiada",
+  },
   {
     icon: <GridIcon />,
     name: "Olimpiadas",
