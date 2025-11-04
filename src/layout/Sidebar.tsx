@@ -1,18 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { getUser, getUserAreas } from "../api/services/authServices";
+import { getUser, getUserAreas } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import {
-  ListIcon,
-  ChevronDownIcon,
-  HorizontaLDots,
-  GridIcon,
-  GroupIcon,
-  UserIcon,
-  Slider,
-  PencilIcon,
-} from "../icons";
+import {ListIcon, ChevronDownIcon,HorizontaLDots,GridIcon,GroupIcon,UserIcon,Slider,PencilIcon,} from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { useOlympiad } from "../context/OlympiadContext";
+import { Phase } from "../types/Phase";
 
 type NavItem = {
   name: string;
@@ -100,34 +93,35 @@ const othersItems: NavItem[] = [];
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-
   const user = getUser();
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
-
+  const { selectedOlympiad } = useOlympiad();
   const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
-  // Nota: si en el futuro necesitamos almacenar el id de la olimpiada a nivel de Sidebar,
-  // podemos agregar un estado aquí. Por ahora lo omitimos para evitar variables sin uso.
   const [menuItems, setMenuItems] = useState(navItems);
+  const [phases, setPhases] = useState<Phase[]>([]);
 
   useEffect(() => {
-    const fetchUserAreas = async () => {
+    const fetchUserAreas = async (olympiadId: number) => {
       try {
-        const res = await getUserAreas();
-        // Convertimos las áreas a formato compatible con NavItem.subItems
+        const res = await getUserAreas(olympiadId);
+        console.log("Respuesta de getUserAreas:", res);
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          // Incluir el olympiad_id proveniente de UserAreasResponse en el path
-          path: `/calificaciones/${res.olympiad_id}/${area.id}/${area.name.toLowerCase()}`,
+          path: `/calificaciones/${area.id}/${area.name.toLowerCase()}`,
         }));
+        console.log("Respuesta de getUserAreas:", res);
+
         setUserAreas(formatted);
       } catch (error) {
         console.error("Error obteniendo áreas del usuario:", error);
       }
     };
 
-    fetchUserAreas();
-  }, []);
+    if (selectedOlympiad?.id) {
+    fetchUserAreas(selectedOlympiad.id);
+    }
+  }, [selectedOlympiad]);
 
 
   useEffect(() => {
@@ -409,13 +403,6 @@ const [openSubmenu, setOpenSubmenu] = useState<{
                 width={150}
                 height={40}
               />
-              {/* <img
-                className="hidden dark:block"
-                src="/images/logo/ohSansi.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              /> */}
             </>
           ) : (
             <div>
