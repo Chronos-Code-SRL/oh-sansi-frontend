@@ -11,8 +11,10 @@ import {
   UserIcon,
   Slider,
   PencilIcon,
+  HomeIcon
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+
 
 type NavItem = {
   name: string;
@@ -50,6 +52,11 @@ const rolePermissions: Record<number, UPermission[]> = {
 };
 
 const navItems: NavItem[] = [
+   {
+    icon: <HomeIcon/>,
+     name:"Inicio",
+     path:"/seleccionar-olimpiada",
+  },
   {
     icon: <GridIcon />,
     name: "Olimpiadas",

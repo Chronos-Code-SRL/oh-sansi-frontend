@@ -1,8 +1,9 @@
 
-import { BoxOlympiad } from "../../components/common/BoxOlympiad"
+import { BoxOlympiad } from "../common/BoxOlympiad"
 import { useEffect, useState } from "react";
 import { getOlympiadsByUser } from "../../api/services/olympiadService";
 import { OlympiadApi } from "../../types/Olympiad";
+import PageMeta from "../common/PageMeta";
 
 
 const LadingPage = () => {
@@ -27,9 +28,12 @@ const LadingPage = () => {
     }, []);
     return (
         <>
+        <div className="min-h-screen w-full" >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#3756A6] via-[#4A4DAF] to-[#E53E3E]">
+                <PageMeta title="Oh sansi Olimpiadas" description="Seleccione una olimpiada que desea calificar o gestionar a los competidores." />
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <h1 className="mt-6 mb-2 text-center text-4xl font-semibold">Oh sansi Olimpiadas</h1>
-                <p className="mb-8 text-center text-muted-foreground">
+                <h1 className="mt-24 mb-2 text-center text-4xl font-semibold text-blue-100">Olimpiadas Oh! Sansi</h1>
+                <p className="mb-8 text-center text-muted-foreground text-blue-100">
                     Seleccione una olimpiada que desea calificar o gestionar a los competidores.
                 </p>
                 {loading && <p className="text-center">Cargando…</p>}
@@ -51,7 +55,9 @@ const LadingPage = () => {
                     </div>
                 )}
             </div>
-
+            </div>
+        </div>
+        
         </>
     )
 }

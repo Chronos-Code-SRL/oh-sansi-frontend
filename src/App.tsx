@@ -3,6 +3,7 @@ import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import AppLayout from "./layout/AppLayout";
+import PublicLayout from "./layout/PublicLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import AdRegistration from "./pages/UploadContestant/UploadContestant";
 import FormOlympiad from "./pages/Olympiad/FormOlympiad";
@@ -17,6 +18,8 @@ import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
 import LadingPage from "./pages/Users/LadingPageOlympiad";
+import FilterElements from "./pages/Filters/FilterElements";
+import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
 
 export default function App() {
   return (
@@ -67,7 +70,11 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/seleccionar-olimpiada" element={<LadingPage />} />
+
+          {/* Public layout with header only (no sidebar) */}
+          <Route element={<PublicLayout />}>
+            <Route path="/seleccionar-olimpiada" element={<SelectOlympiad />} />
+          </Route>
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
