@@ -26,7 +26,7 @@ export default function AdminDefaultInputs() {
 
     const buildValues = () => ({
         name,
-        default_score_cut,
+        // default_score_cut,
         start_date,
         end_date,
         number_of_phases,
@@ -151,7 +151,7 @@ export default function AdminDefaultInputs() {
                                 className="w-full border-gray-300 focus:border-blue-500"
                             />
                         </div>
-                        <div className="space-y-1.5">
+                        {/* <div className="space-y-1.5">
                             <Label htmlFor="default_score_cut" className="block text-sm font-medium text-gray-700">
                                 Umbral de puntuación
                             </Label>
@@ -166,7 +166,7 @@ export default function AdminDefaultInputs() {
                                 placeholder="Ingrese el umbral de puntuación"
                                 className="w-full border-gray-300 focus:border-blue-500"
                             />
-                        </div>
+                        </div> */}
 
                         {/* Fechas */}
                         <div className="space-y-1.5">

@@ -36,7 +36,7 @@ const LadingPage = () => {
                 <p className="mb-8 text-center text-muted-foreground text-blue-100">
                     Seleccione una olimpiada que desea calificar o gestionar a los competidores.
                 </p>
-                {loading && <p className="text-center">Cargando…</p>}
+                {loading && <p className="text-center text-blue-100">Cargando…</p>}
                 {error && <p className="text-center text-red-500">{error}</p>}
 
                 {!loading && !error && (
