@@ -19,46 +19,71 @@ export default function ScoreInput({
   onChangeScoreCut,
 }: ScoreInputProps) {
   const [data, setData] = useState<any>(null);
-  const [scoreCut, setScoreCut] = useState<number>(0);
-  const [currentCut, setCurrentCut] = useState<number>(0);
+  const [minScore, setMinScore] = useState<number>(0); 
+  const [currentMinScore, setCurrentMinScore] = useState<number>(0); 
+  const [maxScore, setMaxScore] = useState<number>(0);
+  const [currentMaxScore, setCurrentMaxScore] = useState<number>(0);
   const [error, setError] = useState("");
   const [confirmModal, setConfirmModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchScoreCuts = async () => {
+    const fetchData = async () => {
       try {
-        const result = await scoreCutsService.getScoreCuts(olympiadId, areaId);
-        setData(result);
+        const [scoreCuts, maxScores] = await Promise.all([
+          scoreCutsService.getScoreCuts(olympiadId, areaId),
+          scoreCutsService.getMaxScores(olympiadId, areaId),
+        ]);
 
-        const firstScore =
-          Array.isArray(result) && result.length > 0
-            ? result?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
+        setData(scoreCuts); 
+
+        const firstMin =
+          Array.isArray(scoreCuts) && scoreCuts.length > 0
+            ? scoreCuts?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
             : 0;
 
-        setScoreCut(Number(firstScore));
-        setCurrentCut(firstScore);
-        onChangeScoreCut?.(Number(firstScore));
+        const firstMax =
+          Array.isArray(maxScores) && maxScores.length > 0
+            ? maxScores?.[0]?.olympiad_area_phase_level_grades?.[0]?.max_score || 100
+            : 100;
+
+        setMinScore(Number(firstMin));
+        setCurrentMinScore(Number(firstMin));
+        setMaxScore(Number(firstMax));
+        setCurrentMaxScore(Number(firstMax));
+        onChangeScoreCut?.(Number(firstMin));
       } catch (error) {
-        console.error("Error al obtener los umbrales:", error);
+        console.error("Error al obtener los umbrales o notas máximas:", error);
       }
     };
-    fetchScoreCuts();
+
+    fetchData();
   }, [olympiadId, areaId]);
 
+
   const validate = () => {
-    if (scoreCut === null || isNaN(Number(scoreCut))) {
-      setError("El umbral es obligatorio.");
+    if (minScore === null || isNaN(Number(minScore))) {
+      setError("El umbral mínimo es obligatorio.");
       return false;
     }
-    if (scoreCut < 0 || scoreCut > 100) {
-      setError("El umbral debe ser un número entre 0 y 100.");
+    if (minScore < 0) {
+      setError("El umbral no puede ser negativo.");
+      return false;
+    }
+    if (maxScore === null || isNaN(Number(maxScore))) {
+      setError("La nota máxima es obligatoria.");
+      return false;
+    }
+    if (maxScore <= minScore) {
+      setError("La nota máxima debe ser mayor que el umbral mínimo.");
       return false;
     }
     setError("");
     return true;
   };
+
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,32 +113,47 @@ export default function ScoreInput({
       }
 
       for (const levelId of nivelesUnicos) {
-        const payload = {
+        const minPayload = {
           phase_id: 1,
           level_id: Number(levelId),
-          score_cut: Number(scoreCut),
+          score_cut: Number(minScore),
         };
-        await scoreCutsService.updateScoreCut(olympiadId, areaId, payload);
+        await scoreCutsService.updateScoreCut(olympiadId, areaId, minPayload);
+
+        const maxPayload = {
+          phase_id: 1,
+          level_id: Number(levelId),
+          max_score: Number(maxScore),
+        };
+        await scoreCutsService.updateMaxScore(olympiadId, areaId, maxPayload);
       }
 
       const updated = await scoreCutsService.getScoreCuts(olympiadId, areaId);
       setData(updated);
 
-      const newCut =
+      const updatedMin =
         Array.isArray(updated) && updated.length > 0
-          ? updated?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
-          : scoreCut;
+          ? updated?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || minScore
+          : minScore;
 
-      setCurrentCut(Number(newCut));
+      const updatedMax =
+        Array.isArray(updated) && updated.length > 0
+          ? updated?.[0]?.olympiad_area_phase_level_grades?.[0]?.max_score || maxScore
+          : maxScore;
+
+      setCurrentMinScore(Number(updatedMin));
+      setCurrentMaxScore(Number(updatedMax));
+
       setConfirmModal(false);
       setSuccessModal(true);
-      onChangeScoreCut?.(Number(scoreCut));
+      onChangeScoreCut?.(Number(minScore));
     } catch (error: any) {
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <>
@@ -124,34 +164,54 @@ export default function ScoreInput({
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
               <div className="w-full">
-                <Label htmlFor="currentCut">Umbral actual</Label>
+                <Label htmlFor="currentMinScore">Umbral actual</Label>
                 <InputField
-                  id="currentCut"
+                  id="currentMinScore"
                   type="number"
-                  value={currentCut}
+                  value={currentMinScore}
                   disabled
                   className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full"
                 />
               </div>
 
               <div className="w-full">
-                <Label htmlFor="scoreCut">Nuevo umbral de calificación</Label>
+                <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full">
                   <InputField
-                    id="scoreCut"
+                    id="minScore"
                     type="number"
-                    value={scoreCut}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setScoreCut(value);
-                      onChangeScoreCut?.(value);
-                    }}
+                    value={minScore}
+                    onChange={(e) => setMinScore(Number(e.target.value))}
                     placeholder="Ej. 60"
                     error={!!error}
                     hint={error}
                     className="w-full sm:flex-1"
                   />
+                </div>
+              </div>
 
+              <div className="w-full">
+                <Label htmlFor="currentMaxScore">Nota máxima actual</Label>
+                <InputField
+                  id="currentMaxScore"
+                  type="number"
+                  value={currentMaxScore}
+                  disabled
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full"
+                />
+              </div>
+
+              <div className="w-full">
+                <Label htmlFor="maxScore">Nueva nota máxima</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full">
+                  <InputField
+                    id="maxScore"
+                    type="number"
+                    value={maxScore}
+                    onChange={(e) => setMaxScore(Number(e.target.value))}
+                    placeholder="Ej. 100"
+                    className="w-full sm:flex-1"
+                  />
                   <Button
                     size="md"
                     variant="primary"
@@ -177,8 +237,11 @@ export default function ScoreInput({
       >
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-            ¿Desea aplicar el nuevo umbral?
+            ¿Desea aplicar los nuevos cambios?
           </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+            Umbral mínimo: <strong>{minScore}</strong> &nbsp;|&nbsp; Nota máxima: <strong>{maxScore}</strong>
+          </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
             <Button
               variant="outline"
@@ -207,10 +270,14 @@ export default function ScoreInput({
       >
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-            ¡Umbral actualizado!
+            ¡Valores actualizados correctamente!
           </h2>
-          <Label>El nuevo umbral ha sido aplicado correctamente.</Label>
-          <Button className="w-full mt-4" onClick={() => setSuccessModal(false)}>
+          <Label>El nuevo umbral y la nota máxima fueron aplicados con éxito.</Label>
+          <Button 
+            variant="primary"
+            className="w-full mt-4" 
+            onClick={() => setSuccessModal(false)}
+          >
             Aceptar
           </Button>
         </div>

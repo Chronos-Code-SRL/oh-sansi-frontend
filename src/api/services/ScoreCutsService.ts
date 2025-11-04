@@ -5,16 +5,17 @@ export const scoreCutsService = {
     const response = await ohSansiApi.get(
       `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`
     );
-    return response.data.data; 
+    return response.data;
   },
 
-  updateScoreCut: async (
-    olympiadId: number,
-    areaId: number,
-    data:
-      | { phase_id: number; level_id: number; score_cut: number } 
-      | { phase_id: number; score_cut: number }                   
-  ) => {
+  getMaxScores: async (olympiadId: number, areaId: number) => {
+    const response = await ohSansiApi.get(
+      `/olympiads/${olympiadId}/areas/${areaId}/max-scores`
+    );
+    return response.data;
+  },
+
+  updateScoreCut: async (olympiadId: number, areaId: number, data: any) => {
     const response = await ohSansiApi.post(
       `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`,
       data
@@ -22,4 +23,11 @@ export const scoreCutsService = {
     return response.data;
   },
 
+  updateMaxScore: async (olympiadId: number, areaId: number, data: any) => {
+    const response = await ohSansiApi.post(
+      `/olympiads/${olympiadId}/areas/${areaId}/max-scores`,
+      data
+    );
+    return response.data;
+  },
 };
