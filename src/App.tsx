@@ -16,7 +16,7 @@ import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
 import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
-
+import LadingPage from "./pages/Users/LadingPageOlympiad";
 
 export default function App() {
   return (
@@ -52,7 +52,7 @@ export default function App() {
 
             {/*Editar Umbral*/}
             <Route path="/editar-umbral/:idOlympiad/:areaId/:areaName" element={<EditScoreCuts />} />
-            
+
             <Route path="/calificaciones" element={<GradingContestant />} />
             {/* Calificaciones por area (incluye id de olimpiada) */}
             <Route path="/calificaciones/:idOlympiad/:areaId/:areaName" element={<MarksStudents />} />
@@ -60,13 +60,14 @@ export default function App() {
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} />
 
-            
+
 
           </Route>
 
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/seleccionar-olimpiada" element={<LadingPage />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

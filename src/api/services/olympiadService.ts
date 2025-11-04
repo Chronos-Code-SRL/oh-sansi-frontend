@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Olympiad, AllOlympiads, OlympiadPayload } from "../../types/Olympiad";
+import { Olympiad, AllOlympiads, OlympiadPayload, OlympiadApi } from "../../types/Olympiad";
 
 const OLYMPIADS_URL = `/olympiads`;
 
@@ -22,7 +22,13 @@ export const getOlympiadById = async (id: number): Promise<Olympiad> => {
   return res.data.olympiad;
 }
 
-export const putOlympiadIdActivate = async(id:number)=>{
+export const putOlympiadIdActivate = async (id: number) => {
   const res = await ohSansiApi.put<{ olympiad: Olympiad }>(`${OLYMPIADS_URL}/${id}/activate`);
   return res;
+
+};
+
+export const getOlympiadsByUser = async (): Promise<OlympiadApi[]> => {
+  const res = await ohSansiApi.get<OlympiadApi[]>(`/user${OLYMPIADS_URL}`);
+  return res.data;
 }
