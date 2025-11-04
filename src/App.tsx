@@ -17,8 +17,6 @@ import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
 import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
-import LadingPage from "./pages/Users/LadingPageOlympiad";
-import FilterElements from "./pages/Filters/FilterElements";
 import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
 
 export default function App() {

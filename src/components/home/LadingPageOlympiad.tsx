@@ -29,7 +29,7 @@ const LadingPage = () => {
     return (
         <>
         <div className="min-h-screen w-full" >
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#3756A6] via-[#4A4DAF] to-[#E53E3E]">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#3756A6] via-[#4A4DAF] to-[#E53E3E]">
                 <PageMeta title="Oh sansi Olimpiadas" description="Seleccione una olimpiada que desea calificar o gestionar a los competidores." />
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <h1 className="mt-24 mb-2 text-center text-4xl font-semibold text-blue-100">Olimpiadas Oh! Sansi</h1>
