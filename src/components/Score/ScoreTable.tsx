@@ -6,6 +6,7 @@ import { Contestant } from "../../types/Contestant";
 interface ScoreTableProps {
   olympiadId: number;
   areaId: number;
+  levelId: number;
   phaseId?: number;
   scoreCut: number;
 }
@@ -13,6 +14,7 @@ interface ScoreTableProps {
 export default function ScoreTable({
   olympiadId,
   areaId,
+  levelId,
   phaseId = 1,
   scoreCut,
 }: ScoreTableProps) {
@@ -21,6 +23,7 @@ export default function ScoreTable({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!levelId) return;
     let alive = true;
 
     async function loadContestants() {
@@ -30,12 +33,13 @@ export default function ScoreTable({
           olympiadId,
           areaId
         );
-        if (alive) setStudents(data);
+        const filtered = data.filter((s: any) => s.level_id === levelId);
+        if (alive) setStudents(filtered);
       } catch (err: any) {
         if (alive) {
           const message =
             err?.response?.status === 404
-              ? "No hay competidores para esta fase o área."
+              ? "No hay competidores para este nivel."
               : "Error al cargar competidores.";
           setError(message);
         }
@@ -48,7 +52,7 @@ export default function ScoreTable({
     return () => {
       alive = false;
     };
-  }, [olympiadId, areaId, phaseId]);
+  }, [olympiadId, areaId, levelId, phaseId]);
 
   const processedStudents = useMemo(() => {
     const sorted = [...students].sort((a, b) => {

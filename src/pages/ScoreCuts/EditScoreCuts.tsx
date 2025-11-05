@@ -7,7 +7,6 @@ import ScoreTable from "../../components/Score/ScoreTable";
 import ScoreInput from "../../components/Score/ScoreInput";
 import SelectLevel from "../../components/Score/SelectLevel";
 
-
 export default function EditScoreCuts() {
   const { areaName = "", areaId = "0", idOlympiad = "1" } = useParams<{
     areaName?: string;
@@ -17,6 +16,7 @@ export default function EditScoreCuts() {
 
   const olympiadId = Number(idOlympiad) || 1;
   const [scoreCut, setScoreCut] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
   function capitalizeFirst(str: string) {
     const s = str.trim();
@@ -31,38 +31,45 @@ export default function EditScoreCuts() {
   return (
     <>
       <PageMeta
-        title={`Editar nota de clasificasión | ${title}`}
+        title={`Editar nota de clasificación | ${title}`}
         description={`Editar el umbral de calificación para el área ${title}.`}
       />
 
-      <TitleBreadCrumb pageTitle="Editar nota de clasificasión" />
+      <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
-      <div className="mt-6"></div>
-
-      <ComponentCard title={`Seleccionar nivel`}>
-        <SelectLevel
-        />
-      </ComponentCard>
-
-      <div className="mt-6"></div>
-
-      <ComponentCard title={`Gestión de Umbral - ${title}`}>
-        <ScoreInput
-          olympiadId={olympiadId}
-          areaId={Number(areaId) || 0}
-          onChangeScoreCut={setScoreCut}
-        />
-      </ComponentCard>
-
-      <div className="mt-6">
-        <ComponentCard title={`Competidores de ${title}`}>
-          <ScoreTable
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ComponentCard title="Seleccionar nivel">
+          <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}
-            scoreCut={scoreCut ?? 0}
+            onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
         </ComponentCard>
+
+        {selectedLevel && (
+          <ComponentCard title={`Gestión Clasificación - ${title}`}>
+            <ScoreInput
+              olympiadId={olympiadId}
+              areaId={Number(areaId) || 0}
+              levelId={selectedLevel}
+              onChangeScoreCut={setScoreCut}
+            />
+          </ComponentCard>
+        )}
       </div>
+
+      {selectedLevel && (
+        <div className="mt-6">
+          <ComponentCard title={`Competidores de ${title}`}>
+            <ScoreTable
+              olympiadId={olympiadId}
+              areaId={Number(areaId) || 0}
+              levelId={selectedLevel}
+              scoreCut={scoreCut ?? 0}
+            />
+          </ComponentCard>
+        </div>
+      )}
     </>
   );
 }

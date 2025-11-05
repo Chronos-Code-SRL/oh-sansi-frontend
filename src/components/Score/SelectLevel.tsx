@@ -4,29 +4,56 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
+import { levelGradesService } from "../../api/services/levelGradesService";
 
 interface LevelOption {
   value: string;
   label: string;
 }
 
-export default function SelectLevel() {
+interface SelectLevelProps {
+  olympiadId: number;
+  areaId: number;
+  onSelectLevel?: (levelId: number) => void;
+}
+
+export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: SelectLevelProps) {
   const [levels, setLevels] = useState<LevelOption[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [confirmModal, setConfirmModal] = useState(false);
 
   useEffect(() => {
-    const mockLevels = [
-      { value: "1", label: "Nivel 1" },
-      { value: "2", label: "Nivel 2" },
-      { value: "3", label: "Nivel 3" },
-    ];
-    setLevels(mockLevels);
-  }, []);
+    const fetchLevels = async () => {
+      try {
+        const response = await levelGradesService.getLevelsFromArea(olympiadId, areaId);
+        const levelGrades = response?.level_grades || [];
+
+        const uniqueLevelsMap = new Map<number, string>();
+
+        for (const lg of levelGrades) {
+          if (!uniqueLevelsMap.has(lg.level.id)) {
+            uniqueLevelsMap.set(lg.level.id, lg.level.name);
+          }
+        }
+
+        const formattedLevels = Array.from(uniqueLevelsMap.entries()).map(([id, name]) => ({
+          value: String(id),
+          label: name,
+        }));
+
+        setLevels(formattedLevels);
+      } catch (error) {
+        console.error("Error al obtener los niveles del área:", error);
+      }
+    };
+
+    fetchLevels();
+  }, [olympiadId, areaId]);
 
   const handleSelectChange = (value: string) => {
     setSelectedLevel(value);
     setConfirmModal(true);
+    onSelectLevel?.(Number(value));
   };
 
   return (
@@ -60,9 +87,8 @@ export default function SelectLevel() {
             Nivel seleccionado correctamente
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Has seleccionado el <strong>Nivel {selectedLevel}</strong>.
+            Has seleccionado el nivel con ID: <strong>{selectedLevel}</strong>
           </p>
-
           <Button
             className="w-full mt-4"
             variant="primary"
