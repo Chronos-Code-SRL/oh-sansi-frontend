@@ -45,8 +45,8 @@ export default function ScoreInput({
 
         const firstMax =
           Array.isArray(maxScores) && maxScores.length > 0
-            ? maxScores?.[0]?.olympiad_area_phase_level_grades?.[0]?.max_score || 100
-            : 100;
+            ? maxScores?.[0]?.olympiad_area_phase_level_grades?.[0]?.max_score || 0
+            : 0;
 
         setMinScore(Number(firstMin));
         setCurrentMinScore(Number(firstMin));

@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import ScoreTable from "../../components/Score/ScoreTable";
 import ScoreInput from "../../components/Score/ScoreInput";
+import SelectLevel from "../../components/Score/SelectLevel";
+
 
 export default function EditScoreCuts() {
   const { areaName = "", areaId = "0", idOlympiad = "1" } = useParams<{
@@ -28,9 +31,20 @@ export default function EditScoreCuts() {
   return (
     <>
       <PageMeta
-        title={`Editar Umbral | ${title}`}
+        title={`Editar nota de clasificasión | ${title}`}
         description={`Editar el umbral de calificación para el área ${title}.`}
       />
+
+      <TitleBreadCrumb pageTitle="Editar nota de clasificasión" />
+
+      <div className="mt-6"></div>
+
+      <ComponentCard title={`Seleccionar nivel`}>
+        <SelectLevel
+        />
+      </ComponentCard>
+
+      <div className="mt-6"></div>
 
       <ComponentCard title={`Gestión de Umbral - ${title}`}>
         <ScoreInput
