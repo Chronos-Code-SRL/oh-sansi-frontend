@@ -4,12 +4,12 @@ import { Contestant, EvaluationUpdatePayload, FilterList } from "../../types/Con
 const CONTESTANTS_URL = `/contestants`;
 
 export const getContestantByPhaseOlympiadArea = async (
-    IdPhase: number,
+    idPhase: number,
     idOlympiad: number,
     idArea: number
 ): Promise<Contestant[]> => {
     const res = await ohSansiApi.get<Contestant[]>(
-        `${CONTESTANTS_URL}/${IdPhase}/${idOlympiad}/${idArea}`
+        `${CONTESTANTS_URL}/${idPhase}/${idOlympiad}/${idArea}`
     );
     return res.data;
 }

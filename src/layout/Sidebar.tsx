@@ -6,6 +6,7 @@ import {ListIcon, ChevronDownIcon,HorizontaLDots,GridIcon,GroupIcon,UserIcon,Sli
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
+import { getOlympiadPhases } from "../api/services/phaseService";
 
 type NavItem = {
   name: string;
@@ -99,6 +100,7 @@ const AppSidebar: React.FC = () => {
   const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);
   const [phases, setPhases] = useState<Phase[]>([]);
+  const [openAreaId, setOpenAreaId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchUserAreas = async (olympiadId: number) => {
@@ -108,7 +110,7 @@ const AppSidebar: React.FC = () => {
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          path: `/calificaciones/${area.id}/${area.name.toLowerCase()}`,
+          path: `/calificaciones/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
         }));
         console.log("Respuesta de getUserAreas:", res);
 
@@ -123,13 +125,46 @@ const AppSidebar: React.FC = () => {
     }
   }, [selectedOlympiad]);
 
+  // obtener fases de la olimpiada
+  useEffect(() => {
+    const fetchPhases = async (olympiadId: number) => {
+      try {
+        const data = await getOlympiadPhases(olympiadId);
+        setPhases(data);
+      } catch (error) {
+        console.error("Error obteniendo fases:", error);
+      }
+    };
+
+    if (selectedOlympiad?.id) {
+      fetchPhases(selectedOlympiad.id);
+    }
+  }, [selectedOlympiad]);
+
 
   useEffect(() => {
     // Solo actualizamos si ya tenemos las áreas
     if (userAreas.length > 0) {
       const updated = navItems.map((item) => {
         if (item.name === "Calificar Competidores") {
-          return { ...item, subItems: userAreas };
+          // construir subitems por área que contengan las fases
+          const areasWithPhases = userAreas.map((area) => {
+            const areaSubItems = phases.length
+              ? phases.map((p) => ({
+                  name: p.name,
+                  path: `${area.path}/fase/${p.id}`,
+                }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: area.path,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
         }
         return item;
       });
@@ -137,7 +172,11 @@ const AppSidebar: React.FC = () => {
     } else {
       setMenuItems(navItems);
     }
-  }, [userAreas]);
+  }, [userAreas, phases]);
+
+  const toggleArea = (areaId: number) => {
+    setOpenAreaId((prev) => (prev === areaId ? null : areaId));
+  };
 
   // Filtrar ítems visibles según permisos
   useEffect(() => {
@@ -167,7 +206,26 @@ const AppSidebar: React.FC = () => {
     // Agregar dinámicamente las áreas a los menús que las necesitan
     const updatedMenu = filteredMenu.map((item) => {
       if (item.name === "Calificar Competidores") {
-        return { ...item, subItems: userAreas.length > 0 ? userAreas : item.subItems };
+        if (userAreas.length > 0) {
+          const areasWithPhases = userAreas.map((area) => {
+            const areaSubItems = phases.length
+              ? phases.map((p) => ({
+                  name: p.name,
+                  path: `${area.path}/fase/${p.id}`,
+                }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: area.path,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
       }
       if (item.name === "Editar Umbral") {
         return {
@@ -189,7 +247,7 @@ const AppSidebar: React.FC = () => {
     });
 
     setMenuItems(updatedMenu);
-  }, [userPerms, userAreas]);
+  }, [userPerms, userAreas, phases]);
 
   
 
@@ -200,10 +258,11 @@ const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number | 'auto'>>(
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const prevOpenSubmenuRef = useRef<typeof openSubmenu | null>(null);
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
@@ -235,17 +294,64 @@ const [openSubmenu, setOpenSubmenu] = useState<{
     }
   }, [location, isActive]);
 
+  // Manejo refinado de expand/collapse para animaciones correctas
+  useEffect(() => {
+    const prev = prevOpenSubmenuRef.current;
+    // Si antes había un submenu abierto y ahora se cerró -> animar colapso
+    if (prev && openSubmenu === null) {
+      const prevKey = `${prev.type}-${prev.index}`;
+      const el = subMenuRefs.current[prevKey];
+      if (el) {
+        // fijar la altura actual y luego animar a 0
+        const h = el.scrollHeight || 0;
+        setSubMenuHeight((prevHeights) => ({ ...prevHeights, [prevKey]: h }));
+        // dar tiempo a que se aplique y luego colapsar
+        window.requestAnimationFrame(() => {
+          setTimeout(() => {
+            setSubMenuHeight((prevHeights) => ({ ...prevHeights, [prevKey]: 0 }));
+          }, 0);
+        });
+      }
+    }
+
+    // Si ahora hay un submenu abierto -> expandir y luego poner 'auto'
+    if (openSubmenu !== null) {
+      const key = `${openSubmenu.type}-${openSubmenu.index}`;
+      const el = subMenuRefs.current[key];
+      if (el) {
+        const h = el.scrollHeight || 0;
+        setSubMenuHeight((prevHeights) => ({ ...prevHeights, [key]: h }));
+        const tid = setTimeout(() => {
+          setSubMenuHeight((prevHeights) => ({ ...prevHeights, [key]: 'auto' }));
+        }, 160); // ligeramente mayor que la duración CSS (150ms)
+        return () => clearTimeout(tid);
+      }
+    }
+
+    prevOpenSubmenuRef.current = openSubmenu;
+  }, [openSubmenu]);
+
+  // Recalcular altura del submenú abierto cuando cambian las fases o el contenido del menú
   useEffect(() => {
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
+      const el = subMenuRefs.current[key];
+      if (el) {
+        // Esperar al siguiente frame (y un micro delay) para que el DOM aplique "hidden/block"
+        window.requestAnimationFrame(() => {
+          setTimeout(() => {
+            const h = el.scrollHeight || 0;
+            setSubMenuHeight((prev) => ({ ...prev, [key]: h }));
+            const tid = setTimeout(() => {
+              setSubMenuHeight((prev) => ({ ...prev, [key]: 'auto' }));
+            }, 160);
+            // limpieza si el effect se re-ejecuta
+            return () => clearTimeout(tid);
+          }, 0);
+        });
       }
     }
-  }, [openSubmenu]);
+  }, [phases, menuItems, openSubmenu, openAreaId]);
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prevOpenSubmenu) => {
@@ -322,48 +428,94 @@ const [openSubmenu, setOpenSubmenu] = useState<{
               ref={(el) => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
               }}
-              className="overflow-hidden transition-all duration-300"
+              className={`overflow-hidden transition-all ${
+                openSubmenu?.type === menuType && openSubmenu?.index === index
+                  ? "duration-150" // abrir: animado
+                  : "duration-0"   // cerrar: instantáneo para evitar reajuste visible
+              }`}
               style={{
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
+                    ? (subMenuHeight[`${menuType}-${index}`] === 'auto'
+                        ? 'auto'
+                        : `${subMenuHeight[`${menuType}-${index}`] || 0}px`)
+                    : '0px',
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${isActive(subItem.path)
-                        ? "menu-dropdown-item-active"
-                        : "menu-dropdown-item-inactive"
-                        }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${isActive(subItem.path)
-                              ? "menu-dropdown-badge-active"
-                              : "menu-dropdown-badge-inactive"
-                              } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${isActive(subItem.path)
-                              ? "menu-dropdown-badge-active"
-                              : "menu-dropdown-badge-inactive"
-                              } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
-                    </Link>
+                    {/* Si el subItem trae subItems (área con fases) renderizamos boton que expande las fases */}
+                    {(
+                      (subItem as any).subItems && (subItem as any).subItems.length > 0
+                    ) ? (
+                      <div>
+                        <button
+                          onClick={() => toggleArea((subItem as any).id)}
+                          className={`menu-dropdown-item group ${openAreaId === (subItem as any).id
+                            ? "menu-dropdown-item-active"
+                            : "menu-dropdown-item-inactive"
+                            } w-full text-left flex items-center gap-2`}
+                        >
+                          <span>{subItem.name}</span>
+                          <ChevronDownIcon
+                            className={`ml-auto w-4 h-4 transition-transform duration-200 ${openAreaId === (subItem as any).id ? "rotate-180 text-brand-500" : ""}`}
+                          />
+                        </button>
+
+                        <div
+                          className={`overflow-hidden transition-all duration-150 ${openAreaId === (subItem as any).id ? "mt-2" : "h-0"}`}
+                        >
+                          <ul className={`ml-4 space-y-1 ${openAreaId === (subItem as any).id ? "block" : "hidden"}`}>
+                            {((subItem as any).subItems as Array<any>).map((phase: any) => (
+                              <li key={phase.name}>
+                                <Link
+                                  to={phase.path}
+                                  className={`menu-dropdown-item ${isActive(phase.path)
+                                    ? "menu-dropdown-item-active"
+                                    : "menu-dropdown-item-inactive"
+                                    }`}
+                                >
+                                  {phase.name}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        to={subItem.path}
+                        className={`menu-dropdown-item ${isActive(subItem.path)
+                          ? "menu-dropdown-item-active"
+                          : "menu-dropdown-item-inactive"
+                          }`}
+                      >
+                        {subItem.name}
+                        <span className="flex items-center gap-1 ml-auto">
+                          {subItem.new && (
+                            <span
+                              className={`ml-auto ${isActive(subItem.path)
+                                ? "menu-dropdown-badge-active"
+                                : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                            >
+                              new
+                            </span>
+                          )}
+                          {subItem.pro && (
+                            <span
+                              className={`ml-auto ${isActive(subItem.path)
+                                ? "menu-dropdown-badge-active"
+                                : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                            >
+                              pro
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

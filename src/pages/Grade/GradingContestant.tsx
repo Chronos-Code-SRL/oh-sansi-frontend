@@ -11,7 +11,7 @@ export default function MarksStudents() {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    const { areaName, areaId, idOlympiad } = useParams<{ areaName?: string; areaId?: string; idOlympiad?: string }>();
+    const { idOlympiad, areaName, areaId, phaseId } = useParams<{ areaName?: string; phaseId?: string; idOlympiad?: string; areaId?: string; }>();
     const baseTitle = areaName ? decodeURIComponent(areaName) : "Calificaciones";
     const title = capitalizeFirst(baseTitle);
     return (
@@ -20,8 +20,13 @@ export default function MarksStudents() {
                 title={title}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
-            <ComponentCard key={areaId} title={title}>
-                <StudentTable key={areaId} idOlympiad={Number(idOlympiad)} idArea={Number(areaId)} />
+            <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={title}>
+                <StudentTable
+                    key={`${areaId}-${phaseId ?? 'none'}`}
+                    idPhase={ Number(phaseId) }
+                    idOlympiad={Number(idOlympiad)}
+                    idArea={Number(areaId)} 
+                />
             </ComponentCard>
         </>
     )

@@ -11,11 +11,12 @@ import SearchBar from "./Searcher";
 import Filter from "./Filter";
 
 interface Props {
+    idPhase: number;
+    idOlympiad: number;
     idArea: number;
-    idOlympiad:number;
 }
 
-export default function StudentTable({ idArea, idOlympiad}: Props) {
+export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
 
         async function loadContestants() {
             try {
-                const data = await getContestantByPhaseOlympiadArea(1, idOlympiad, idArea);
+                const data = await getContestantByPhaseOlympiadArea(idPhase, idOlympiad, idArea);
                 if (alive) setStudents(data);
                 console.log("Estudiantes cargados:", data);
             } catch {
@@ -86,7 +87,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
 
         loadContestants();
         return () => { alive = false; };
-    }, []);
+    }, [idPhase, idArea, idOlympiad]);
 
     useEffect(() => {
         async function pollOnce() {
