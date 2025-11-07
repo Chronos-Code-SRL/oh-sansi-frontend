@@ -53,7 +53,9 @@ export default function App() {
             {/*Editar Umbral*/}
             <Route path="/editar-umbral/:idOlympiad/:areaId/:areaName" element={<EditScoreCuts />} />
 
+            {/* SI NADIE RESPONDE POR LA SIGUIENTE LINEA SE ELIMINA */}
             <Route path="/calificaciones" element={<GradingContestant />} />
+
             {/* Calificaciones por área y fase */}
             <Route path="/calificaciones/:idOlympiad/:areaId/:areaName/fase/:phaseId" element={<MarksStudents />} />
 

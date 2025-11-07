@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import {ListIcon, ChevronDownIcon,HorizontaLDots,GridIcon,GroupIcon,UserIcon,Slider,PencilIcon,} from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -12,11 +12,11 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { 
-    name: string; 
-    path: string; 
-    pro?: boolean; 
-    new?: boolean;  
+  subItems?: {
+    name: string;
+    path: string;
+    pro?: boolean;
+    new?: boolean;
     permission?: UPermission
   }[];
   permission?: UPermission;
@@ -51,7 +51,7 @@ const navItems: NavItem[] = [
       { name: "Crear Olimpiada", path: "/Olimpiada", pro: false, permission: UPermission.CREATE_OLYMPIAD },
       { name: "Configurar Áreas", path: "/VerOlimpiadas", pro: false, permission: UPermission.CONFIGURE_AREAS },
     ],
-    
+
   },
   {
     icon: <UserIcon />,
@@ -71,15 +71,15 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Calificar Competidores",
     path: "/calificaciones",
-    subItems: [], 
+    subItems: [],
     permission: UPermission.GRADE_COMPETITOR
   },
   {
     icon: <PencilIcon />,
     name: "Editar Umbral",
     path: "/editar-umbral",
-    subItems: [], 
-    permission: UPermission.EDIT_SCORE_CUT, 
+    subItems: [],
+    permission: UPermission.EDIT_SCORE_CUT,
   },
   {
     icon: <Slider />,
@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
     path: "/filtros-de-lista",
     permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
-  
+
 ];
 const othersItems: NavItem[] = [];
 
@@ -97,7 +97,7 @@ const AppSidebar: React.FC = () => {
   const user = getUser();
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
   const { selectedOlympiad } = useOlympiad();
-  const [userAreas, setUserAreas] = useState<{id:number; name: string; path: string }[]>([]);
+  const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [openAreaId, setOpenAreaId] = useState<number | null>(null);
@@ -110,7 +110,7 @@ const AppSidebar: React.FC = () => {
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          path: `/calificaciones/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
+          path: `/calificaciones/${olympiadId}/${area.id}/${area.name}`,
         }));
         console.log("Respuesta de getUserAreas:", res);
 
@@ -121,7 +121,7 @@ const AppSidebar: React.FC = () => {
     };
 
     if (selectedOlympiad?.id) {
-    fetchUserAreas(selectedOlympiad.id);
+      fetchUserAreas(selectedOlympiad.id);
     }
   }, [selectedOlympiad]);
 
@@ -150,10 +150,13 @@ const AppSidebar: React.FC = () => {
           // construir subitems por área que contengan las fases
           const areasWithPhases = userAreas.map((area) => {
             const areaSubItems = phases.length
-              ? phases.map((p) => ({
+              ? phases.map((p) => {
+                console.log(p.name);
+                return {
                   name: p.name,
                   path: `${area.path}/fase/${p.id}`,
-                }))
+                };
+              })
               : [];
 
             return {
@@ -185,8 +188,8 @@ const AppSidebar: React.FC = () => {
         // Filtrar subitems según permisos
         const visibleSubItems = item.subItems
           ? item.subItems.filter(
-              (sub) => !sub.permission || userPerms.includes(sub.permission)
-            )
+            (sub) => !sub.permission || userPerms.includes(sub.permission)
+          )
           : [];
 
         const canSeeItem =
@@ -210,9 +213,9 @@ const AppSidebar: React.FC = () => {
           const areasWithPhases = userAreas.map((area) => {
             const areaSubItems = phases.length
               ? phases.map((p) => ({
-                  name: p.name,
-                  path: `${area.path}/fase/${p.id}`,
-                }))
+                name: p.name,
+                path: `${area.path}/fase/${p.id}`,
+              }))
               : [];
 
             return {
@@ -233,13 +236,13 @@ const AppSidebar: React.FC = () => {
           subItems:
             userAreas.length > 0
               ? userAreas.map((area) => {
-                  const olympiadId = area.path.split("/")[2]; 
-                  return {
-                    id: area.id,
-                    name: area.name,
-                    path: `/editar-umbral/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
-                  };
-                })
+                const olympiadId = area.path.split("/")[2];
+                return {
+                  id: area.id,
+                  name: area.name,
+                  path: `/editar-umbral/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
+                };
+              })
               : item.subItems,
         };
       }
@@ -249,12 +252,12 @@ const AppSidebar: React.FC = () => {
     setMenuItems(updatedMenu);
   }, [userPerms, userAreas, phases]);
 
-  
-
-//Editar
 
 
-const [openSubmenu, setOpenSubmenu] = useState<{
+  //Editar
+
+
+  const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
@@ -428,17 +431,16 @@ const [openSubmenu, setOpenSubmenu] = useState<{
               ref={(el) => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
               }}
-              className={`overflow-hidden transition-all ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "duration-150" // abrir: animado
-                  : "duration-0"   // cerrar: instantáneo para evitar reajuste visible
-              }`}
+              className={`overflow-hidden transition-all ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                ? "duration-150" // abrir: animado
+                : "duration-0"   // cerrar: instantáneo para evitar reajuste visible
+                }`}
               style={{
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? (subMenuHeight[`${menuType}-${index}`] === 'auto'
-                        ? 'auto'
-                        : `${subMenuHeight[`${menuType}-${index}`] || 0}px`)
+                      ? 'auto'
+                      : `${subMenuHeight[`${menuType}-${index}`] || 0}px`)
                     : '0px',
               }}
             >
