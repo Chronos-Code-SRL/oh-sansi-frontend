@@ -25,7 +25,6 @@ export const getOlympiadById = async (id: number): Promise<Olympiad> => {
 export const putOlympiadIdActivate = async (id: number) => {
   const res = await ohSansiApi.put<{ olympiad: Olympiad }>(`${OLYMPIADS_URL}/${id}/activate`);
   return res;
-
 };
 
 export const getOlympiadsByUser = async (): Promise<OlympiadApi[]> => {

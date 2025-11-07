@@ -62,8 +62,6 @@ export default function App() {
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} />
 
-
-
           </Route>
 
           {/* Auth Layout */}
