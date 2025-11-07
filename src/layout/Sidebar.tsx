@@ -110,7 +110,8 @@ const AppSidebar: React.FC = () => {
         const formatted = res.areas.map((area) => ({
           id: area.id,
           name: area.name,
-          path: `/calificaciones/${olympiadId}/${area.id}/${area.name}`,
+          path: `/calificaciones/${olympiadId}/${encodeURIComponent(area.name)}/${area.id}`,
+
         }));
         console.log("Respuesta de getUserAreas:", res);
 
@@ -154,7 +155,8 @@ const AppSidebar: React.FC = () => {
                 console.log(p.name);
                 return {
                   name: p.name,
-                  path: `${area.path}/fase/${p.id}`,
+                  path: `${area.path}/${encodeURIComponent(p.name)}/${p.id}`,
+
                 };
               })
               : [];
@@ -214,7 +216,8 @@ const AppSidebar: React.FC = () => {
             const areaSubItems = phases.length
               ? phases.map((p) => ({
                 name: p.name,
-                path: `${area.path}/fase/${p.id}`,
+                path: `${area.path}/${p.name}/${p.id}`,
+                
               }))
               : [];
 

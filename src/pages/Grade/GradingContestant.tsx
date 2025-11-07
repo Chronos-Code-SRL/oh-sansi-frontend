@@ -6,15 +6,24 @@ import StudentTable from "../../components/Grade/StudentTable";
 
 export default function MarksStudents() {
 
-    const { idOlympiad, areaName, areaId, phaseId, } = useParams<{ areaName?: string; phaseId?: string; idOlympiad?: string; areaId?: string; }>();
-    const title = areaName ? decodeURIComponent(areaName) : "Calificaciones";
+    const { idOlympiad, areaName, areaId, phaseId, phaseName } = useParams<{
+    idOlympiad?: string;
+    areaName?: string;
+    areaId?: string;
+    phaseId?: string;
+    phaseName?: string;
+  }>();
+    const decodedPhaseName = phaseName ? decodeURIComponent(phaseName) : "";
+    const decodedAreaName = areaName ? decodeURIComponent(areaName) : "";
+    const title = `${decodedAreaName} - ${decodedPhaseName}`;
+
     return (
         <>
             <PageMeta
                 title={title}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
-            <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={`${title} - Fase ${phaseId}`}>
+            <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={title}>
                 <StudentTable
                     key={`${areaId}-${phaseId ?? 'none'}`}
                     idPhase={Number(phaseId)}

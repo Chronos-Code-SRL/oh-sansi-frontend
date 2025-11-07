@@ -57,7 +57,11 @@ export default function App() {
             <Route path="/calificaciones" element={<GradingContestant />} />
 
             {/* Calificaciones por área y fase */}
-            <Route path="/calificaciones/:idOlympiad/:areaId/:areaName/fase/:phaseId" element={<MarksStudents />} />
+            <Route
+              path="/calificaciones/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId"
+              element={<MarksStudents />}
+            />
+
 
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} />
