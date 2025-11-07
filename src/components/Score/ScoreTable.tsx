@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
-import { getContestantByPhaseOlympiadArea } from "../../api/services/contestantService";
+import { getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
 import { Contestant } from "../../types/Contestant";
 
 interface ScoreTableProps {
@@ -25,10 +25,11 @@ export default function ScoreTable({
 
     async function loadContestants() {
       try {
-        const data = await getContestantByPhaseOlympiadArea(
+        const data = await getContestantByPhaseOlympiadAreaLevel(
           phaseId,
           olympiadId,
-          areaId
+          areaId,
+          1
         );
         if (alive) setStudents(data);
       } catch (err: any) {
@@ -90,13 +91,12 @@ export default function ScoreTable({
           {processedStudents.map((s) => (
             <TableRow
               key={s.contestant_id}
-              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${
-                s.isClassified
+              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${s.isClassified
                   ? "bg-emerald-50 dark:bg-emerald-950/20"
                   : typeof s.score === "number"
-                  ? "bg-rose-50 dark:bg-rose-950/20"
-                  : "bg-gray-50 dark:bg-gray-900/30"
-              }`}
+                    ? "bg-rose-50 dark:bg-rose-950/20"
+                    : "bg-gray-50 dark:bg-gray-900/30"
+                }`}
             >
               <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
@@ -107,11 +107,10 @@ export default function ScoreTable({
               {/* Estado */}
               <td className="px-6 py-4 text-sm text-center">
                 <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
-                    s.status
+                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${s.status
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-rose-100 text-rose-700"
-                  }`}
+                    }`}
                 >
                   {s.status ? "Evaluado" : "No Evaluado"}
                 </span>

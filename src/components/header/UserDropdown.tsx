@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link } from "react-router";
-import { getUser,getRoleName,logout } from "../../api/services/authServices";
+import { getUser,getRoleName,logout } from "../../api/services/authService";
 import { User } from "../../types/User";
 
 export default function UserDropdown() {

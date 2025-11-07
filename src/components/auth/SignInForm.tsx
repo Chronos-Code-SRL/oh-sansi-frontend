@@ -3,7 +3,7 @@ import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
-import { getToken, login } from "../../api/services/authServices";
+import { getToken, login } from "../../api/services/authService";
 import { useNavigate } from "react-router";
 type Props = {
   onSuccess?: () => void;

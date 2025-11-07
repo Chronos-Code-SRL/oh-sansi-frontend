@@ -1,3 +1,5 @@
+import { Area } from "./Area";
+
 export interface Olympiad {
     id: number;
     name: string;
@@ -23,11 +25,6 @@ export interface OlympiadPayload {
     areas: string[];
 }
 
-// For the new endpoint that includes areas as objects
-export interface Area {
-    id: number;
-    name: string;
-}
 
 export interface OlympiadApi {
     id: number;
@@ -37,5 +34,5 @@ export interface OlympiadApi {
     end_date: string;
     number_of_phases: number;
     status: string;
-    areas: Area[]; // en la API son objetos
+    areas: Area[]; 
 }

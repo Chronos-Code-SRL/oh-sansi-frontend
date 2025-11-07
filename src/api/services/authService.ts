@@ -7,7 +7,6 @@ const LOGIN = `/login`;
 const LOGOUT = `/logout`;
 const USER_AREAS_URL = "/user/areas";
 
-
 // Login
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
   const res = await ohSansiApi.post<LoginResponse>(LOGIN, { email, password });
@@ -70,13 +69,16 @@ export const getRole = (requiredRoleId: number): boolean => {
   return user?.roles_id === requiredRoleId;
 };
 
-export const getUserAreas = async (): Promise<UserAreasResponse> => {
+export const getUserAreas = async (idOlympiad: number): Promise<UserAreasResponse> => {
   const token = getToken();
   if (!token) {
     throw new Error("No se encontró token. El usuario no está autenticado.");
   }
-  const res = await ohSansiApi.get<UserAreasResponse>(USER_AREAS_URL, {
+  const res = await ohSansiApi.get(`${USER_AREAS_URL}/${idOlympiad}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  return res.data;
+  return {
+    areas: res.data.data,
+    status: res.data.status,
+  };
 };
