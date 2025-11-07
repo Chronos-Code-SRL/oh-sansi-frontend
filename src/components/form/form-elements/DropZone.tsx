@@ -1,27 +1,20 @@
-import ComponentCard from "../common/ComponentCard";
-import Badge from "../ui/badge/Badge";
+import ComponentCard from "../../common/ComponentCard";
 import { useDropzone } from "react-dropzone";
-//import DropZone from "react-dropzone";
+// import Dropzone from "react-dropzone";
 
-interface DropZone {
-  onFilesAdded: (files: File[]) => void;
-}
-
-const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
+const DropzoneComponent: React.FC = () => {
   const onDrop = (acceptedFiles: File[]) => {
     console.log("Files dropped:", acceptedFiles);
     // Handle file uploads here
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
     accept: {
       "image/png": [],
       "image/jpeg": [],
       "image/webp": [],
       "image/svg+xml": [],
-    },
-    onDrop: (acceptedFiles) => {
-      onFilesAdded(acceptedFiles);
     },
   });
   return (
@@ -29,11 +22,12 @@ const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
       <div className="transition border border-gray-300 border-dashed cursor-pointer dark:hover:border-brand-500 dark:border-gray-700 rounded-xl hover:border-brand-500">
         <form
           {...getRootProps()}
-          className={`dropzone rounded-xl border-dashed border-gray-300 p-7 lg:p-10
-        ${isDragActive
-              ? "border-brand-500 bg-gray-100 "
-              : "border-gray-300 bg-gray-50 dark:border-gray-700 "
-            }
+          className={`dropzone rounded-xl   border-dashed border-gray-300 p-7 lg:p-10
+        ${
+          isDragActive
+            ? "border-brand-500 bg-gray-100 dark:bg-gray-800"
+            : "border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+        }
       `}
           id="demo-upload"
         >
@@ -65,19 +59,12 @@ const DropzoneComponent: React.FC<DropZone> = ({ onFilesAdded }) => {
               {isDragActive ? "Drop Files Here" : "Drag & Drop Files Here"}
             </h4>
 
-            <div className="flex items-center justify-center gap-1 mb-3 col-span-2 ">
-              <span className="text-sm text-gray-700 dark:text-gray-400">
-                Arrastra tus archivos aquí o
-              </span>
-              <span className="font-medium underline text-theme-sm text-brand-500 cursor-pointer">
-                Haz clic para seleccionarlos
-              </span>
-            </div>
+            <span className=" text-center mb-5 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
+              Drag and drop your PNG, JPG, WebP, SVG images here or browse
+            </span>
 
-
-            <span className=" text-center mb-2 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
-              Formato permitido:
-              <Badge color="primary"> csv</Badge>
+            <span className="font-medium underline text-theme-sm text-brand-500">
+              Browse File
             </span>
           </div>
         </form>
