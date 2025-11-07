@@ -1,7 +1,6 @@
 import React from "react";
-import GridShape from "../../components/common/GridShape";
+
 import { Link } from "react-router";
-import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
 
 export default function AuthLayout({
   children,
@@ -9,31 +8,26 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0">
-      <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
+    <div className="relative flex items-center justify-center min-h-screen w-full bg-white overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-[100%] bg-gradient-to-r from-[#3756A6] via-[#4A4DAF] to-[#E53E3E]" />
+       <div className="relative z-10 bg-white rounded-2xl shadow-xl 
+                      px-6 py-10
+                      sm:px-10 sm:py-12 
+                      w-full 
+                      max-w-md sm:max-w-lg lg:max-w-xl 
+                      flex flex-col items-center">
+        <Link to="/" className="mb-4">
+          <img
+            src="/images/logo/ohSansi.svg"
+            alt="Logo"
+            width={200}
+            height={48}
+          />
+        </Link>
+        {/* <p className="text-gray-500 text-sm mb-6 text-center ">
+          Sistema de calificaciones Oh!Sansi
+        </p> */}
         {children}
-        <div className="items-center hidden w-full h-full lg:w-1/2 bg-brand-950 dark:bg-white/5 lg:grid">
-          <div className="relative flex items-center justify-center z-1">
-            {/* <!-- ===== Common Grid Shape Start ===== --> */}
-            <GridShape />
-            <div className="flex flex-col items-center max-w-xs">
-              <Link to="/" className="block mb-4">
-                <img
-                  width={231}
-                  height={48}
-                  src="/images/logo/auth-logo.svg"
-                  alt="Logo"
-                />
-              </Link>
-              <p className="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
-          <ThemeTogglerTwo />
-        </div>
       </div>
     </div>
   );

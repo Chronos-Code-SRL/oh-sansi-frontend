@@ -2,22 +2,17 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
-import LineChart from "./pages/Charts/LineChart";
-import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Tables/BasicTables";
-import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
+import AdRegistration from "./pages/UploadContestant/UploadContestant";
+import FormOlympiad from "./pages/Olympiad/FormOlympiad";
+import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
+import ViewAreas from "./pages/Olympiad/ViewAreas";
+import GradingContestant from "./pages/Grade/GradingContestant";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
+import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
+import MarksStudents from "./pages/Grade/GradingContestant";
 
 export default function App() {
   return (
@@ -26,31 +21,35 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+          <Route
+            element={
+              // <AppLayout />
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index path="/" element={<FormOlympiad />} />
 
-            {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
+            {/* Aministration*/}
+            <Route index path="/registration" element={<AdRegistration />} />
 
             {/* Forms */}
-            <Route path="/form-elements" element={<FormElements />} />
 
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
+            <Route path="/Olimpiada" element={<FormOlympiad />} />
+            <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
 
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
+            {/* Prueba Modal */}
+            <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
 
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
+            {/*Register User*/}
+            < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
+            < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
+
+            <Route path="/calificaciones" element={<GradingContestant />} />
+            {/* Calificaciones por area */}
+            <Route path="/calificaciones/:areaId/:areaName" element={<MarksStudents />} />
+
           </Route>
 
           {/* Auth Layout */}
