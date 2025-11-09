@@ -6,16 +6,17 @@ import CommentModal from "./CommentModal";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import type { KeyboardEventHandler } from "react";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { checkUpdates, getContestantByPhaseOlympiadArea, updatePartialEvaluation } from "../../api/services/contestantService";
+import { checkUpdates, updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
 import SearchBar from "./Searcher";
 import Filter from "./Filter";
 
 interface Props {
+    idPhase: number;
+    idOlympiad: number;
     idArea: number;
-    idOlympiad:number;
 }
 
-export default function StudentTable({ idArea, idOlympiad}: Props) {
+export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
 
         async function loadContestants() {
             try {
-                const data = await getContestantByPhaseOlympiadArea(1, idOlympiad, idArea);
+                const data = await getContestantByPhaseOlympiadAreaLevel(idPhase, idOlympiad, idArea, 2);
                 if (alive) setStudents(data);
                 console.log("Estudiantes cargados:", data);
             } catch {
@@ -86,7 +87,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
 
         loadContestants();
         return () => { alive = false; };
-    }, []);
+    }, [idPhase, idArea, idOlympiad]);
 
     useEffect(() => {
         async function pollOnce() {
@@ -295,30 +296,6 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
         }
     };
 
-    // const rejectNote = async (s: Contestant) => {
-    //     if (saving) return;
-    //     try {
-    //         setSaving(true);
-
-    //         // Opción A: limpiar score (ojo: tu backend hoy setea status=true si 'score' existe, incluso si es null)
-    //         // Idealmente el backend debería permitir poner status=false explícitamente.
-    //         await updatePartialEvaluation(getEvaluationId(s), { score: null });
-
-    //         setStudents((prev) =>
-    //             prev.map((st) =>
-    //                 st.contestant_id === s.contestant_id
-    //                     ? { ...st, score: null as any, status: false }
-    //                     : st,
-    //             ),
-    //         );
-    //         setEditingCi(null);
-    //     } catch {
-    //         setError("No se pudo actualizar el estado.");
-    //     } finally {
-    //         setSaving(false);
-    //     }
-    // };
-
     const rejectNote = (_s: Contestant) => {
         if (saving) return;
         // Cancelar edición sin modificar nota ni estado
@@ -437,7 +414,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
                                                     type="button"
                                                     disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
                                                     onClick={() => saveNote(s)} //Aca en el end point patch
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
+                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
                                                     title="Aceptar"
                                                 >
                                                     <CheckLineIcon className="size-5" />
@@ -446,7 +423,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
                                                     type="button"
                                                     disabled={saving === true}
                                                     onClick={() => rejectNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
+                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
                                                     title="Rechazar"
                                                 >
                                                     <CloseLineIcon className="size-5" />
@@ -464,7 +441,7 @@ export default function StudentTable({ idArea, idOlympiad}: Props) {
                                         <button
                                             type="button"
                                             onClick={() => openCommentModal(s)}
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                                             title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                         >
                                             <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />

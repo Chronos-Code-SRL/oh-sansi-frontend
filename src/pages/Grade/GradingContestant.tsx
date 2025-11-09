@@ -5,23 +5,31 @@ import StudentTable from "../../components/Grade/StudentTable";
 
 
 export default function MarksStudents() {
-    function capitalizeFirst(str: string) {
-        const s = str.trim();
-        if (!s) return s;
-        return s.charAt(0).toUpperCase() + s.slice(1);
-    }
 
-    const { areaName, areaId, idOlympiad } = useParams<{ areaName?: string; areaId?: string; idOlympiad?: string }>();
-    const baseTitle = areaName ? decodeURIComponent(areaName) : "Calificaciones";
-    const title = capitalizeFirst(baseTitle);
+    const { idOlympiad, areaName, areaId, phaseId, phaseName } = useParams<{
+    idOlympiad?: string;
+    areaName?: string;
+    areaId?: string;
+    phaseId?: string;
+    phaseName?: string;
+  }>();
+    const decodedPhaseName = phaseName ? decodeURIComponent(phaseName) : "";
+    const decodedAreaName = areaName ? decodeURIComponent(areaName) : "";
+    const title = `${decodedAreaName} - ${decodedPhaseName}`;
+
     return (
         <>
             <PageMeta
                 title={title}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
-            <ComponentCard key={areaId} title={title}>
-                <StudentTable key={areaId} idOlympiad={Number(idOlympiad)} idArea={Number(areaId)} />
+            <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={title}>
+                <StudentTable
+                    key={`${areaId}-${phaseId ?? 'none'}`}
+                    idPhase={Number(phaseId)}
+                    idOlympiad={Number(idOlympiad)}
+                    idArea={Number(areaId)}
+                />
             </ComponentCard>
         </>
     )

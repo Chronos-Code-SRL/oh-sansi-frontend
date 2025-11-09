@@ -3,9 +3,6 @@ import { Outlet } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import Sidebar from "./Sidebar";
-// import AppSidebar from "./AppSidebar";
-// import AdminSidebar from "./adminLayout/AdminSidebar";
-
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -13,7 +10,6 @@ const LayoutContent: React.FC = () => {
   return (
     <div className="min-h-screen xl:flex">
       <div>
-        {/* <AppSidebar /> */}
         <Sidebar />
         <Backdrop />
       </div>

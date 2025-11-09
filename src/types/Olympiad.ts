@@ -1,3 +1,5 @@
+import { Area } from "./Area";
+
 export interface Olympiad {
     id: number;
     name: string;
@@ -21,4 +23,16 @@ export interface OlympiadPayload {
     end_date: string;
     number_of_phases: number;
     areas: string[];
+}
+
+
+export interface OlympiadApi {
+    id: number;
+    name: string;
+    default_score_cut: number;
+    start_date: string;
+    end_date: string;
+    number_of_phases: number;
+    status: string;
+    areas: Area[]; 
 }
