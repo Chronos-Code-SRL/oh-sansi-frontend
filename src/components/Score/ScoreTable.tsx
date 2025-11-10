@@ -15,7 +15,7 @@ export default function ScoreTable({
   olympiadId,
   areaId,
   levelId,
-  phaseId = 1,
+  phaseId,
   scoreCut,
 }: ScoreTableProps) {
   const [students, setStudents] = useState<Contestant[]>([]);
@@ -23,19 +23,24 @@ export default function ScoreTable({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!levelId) return;
+    if (!levelId || !phaseId) return; 
     let alive = true;
 
     async function loadContestants() {
+      setLoading(true);
+      setError(null);
+      setStudents([]);
+
       try {
         const data = await getContestantByPhaseOlympiadAreaLevel(
-          phaseId,
+          Number(phaseId),
           olympiadId,
           areaId,
-          1
+          levelId
         );
-        const filtered = data.filter((s: any) => s.level_id === levelId);
-        if (alive) setStudents(filtered);
+
+        const list = Array.isArray(data) ? data : [];
+        if (alive) setStudents(list);
       } catch (err: any) {
         if (alive) {
           const message =
@@ -95,12 +100,13 @@ export default function ScoreTable({
           {processedStudents.map((s) => (
             <TableRow
               key={s.contestant_id}
-              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${s.isClassified
+              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${
+                s.isClassified
                   ? "bg-emerald-50 dark:bg-emerald-950/20"
                   : typeof s.score === "number"
-                    ? "bg-rose-50 dark:bg-rose-950/20"
-                    : "bg-gray-50 dark:bg-gray-900/30"
-                }`}
+                  ? "bg-rose-50 dark:bg-rose-950/20"
+                  : "bg-gray-50 dark:bg-gray-900/30"
+              }`}
             >
               <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
@@ -108,24 +114,22 @@ export default function ScoreTable({
               <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
 
-              {/* Estado */}
               <td className="px-6 py-4 text-sm text-center">
                 <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${s.status
+                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
+                    s.status
                       ? "bg-emerald-100 text-emerald-700"
                       : "bg-rose-100 text-rose-700"
-                    }`}
+                  }`}
                 >
                   {s.status ? "Evaluado" : "No Evaluado"}
                 </span>
               </td>
 
-              {/* Nota */}
               <td className="px-6 py-4 text-sm text-center">
                 {typeof s.score === "number" ? s.score : "—"}
               </td>
 
-              {/* Clasificación */}
               <td className="px-6 py-4 text-sm text-center">
                 {typeof s.score === "number" ? (
                   s.isClassified ? (
