@@ -23,25 +23,35 @@ export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: Selec
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [confirmModal, setConfirmModal] = useState(false);
 
-  useEffect(() => {
-    const fetchLevels = async () => {
-      try {
-        const response = await levelService.getLevelsByArea(olympiadId, areaId);
-        const levelList: Level[] = response?.levels || [];
+useEffect(() => {
+  const fetchLevels = async () => {
+    try {
+      const response = await levelService.getLevelsByArea(olympiadId, areaId);
 
-        const formattedLevels = levelList.map((lvl) => ({
-          value: String(lvl.id),
-          label: lvl.name,
-        }));
+      const levelList: Level[] = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.levels)
+        ? response.levels
+        : [];
 
-        setLevels(formattedLevels);
-      } catch (error) {
-        console.error("Error al obtener los niveles del área:", error);
+      if (!levelList.length) {
       }
-    };
 
-    fetchLevels();
-  }, [olympiadId, areaId]);
+      const formattedLevels = levelList.map((lvl) => ({
+        value: String(lvl.id),
+        label: lvl.name,
+      }));
+
+      setLevels(formattedLevels);
+    } catch (error) {
+      console.error("Error al obtener los niveles del área:", error);
+    }
+  };
+
+  fetchLevels();
+}, [olympiadId, areaId]);
+
+
 
   const handleSelectChange = (value: string) => {
     setSelectedLevel(value);
