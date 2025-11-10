@@ -4,6 +4,7 @@ import { CsvUploadsResponse, UploadCsvResponse } from "../../types/CompetitorUpl
 const UPLOAD_CSV_URL = "/competitors/upload-csv";
 const DOWNLOAD_ERROR_URL = "/competitors/download-error-csv";
 const GET_FILES_CSV = "/olympiads/{olympiadId}/csv-uploads"
+const GET_HEADER_CSV_TEMPLATE = "/competitors/download-template"
 
 // Subir archivos CSV y asociarlos a una olimpiada
 export const uploadCompetitorCsv = async (
@@ -37,3 +38,10 @@ export const getCsvUploadsByOlympiad = async (olympiadId: number) => {
   return res.data;
 };
 
+
+export const getCsvHeaderTemplate = async (): Promise<Blob> => {
+  const res = await ohSansiApi.get(GET_HEADER_CSV_TEMPLATE, {
+    responseType: "blob",
+  });
+  return res.data;
+}

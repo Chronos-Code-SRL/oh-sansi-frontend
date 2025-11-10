@@ -7,6 +7,7 @@ interface AlertProps {
   showLink?: boolean; // Whether to show the "Learn More" link
   linkHref?: string; // Link URL
   linkText?: string; // Link text
+  onLinkClick?: () => void;
 }
 
 const Alert: React.FC<AlertProps> = ({
@@ -16,6 +17,7 @@ const Alert: React.FC<AlertProps> = ({
   showLink = false,
   linkHref = "#",
   linkText = "Learn more",
+  onLinkClick
 }) => {
   // Tailwind classes for each variant
   const variantClasses = {
@@ -128,12 +130,23 @@ const Alert: React.FC<AlertProps> = ({
           <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
 
           {showLink && (
-            <Link
-              to={linkHref}
-              className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
-            >
-              {linkText}
-            </Link>
+            <>
+              {onLinkClick ? (
+                <button
+                  onClick={onLinkClick}
+                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
+                >
+                  {linkText}
+                </button>
+              ) : (
+                <Link
+                  to={linkHref}
+                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
+                >
+                  {linkText}
+                </Link>
+              )}
+            </>
           )}
         </div>
       </div>

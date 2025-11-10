@@ -9,6 +9,8 @@ import { Olympiad } from "../../types/Olympiad";
 import { getOlympiads } from "../../api/services/olympiadService";
 import { uploadCompetitorCsv, downloadErrorCsv, getCsvUploadsByOlympiad } from "../../api/services/uploadContestantService"
 import { FileDetail, UploadCsv } from "../../types/CompetitorUpload";
+import BadgeInformation from "./InformationZone";
+import InformationZone from "./InformationZone";
 
 type FileWithDetails = UploadCsv & { details: FileDetail[] };
 
@@ -149,7 +151,7 @@ export default function AdRegistration() {
                 placeholder="Selecciona una Olimpiada"
               />
             </div>
-
+                <InformationZone />
             {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
