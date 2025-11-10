@@ -15,11 +15,18 @@ interface LevelOption {
 interface SelectLevelProps {
   olympiadId: number;
   areaId: number;
-  areaName?: string; 
+  phaseId?: number;
+  areaName?: string;
   onSelectLevel?: (levelId: number) => void;
 }
 
-export default function SelectLevel({ olympiadId, areaId, areaName, onSelectLevel }: SelectLevelProps) {
+export default function SelectLevel({
+  olympiadId,
+  areaId,
+  phaseId,
+  areaName,
+  onSelectLevel,
+}: SelectLevelProps) {
   const [levels, setLevels] = useState<LevelOption[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
@@ -50,12 +57,10 @@ export default function SelectLevel({ olympiadId, areaId, areaName, onSelectLeve
     fetchLevels();
   }, [olympiadId, areaId]);
 
-
   useEffect(() => {
     setSelectedLevel("");
     setSelectedLabel("");
-  }, [areaId, olympiadId]);
-  
+  }, [areaId, olympiadId, phaseId]);
 
   const handleSelectChange = (value: string) => {
     const selected = levels.find((lvl) => lvl.value === value);

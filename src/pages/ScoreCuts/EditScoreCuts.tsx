@@ -44,6 +44,7 @@ export default function EditScoreCuts() {
           <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}
+            phaseId={Number(phaseId)}
             areaName={decodedAreaName}
             onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
