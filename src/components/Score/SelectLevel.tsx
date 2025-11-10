@@ -50,6 +50,13 @@ export default function SelectLevel({ olympiadId, areaId, areaName, onSelectLeve
     fetchLevels();
   }, [olympiadId, areaId]);
 
+
+  useEffect(() => {
+    setSelectedLevel("");
+    setSelectedLabel("");
+  }, [areaId, olympiadId]);
+  
+
   const handleSelectChange = (value: string) => {
     const selected = levels.find((lvl) => lvl.value === value);
     setSelectedLevel(value);
