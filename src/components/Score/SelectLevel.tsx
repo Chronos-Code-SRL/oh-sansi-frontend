@@ -4,7 +4,8 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
-import { levelGradesService } from "../../api/services/levelGradesService";
+import { levelService } from "../../api/services/levelService";
+import { Level } from "../../types/Level";
 
 interface LevelOption {
   value: string;
@@ -25,20 +26,12 @@ export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: Selec
   useEffect(() => {
     const fetchLevels = async () => {
       try {
-        const response = await levelGradesService.getLevelsFromArea(olympiadId, areaId);
-        const levelGrades = response?.level_grades || [];
+        const response = await levelService.getLevelsByArea(olympiadId, areaId);
+        const levelList: Level[] = response?.levels || [];
 
-        const uniqueLevelsMap = new Map<number, string>();
-
-        for (const lg of levelGrades) {
-          if (!uniqueLevelsMap.has(lg.level.id)) {
-            uniqueLevelsMap.set(lg.level.id, lg.level.name);
-          }
-        }
-
-        const formattedLevels = Array.from(uniqueLevelsMap.entries()).map(([id, name]) => ({
-          value: String(id),
-          label: name,
+        const formattedLevels = levelList.map((lvl) => ({
+          value: String(lvl.id),
+          label: lvl.name,
         }));
 
         setLevels(formattedLevels);
