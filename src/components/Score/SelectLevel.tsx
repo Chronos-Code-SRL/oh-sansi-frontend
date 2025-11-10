@@ -21,40 +21,38 @@ interface SelectLevelProps {
 export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: SelectLevelProps) {
   const [levels, setLevels] = useState<LevelOption[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [selectedLabel, setSelectedLabel] = useState<string>(""); 
   const [confirmModal, setConfirmModal] = useState(false);
 
-useEffect(() => {
-  const fetchLevels = async () => {
-    try {
-      const response = await levelService.getLevelsByArea(olympiadId, areaId);
+  useEffect(() => {
+    const fetchLevels = async () => {
+      try {
+        const response = await levelService.getLevelsByArea(olympiadId, areaId);
 
-      const levelList: Level[] = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.levels)
-        ? response.levels
-        : [];
+        const levelList: Level[] = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.levels)
+          ? response.levels
+          : [];
 
-      if (!levelList.length) {
+        const formattedLevels = levelList.map((lvl) => ({
+          value: String(lvl.id),
+          label: lvl.name,
+        }));
+
+        setLevels(formattedLevels);
+      } catch (error) {
+        console.error("Error al obtener los niveles del área:", error);
       }
+    };
 
-      const formattedLevels = levelList.map((lvl) => ({
-        value: String(lvl.id),
-        label: lvl.name,
-      }));
-
-      setLevels(formattedLevels);
-    } catch (error) {
-      console.error("Error al obtener los niveles del área:", error);
-    }
-  };
-
-  fetchLevels();
-}, [olympiadId, areaId]);
-
-
+    fetchLevels();
+  }, [olympiadId, areaId]);
 
   const handleSelectChange = (value: string) => {
+    const selected = levels.find((lvl) => lvl.value === value);
     setSelectedLevel(value);
+    setSelectedLabel(selected?.label || ""); 
     setConfirmModal(true);
     onSelectLevel?.(Number(value));
   };
@@ -72,9 +70,9 @@ useEffect(() => {
             onChange={handleSelectChange}
           />
 
-          {selectedLevel && (
+          {selectedLabel && (
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              Nivel seleccionado: <strong>{selectedLevel}</strong>
+              Nivel seleccionado: <strong>{selectedLabel}</strong>
             </p>
           )}
         </div>
@@ -90,7 +88,7 @@ useEffect(() => {
             Nivel seleccionado correctamente
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Has seleccionado el nivel con ID: <strong>{selectedLevel}</strong>
+            Has seleccionado el nivel: <strong>{selectedLabel}</strong>
           </p>
           <Button
             className="w-full mt-4"
