@@ -1,20 +1,55 @@
 import { ohSansiApi } from "../ohSansiApi";
 
 export const scoreCutsService = {
-  getScoreCuts: async (olympiadId: number, areaId: number) => {
-    const response = await ohSansiApi.get(
-      `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`
-    );
-    return response.data.data; 
-  },
-
-  updateScoreCut: async (
+  getScoreCuts: async (
     olympiadId: number,
     areaId: number,
-    data:
-      | { phase_id: number; level_id: number; score_cut: number } 
-      | { phase_id: number; score_cut: number }                   
+    phaseId?: number,
+    levelId?: number
   ) => {
+    const url = `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`;
+    const params: any = {};
+
+    if (phaseId) params.phase_id = phaseId;
+    if (levelId) params.level_id = levelId;
+
+    const response = await ohSansiApi.get(url, { params });
+    const result = response.data;
+
+    const items = Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result)
+      ? result
+      : [];
+
+    return items;
+  },
+
+  getMaxScores: async (
+    olympiadId: number,
+    areaId: number,
+    phaseId?: number,
+    levelId?: number
+  ) => {
+    const url = `/olympiads/${olympiadId}/areas/${areaId}/max-scores`;
+    const params: any = {};
+
+    if (phaseId) params.phase_id = phaseId;
+    if (levelId) params.level_id = levelId;
+
+    const response = await ohSansiApi.get(url, { params });
+    const result = response.data;
+
+    const items = Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result)
+      ? result
+      : [];
+
+    return items;
+  },
+
+  updateScoreCut: async (olympiadId: number, areaId: number, data: any) => {
     const response = await ohSansiApi.post(
       `/olympiads/${olympiadId}/areas/${areaId}/score-cuts`,
       data
@@ -22,4 +57,11 @@ export const scoreCutsService = {
     return response.data;
   },
 
+  updateMaxScore: async (olympiadId: number, areaId: number, data: any) => {
+    const response = await ohSansiApi.post(
+      `/olympiads/${olympiadId}/areas/${areaId}/max-scores`,
+      data
+    );
+    return response.data;
+  },
 };

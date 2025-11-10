@@ -52,7 +52,7 @@ export default function App() {
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
             {/*Editar Umbral*/}
-            <Route path="/editar-umbral/:idOlympiad/:areaId/:areaName" element={<EditScoreCuts />} />
+            <Route path="/editar-umbral/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<EditScoreCuts />} />
 
             {/* SI NADIE RESPONDE POR LA SIGUIENTE LINEA SE ELIMINA */}
             <Route path="/calificaciones" element={<GradingContestant />} />

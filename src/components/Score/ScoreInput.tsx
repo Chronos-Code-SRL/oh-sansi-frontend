@@ -3,214 +3,204 @@ import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
-import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { Modal } from "../../components/ui/modal";
 import { scoreCutsService } from "../../api/services/ScoreCutsService";
 
 interface ScoreInputProps {
   olympiadId: number;
   areaId: number;
+  levelId: number;
+  phaseId: number;
   onChangeScoreCut?: (value: number) => void;
 }
 
 export default function ScoreInput({
   olympiadId,
   areaId,
+  levelId,
+  phaseId,
   onChangeScoreCut,
 }: ScoreInputProps) {
-  const [data, setData] = useState<any>(null);
-  const [scoreCut, setScoreCut] = useState<number>(0);
-  const [currentCut, setCurrentCut] = useState<number>(0);
+  const [minScore, setMinScore] = useState<number>(0);
+  const [currentMinScore, setCurrentMinScore] = useState<number>(0);
+  const [maxScore, setMaxScore] = useState<number>(0);
+  const [currentMaxScore, setCurrentMaxScore] = useState<number>(0);
   const [error, setError] = useState("");
-  const [confirmModal, setConfirmModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saveType, setSaveType] = useState<"umbral" | "maxima" | null>(null);
 
   useEffect(() => {
-    const fetchScoreCuts = async () => {
+    const fetchScores = async () => {
+      if (!levelId || !phaseId) return;
+
       try {
-        const result = await scoreCutsService.getScoreCuts(olympiadId, areaId);
-        setData(result);
+        const scoreCuts = await scoreCutsService.getScoreCuts(olympiadId, areaId);
 
-        const firstScore =
-          Array.isArray(result) && result.length > 0
-            ? result?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
-            : 0;
+        const currentPhase = Array.isArray(scoreCuts)
+          ? scoreCuts.find((phase) => phase.phase_id === phaseId)
+          : null;
 
-        setScoreCut(Number(firstScore));
-        setCurrentCut(firstScore);
-        onChangeScoreCut?.(Number(firstScore));
+        const levelData = currentPhase?.olympiad_area_phase_level_grades?.find(
+          (lg: any) => lg.level_grade?.level?.id === levelId
+        );
+
+        const firstMin = levelData?.score_cut ?? 0;
+        const firstMax = levelData?.max_score ?? 0;
+
+        setMinScore(firstMin);
+        setCurrentMinScore(firstMin);
+        setMaxScore(firstMax);
+        setCurrentMaxScore(firstMax);
+
+        onChangeScoreCut?.(firstMin);
       } catch (error) {
-        console.error("Error al obtener los umbrales:", error);
+        console.error("Error al obtener umbral o nota máxima:", error);
       }
     };
-    fetchScoreCuts();
-  }, [olympiadId, areaId]);
 
-  const validate = () => {
-    if (scoreCut === null || isNaN(Number(scoreCut))) {
-      setError("El umbral es obligatorio.");
-      return false;
-    }
-    if (scoreCut < 0 || scoreCut > 100) {
-      setError("El umbral debe ser un número entre 0 y 100.");
-      return false;
-    }
-    setError("");
-    return true;
+    fetchScores();
+  }, [olympiadId, areaId, levelId, phaseId]);
+
+  const handleUpdateWithType = (type: "umbral" | "maxima") => {
+    setSaveType(type);
+    setTimeout(() => handleUpdate(type), 0);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validate()) setConfirmModal(true);
-  };
-
-  const handleUpdateAll = async () => {
+  const handleUpdate = async (type: "umbral" | "maxima") => {
     setLoading(true);
+    setError("");
+
     try {
-      if (!data) return;
+      const payload: any = {
+        phase_id: phaseId,
+        level_id: levelId,
+      };
 
-      const fases = Array.isArray(data) ? data : data.phases || [data];
-      const nivelesUnicos = new Set<number>();
-
-      for (const fase of fases) {
-        const levelGrades: any[] =
-          fase.level_grades || fase.olympiad_area_phase_level_grades || [];
-
-        for (const lg of levelGrades) {
-          const levelId =
-            lg?.level_id ||
-            lg?.level_grade?.level?.id ||
-            lg?.level_grade_id;
-
-          if (levelId) nivelesUnicos.add(Number(levelId));
-        }
-      }
-
-      for (const levelId of nivelesUnicos) {
-        const payload = {
-          phase_id: 1,
-          level_id: Number(levelId),
-          score_cut: Number(scoreCut),
-        };
+      if (type === "umbral") {
+        payload.score_cut = minScore;
         await scoreCutsService.updateScoreCut(olympiadId, areaId, payload);
+        setCurrentMinScore(minScore);
       }
 
-      const updated = await scoreCutsService.getScoreCuts(olympiadId, areaId);
-      setData(updated);
+      if (type === "maxima") {
+        payload.max_score = maxScore;
+        await scoreCutsService.updateMaxScore(olympiadId, areaId, payload);
+        setCurrentMaxScore(maxScore);
+      }
 
-      const newCut =
-        Array.isArray(updated) && updated.length > 0
-          ? updated?.[0]?.olympiad_area_phase_level_grades?.[0]?.score_cut || 0
-          : scoreCut;
-
-      setCurrentCut(Number(newCut));
-      setConfirmModal(false);
       setSuccessModal(true);
-      onChangeScoreCut?.(Number(scoreCut));
+      onChangeScoreCut?.(minScore);
     } catch (error: any) {
-      console.error(error);
+      console.error("Error al actualizar valores:", error);
+      setError("No se pudo guardar el cambio. Revisa la consola para más detalles.");
     } finally {
       setLoading(false);
+      setSaveType(null);
     }
   };
 
   return (
     <>
-      <TitleBreadCrumb pageTitle="Editar Umbral de Calificación" />
-
-      <form onSubmit={handleSubmit} className="w-full">
-        <ComponentCard title="Umbral de Clasificación">
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="w-full">
-                <Label htmlFor="currentCut">Umbral actual</Label>
+      <ComponentCard title="Nota de Clasificación">
+        <div className="flex flex-col gap-8">
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div>
+                <Label htmlFor="currentMinScore">Umbral actual</Label>
                 <InputField
-                  id="currentCut"
+                  id="currentMinScore"
                   type="number"
-                  value={currentCut}
+                  value={currentMinScore}
                   disabled
-                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 opacity-100 cursor-default w-full"
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 w-full"
                 />
               </div>
 
-              <div className="w-full">
-                <Label htmlFor="scoreCut">Nuevo umbral de calificación</Label>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-2 w-full">
-                  <InputField
-                    id="scoreCut"
-                    type="number"
-                    value={scoreCut}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setScoreCut(value);
-                      onChangeScoreCut?.(value);
-                    }}
-                    placeholder="Ej. 60"
-                    error={!!error}
-                    hint={error}
-                    className="w-full sm:flex-1"
-                  />
+              <div>
+                <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
+                <InputField
+                  id="minScore"
+                  type="number"
+                  value={minScore}
+                  onChange={(e) => setMinScore(Number(e.target.value))}
+                  placeholder="Ej. 60"
+                />
+              </div>
 
-                  <Button
-                    size="md"
-                    variant="primary"
-                    type="submit"
-                    disabled={loading}
-                    className="w-full sm:w-auto"
-                  >
-                    {loading ? "Guardando..." : "Guardar"}
-                  </Button>
-                </div>
+              <div className="flex justify-end">
+                <Button
+                  size="md"
+                  variant="primary"
+                  disabled={loading}
+                  onClick={() => handleUpdateWithType("umbral")}
+                  className="w-full sm:w-auto mt-2"
+                >
+                  {loading && saveType === "umbral" ? "Guardando..." : "Guardar"}
+                </Button>
               </div>
             </div>
-
-            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
           </div>
-        </ComponentCard>
-      </form>
 
-      <Modal 
-        isOpen={confirmModal} 
-        onClose={() => setConfirmModal(false)}
-        className="max-w-md mx-auto shadow-lg"
-      >
-        <div className="p-6 text-center">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-            ¿Desea aplicar el nuevo umbral?
-          </h2>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setConfirmModal(false)}
-              disabled={loading}
-              className="w-full sm:w-auto"
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleUpdateAll}
-              disabled={loading}
-              className="w-full sm:w-auto"
-            >
-              {loading ? "Guardando..." : "Confirmar"}
-            </Button>
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div>
+                <Label htmlFor="currentMaxScore">Nota máxima actual</Label>
+                <InputField
+                  id="currentMaxScore"
+                  type="number"
+                  value={currentMaxScore}
+                  disabled
+                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 w-full"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="maxScore">Nueva nota máxima</Label>
+                <InputField
+                  id="maxScore"
+                  type="number"
+                  value={maxScore}
+                  onChange={(e) => setMaxScore(Number(e.target.value))}
+                  placeholder="Ej. 100"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  size="md"
+                  variant="primary"
+                  disabled={loading}
+                  onClick={() => handleUpdateWithType("maxima")}
+                  className="w-full sm:w-auto mt-2"
+                >
+                  {loading && saveType === "maxima" ? "Guardando..." : "Guardar"}
+                </Button>
+              </div>
+            </div>
           </div>
+
+          {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
         </div>
-      </Modal>
+      </ComponentCard>
 
-      <Modal 
-        isOpen={successModal} 
+      <Modal
+        isOpen={successModal}
         onClose={() => setSuccessModal(false)}
         className="max-w-md mx-auto shadow-lg"
       >
         <div className="p-6 text-center">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-            ¡Umbral actualizado!
+            ¡Cambios guardados correctamente!
           </h2>
-          <Label>El nuevo umbral ha sido aplicado correctamente.</Label>
-          <Button className="w-full mt-4" onClick={() => setSuccessModal(false)}>
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Los valores fueron actualizados exitosamente.
+          </p>
+          <Button
+            variant="primary"
+            className="w-full mt-4"
+            onClick={() => setSuccessModal(false)}
+          >
             Aceptar
           </Button>
         </div>
