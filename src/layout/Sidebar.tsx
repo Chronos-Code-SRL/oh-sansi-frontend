@@ -240,20 +240,32 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Editar Umbral") {
-        return {
-          ...item,
-          subItems:
-            userAreas.length > 0
-              ? userAreas.map((area) => {
-                const olympiadId = area.path.split("/")[2];
-                return {
-                  id: area.id,
-                  name: area.name,
-                  path: `/editar-umbral/${olympiadId}/${area.id}/${area.name.toLowerCase()}`,
-                };
-              })
-              : item.subItems,
-        };
+        if (userAreas.length > 0) {
+          const areasWithPhases = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
+
+            const areaSubItems = phases.length
+              ? phases.map((phase) => ({
+                  name: phase.name,
+                  path: `/editar-umbral/${olympiadId}/${encodeURIComponent(
+                    area.name
+                  )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+                }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/editar-umbral/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
       }
       return item;
     });

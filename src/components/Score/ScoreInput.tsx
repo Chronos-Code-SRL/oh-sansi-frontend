@@ -10,6 +10,7 @@ interface ScoreInputProps {
   olympiadId: number;
   areaId: number;
   levelId: number;
+  phaseId: number;
   onChangeScoreCut?: (value: number) => void;
 }
 
@@ -17,6 +18,7 @@ export default function ScoreInput({
   olympiadId,
   areaId,
   levelId,
+  phaseId,
   onChangeScoreCut,
 }: ScoreInputProps) {
   const [minScore, setMinScore] = useState<number>(0);
@@ -30,7 +32,7 @@ export default function ScoreInput({
 
   useEffect(() => {
     const fetchScores = async () => {
-      if (!levelId) return;
+      if (!levelId || !phaseId) return;
       try {
         const [scoreCuts, maxScores] = await Promise.all([
           scoreCutsService.getScoreCuts(olympiadId, areaId),
@@ -38,10 +40,19 @@ export default function ScoreInput({
         ]);
 
         const levelCut = Array.isArray(scoreCuts)
-          ? scoreCuts.find((item) => item.level_id === levelId)
+          ? scoreCuts.find(
+              (item) =>
+                item.level_id === levelId &&
+                item.phase_id === phaseId
+            )
           : null;
+
         const levelMax = Array.isArray(maxScores)
-          ? maxScores.find((item) => item.level_id === levelId)
+          ? maxScores.find(
+              (item) =>
+                item.level_id === levelId &&
+                item.phase_id === phaseId
+            )
           : null;
 
         const firstMin = levelCut?.score_cut ?? 0;
@@ -58,7 +69,7 @@ export default function ScoreInput({
     };
 
     fetchScores();
-  }, [olympiadId, areaId, levelId]);
+  }, [olympiadId, areaId, levelId, phaseId]);
 
   const validate = () => {
     if (minScore === null || isNaN(Number(minScore))) {
@@ -90,14 +101,14 @@ export default function ScoreInput({
     setLoading(true);
     try {
       const minPayload = {
-        phase_id: 1,
+        phase_id: phaseId, 
         level_id: levelId,
         score_cut: minScore,
       };
       await scoreCutsService.updateScoreCut(olympiadId, areaId, minPayload);
 
       const maxPayload = {
-        phase_id: 1,
+        phase_id: phaseId, 
         level_id: levelId,
         max_score: maxScore,
       };
