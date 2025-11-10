@@ -15,13 +15,14 @@ interface LevelOption {
 interface SelectLevelProps {
   olympiadId: number;
   areaId: number;
+  areaName?: string; 
   onSelectLevel?: (levelId: number) => void;
 }
 
-export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: SelectLevelProps) {
+export default function SelectLevel({ olympiadId, areaId, areaName, onSelectLevel }: SelectLevelProps) {
   const [levels, setLevels] = useState<LevelOption[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const [selectedLabel, setSelectedLabel] = useState<string>(""); 
+  const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [confirmModal, setConfirmModal] = useState(false);
 
   useEffect(() => {
@@ -52,14 +53,14 @@ export default function SelectLevel({ olympiadId, areaId, onSelectLevel }: Selec
   const handleSelectChange = (value: string) => {
     const selected = levels.find((lvl) => lvl.value === value);
     setSelectedLevel(value);
-    setSelectedLabel(selected?.label || ""); 
+    setSelectedLabel(selected?.label || "");
     setConfirmModal(true);
     onSelectLevel?.(Number(value));
   };
 
   return (
     <>
-      <ComponentCard title="Niveles del Área">
+      <ComponentCard title={`Niveles del Área ${areaName ? `– ${areaName}` : ""}`}>
         <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
           <Label htmlFor="level">Seleccione un nivel:</Label>
 

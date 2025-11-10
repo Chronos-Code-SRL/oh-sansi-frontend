@@ -39,6 +39,7 @@ export default function EditScoreCuts() {
           <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}
+            areaName={title}
             onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
         </ComponentCard>
