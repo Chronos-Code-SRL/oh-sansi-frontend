@@ -41,15 +41,15 @@ export default function AdRegistration() {
         ...f,
         details: [
           {
-            id:f.id,
+            id: f.id,
             filename: f.original_file_name,
             successful: f.successful_records,
             competitor_errors: f.failed_records,
             header_errors: f.header_errors,
             total_records: f.total_records,
             error_file: f.has_error_file ? f.original_file_name.replace(".csv", "-errores.csv") : undefined,
-            uploaded_at_human:  f.uploaded_at_human,
-            file_size:f.file_size,
+            uploaded_at_human: f.uploaded_at_human,
+            file_size: f.file_size,
           }
         ]
       }));
@@ -91,9 +91,9 @@ export default function AdRegistration() {
         success_rate: d.total_records > 0 ? Math.round((d.successful / d.total_records) * 100) : 0,
         has_errors: d.competitor_errors > 0 || d.header_errors > 0,
         has_error_file: !!d.error_file,
-        header_errors:d.header_errors,
+        header_errors: d.header_errors,
         uploaded_at_human: d.uploaded_at_human,
-        file_size: d.file_size, 
+        file_size: d.file_size,
         details: [d]
       }));
 
@@ -151,7 +151,7 @@ export default function AdRegistration() {
                 placeholder="Selecciona una Olimpiada"
               />
             </div>
-                <InformationZone />
+            <InformationZone />
             {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
@@ -161,75 +161,75 @@ export default function AdRegistration() {
                 <ComponentCard title="Archivos subidos">
 
                   {isLoadingUploads ? (
-                  <p className="text-gray-500">Cargando archivos...</p>
+                    <p className="text-gray-500">Cargando archivos...</p>
                   ) : files.length === 0 ? (
-                  <p className="text-gray-500">No se han subido archivos aún.</p>
+                    <p className="text-gray-500">No se han subido archivos aún.</p>
                   ) : (
 
-                  <div className="mt-6 text-left">
-                    <div className="space-y-2">
-                      {files.map((f) => (
-                        <div
-                          key={f.id}
-                          className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-4 border rounded-xl gap-3"
-                        >
-                          <div className="flex items-start space-x-3">
-                            <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
-                            <div>
-                              <p className="font-medium mb-1">{f.original_file_name}</p>
-                              <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
-                              
+                    <div className="mt-6 text-left">
+                      <div className="space-y-2">
+                        {files.map((f) => (
+                          <div
+                            key={f.id}
+                            className="flex flex-col sm:flex-row sm:items-start sm:justify-between p-4 border rounded-xl gap-3"
+                          >
+                            <div className="flex items-start space-x-3">
+                              <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
+                              <div>
+                                <p className="font-medium mb-1">{f.original_file_name}</p>
+                                <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
 
-                              {f.details[0].header_errors > 0 ? (
-                                <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
-                                  Archivo inválido: revisa que el CSV tenga cabecera correcta.
-                                </Badge>
-                              ) : f.details[0].total_records === 0 ? (
-                                <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
-                                  El archivo está vacío. Asegúrate de que contenga registros.
-                                </Badge>
-                              ) : (
-                                <div className="mt-1 space-x-2">
-                                  <Badge color="info" startIcon={<InfoIcon className="size-5" />}>
-                                    {f.details[0].total_records} registros totales
-                                  </Badge>
-                                  <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>
-                                    {f.details[0].successful} exitosos  ({f.success_rate})%
-                                  </Badge>
+
+                                {f.details[0].header_errors > 0 ? (
                                   <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
-                                    {f.details[0].competitor_errors} errores
+                                    Archivo inválido: revisa que el CSV tenga cabecera correcta.
                                   </Badge>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {f.details[0].error_file && (
-                            <div className="sm:ml-auto">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                startIcon={<DownloadIcon className="size-5" />}
-                                onClick={() => handleDownloadError(f.details[0].error_file!)}
-                              >
-                                Descargar CSV de errores
-                              </Button>
-                              <div className="text-right mt-3 mr-2">
-                                <p className="text-sm text-gray-500 mb-2">
-                              {/* {f.uploaded_at} */}
-                               {f.uploaded_at_human} 
-                            </p>
+                                ) : f.details[0].total_records === 0 ? (
+                                  <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
+                                    El archivo está vacío. Asegúrate de que contenga registros.
+                                  </Badge>
+                                ) : (
+                                  <div className="mt-1 space-x-2">
+                                    <Badge color="info" startIcon={<InfoIcon className="size-5" />}>
+                                      {f.details[0].total_records} registros totales
+                                    </Badge>
+                                    <Badge color="success" startIcon={<CheckCircleIcon className="size-5" />}>
+                                      {f.details[0].successful} exitosos  ({f.success_rate})%
+                                    </Badge>
+                                    <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
+                                      {f.details[0].competitor_errors} errores
+                                    </Badge>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            
-                          )}
-                        </div>
-                      ))}
+
+
+                            <div className="flex flex-col items-end justify-between relative">
+                              <p className="text-sm text-gray-500 mt-1 mr-2 mb-4">
+                                {f.uploaded_at_human}
+                              </p>
+                              {f.details[0].error_file && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  startIcon={<DownloadIcon className="size-5" />}
+                                  onClick={() => handleDownloadError(f.details[0].error_file!)}
+                                >
+                                  Descargar CSV de errores
+                                </Button>
+                              )}
+                              
+                            </div>
+
+
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
                   )}
-                  </ComponentCard>                
-                  
+                </ComponentCard>
+
               </div>
             )}
           </div>
