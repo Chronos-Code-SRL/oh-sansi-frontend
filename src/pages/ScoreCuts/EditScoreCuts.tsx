@@ -32,32 +32,30 @@ export default function EditScoreCuts() {
         description={`Editar umbral y nota máxima para el área ${decodedAreaName}, fase ${decodedPhaseName}.`}
       />
 
-      <TitleBreadCrumb pageTitle="Editar Umbral y Nota Máxima" />
+      <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
-      <div className="mt-6">
-        <ComponentCard title={`Seleccionar nivel del área`}>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+        <ComponentCard title={`Seleccionar nivel`}>
           <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}
-            areaName={title}
+            areaName={decodedAreaName}
             onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
         </ComponentCard>
-      </div>
 
-      {selectedLevel && (
-        <div className="mt-6">
-          <ComponentCard title={`Gestión Clasificación - ${title}`}>
+        {selectedLevel && (
+          <ComponentCard title={`Gestión Clasificación - ${decodedAreaName}`}>
             <ScoreInput
               olympiadId={olympiadId}
               areaId={Number(areaId) || 0}
               levelId={selectedLevel}
-              phaseId={Number(phaseId)} 
+              phaseId={Number(phaseId)}
               onChangeScoreCut={setScoreCut}
             />
           </ComponentCard>
-        </div>
-      )}
+        )}
+      </div>
 
       {selectedLevel && (
         <div className="mt-6">
@@ -66,7 +64,7 @@ export default function EditScoreCuts() {
               olympiadId={olympiadId}
               areaId={Number(areaId) || 0}
               levelId={selectedLevel}
-              phaseId={Number(phaseId)} 
+              phaseId={Number(phaseId)}
               scoreCut={scoreCut ?? 0}
             />
           </ComponentCard>
