@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { getUser, getUserAreas } from "../api/services/authService";
+import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
 import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -101,6 +101,7 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const user = getUser();
+  const isAdmin = getRoleName(user) === "Admin";
   const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
   const { selectedOlympiad } = useOlympiad();
   const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
@@ -207,8 +208,14 @@ const AppSidebar: React.FC = () => {
 
         if (!canSeeItem) return null;
 
+        // Ajustar dinámicamente la ruta de "Inicio" según el rol
+        const adjustedItem =
+          item.name === "Inicio"
+            ? { ...item, path: isAdmin ? "/" : "/seleccionar-olimpiada" }
+            : item;
+
         return {
-          ...item,
+          ...adjustedItem,
           ...(visibleSubItems.length > 0 ? { subItems: visibleSubItems } : {}),
         };
       })
