@@ -18,6 +18,7 @@ import RegisterEvaluator from "./pages/Users/RegisterEvaluator";
 import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
 import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
+import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
 
 export default function App() {
   return (
@@ -63,9 +64,12 @@ export default function App() {
               element={<MarksStudents />}
             />
 
-
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} />
+
+            {/*Approve Phase */}
+            <Route path="/aprobar-fase" element={<ApprovePhase />} />
+
 
           </Route>
 

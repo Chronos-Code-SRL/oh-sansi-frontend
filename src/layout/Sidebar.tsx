@@ -37,6 +37,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.GRADE_COMPETITOR,
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
+    UPermission.APPROVE_PHASE,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -93,7 +94,12 @@ const navItems: NavItem[] = [
     path: "/filtros-de-lista",
     permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
-
+  {
+    icon: <Slider />,
+    name: "Avalar Fase",
+    path: "/aprobar-fase",
+    permission: UPermission.APPROVE_PHASE,
+  },
 ];
 const othersItems: NavItem[] = [];
 
@@ -453,8 +459,8 @@ const AppSidebar: React.FC = () => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
               }}
               className={`overflow-hidden transition-all ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                ? "duration-150" // abrir: animado
-                : "duration-0"   // cerrar: instantáneo para evitar reajuste visible
+                ? "duration-150" 
+                : "duration-0"   
                 }`}
               style={{
                 height:
