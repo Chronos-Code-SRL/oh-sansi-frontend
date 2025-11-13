@@ -69,7 +69,7 @@ export const scoreCutsService = {
 
 export const getScoresByOlympiadAreaPhaseLevel = async (OlympiadId: number, areaId: number, phaseId: number, levelId: number): Promise<Score> => {
   const res = await ohSansiApi.get(
-    `/olympiads/${OlympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}/scores`
+    `/olympiads/${OlympiadId}/areas/${areaId}/phases/${phaseId}/level/${levelId}/scores`
   );
   return res.data;
 }
