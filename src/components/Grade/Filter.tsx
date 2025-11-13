@@ -26,7 +26,8 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleFilter = (type: "estado" | "nivel" | "grado", value: string) => {
+  const toggleFilter = (type: "estado" | "grado", value: string) => {
+      // const toggleFilter = (type: "estado" | "nivel" | "grado", value: string) => {
     setSelectedFilters((prev: any) => {
       const current = prev[type];
       const updated = current.includes(value) ? current.filter((v: string) => v !== value) : [...current, value];
@@ -36,7 +37,7 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
 
   const filterOptions = {
     Estado: ["Evaluado", "No Evaluado"],
-    Nivel: ["Primero","Segundo","Tercero","Cuarto","Quinto","Sexto"],
+    // Nivel: ["Primero","Segundo","Tercero","Cuarto","Quinto","Sexto"],
     Grado: [
       "Primero de primaria","Segundo de primaria","Tercero de primaria","Cuarto de primaria",
       "Quinto de primaria","Sexto de primaria","Primero de secundaria","Segundo de secundaria",

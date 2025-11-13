@@ -28,3 +28,30 @@ export interface Evaluation {
     description: string | null;
     updated_at: string; // ISO
 }
+
+export interface FilterList {
+    contestant_id: number;
+    evaluation_id: number;
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    gender: string;
+    department: string;
+    score: number | null;
+    status: boolean;
+    area_name: string;
+    grade_name: string;
+    level_name: string;
+}
+
+//Type for check updates response
+export type EvaluationDelta = {
+    id_evaluation: number;
+    registration_id: number;
+    contestant_id: number;
+    score: number | null;
+    description: string | null;
+    status: boolean;
+    created_at: string;
+    updated_at: string;
+};

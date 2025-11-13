@@ -1,3 +1,4 @@
+import { Datum, LevelOption } from "../../types/Level";
 import { ohSansiApi } from "../ohSansiApi";
 
 export const levelGradesService = {
@@ -26,4 +27,15 @@ export const levelGradesService = {
     );
     return response.data;
   },
+};
+
+export const getLevelsOlympiad = async (): Promise<LevelOption[]> => {
+  const res = await ohSansiApi.get<LevelOption[]>("/levels-olympiad");
+  return res.data;
+};
+
+//Get levels by olympiad and area
+export const getLevelsByOlympiadAndArea = async (olympiadId: number, areaId: number): Promise<LevelOption[]> => {
+  const res = await ohSansiApi.get<Datum>(`/olympiads/${olympiadId}/area/${areaId}`);
+  return res.data?.data || [];
 };
