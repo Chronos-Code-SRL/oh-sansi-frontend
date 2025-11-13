@@ -12,6 +12,8 @@ import Filter from "./Filter";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
+import { getScoresByOlympiadAreaPhaseLevel, scoreCutsService } from "../../api/services/ScoreCutsService";
+import { Score } from "../../types/ScoreCuts";
 
 interface Props {
     idPhase: number;
@@ -34,7 +36,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
-
+    const [alertVariant, setAlertVariant] = useState<"success" | "error">("success");
     // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
@@ -47,6 +49,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
     const autoHideTimerRef = useRef<number | null>(null);
+
+    const [currentMaxScore, setCurrentMaxScore] = useState<Score>();
 
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
@@ -111,6 +115,32 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setError(null);
         async function loadContestants() {
             try {
+
+                // const scoreCuts = await scoreCutsService.getScoreCuts(idOlympiad, idArea);
+
+                // const currentPhase = Array.isArray(scoreCuts)
+                //     ? scoreCuts.find((phase) => phase.phase_id === idPhase)
+                //     : null;
+
+                // const levelData = currentPhase?.olympiad_area_phase_level_grades?.find(
+                //     (lg: any) => lg.level_grade?.level?.id === levelId
+                // );
+
+                // //const firstMin = levelData?.score_cut ?? 0;
+                // const firstMax = levelData?.max_score ?? 0;
+                // console.log(typeof firstMax, firstMax);
+
+                const scoreData = await getScoresByOlympiadAreaPhaseLevel(idOlympiad, idArea, idPhase, levelId);
+                setCurrentMaxScore(scoreData);
+
+                //setMinScore(firstMin);
+                //setCurrentMinScore(firstMin);
+                //setMaxScore(firstMax);
+
+
+                //console.log(currentMaxScore);
+                //onChangeScoreCut?.(firstMin);
+                console.log(idPhase, idOlympiad, idArea, levelId);
                 const data = await getContestantByPhaseOlympiadAreaLevel(
                     idPhase,
                     idOlympiad,
@@ -118,6 +148,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     levelId,
                 );
                 if (alive) setStudents(data);
+
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
@@ -128,6 +159,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
+    // Polling para actualizaciones en tiempo real
     useEffect(() => {
         async function pollOnce() {
             const since = lastUpdateAtRef.current ?? new Date().toISOString();
@@ -265,7 +297,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
     }
 
-    function showAlert(title: string, message: string): void {
+    function showAlert(title: string, message: string, variant: "success" | "error" = "success"): void {
         // Limpia un timer previo si existiera
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
@@ -273,13 +305,13 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
         setAlertTitle(title);
         setAlertMessage(message);
+        setAlertVariant(variant);
         setAlertOpen(true);
-
         // Auto-cerrar a los 3 segundos (ajustable)
         autoHideTimerRef.current = window.setTimeout(() => {
             setAlertOpen(false);
             autoHideTimerRef.current = null;
-        }, 3000);
+        }, 4000);
     }
 
     const startEdit = (s: Contestant) => {
@@ -297,16 +329,27 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     const saveNote = async (s: Contestant) => {
         if (saving) return;
-        if (draftNote === "" || isNaN(Number(draftNote))) return;
-        const nota = Math.max(0, Math.min(100, Number(draftNote)));
-
+        if (draftNote === "" || isNaN(Number(draftNote))) {
+            showAlert("Nota inválida", "Debe ingresar un número.");
+            return;
+        }
+        const v = Number(draftNote);
+        //const cap = currentMaxScore?.max_score !== null ? currentMaxScore?.max_score : 100;
+        const cap = currentMaxScore?.max_score ?? 100;
+        if (v < 0) {
+            showAlert("Nota fuera de rango", `La calificación debe ser mayor o igual 0`, "error");
+            return;
+        }
+        if (v > cap) {
+            showAlert("Nota fuera de rango", `La calificación debe ser menor o igual a ${cap}`, "error");
+            return;
+        }
+        const nota = Math.max(0, Math.min(cap, v));
         try {
             setSaving(true);
             const id = getEvaluationId(s);
             console.log("[saveNote] PATCH", { id, score: nota });
-
             await updatePartialEvaluation(id, { score: nota });
-
             console.log("[saveNote] OK", { id, score: nota });
             setStudents((prev) =>
                 prev.map((st) =>
@@ -316,9 +359,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 ),
             );
             setEditingCi(null);
+            showAlert("Nota guardada", "La calificación se guardó correctamente.", "success");
         } catch (e) {
             console.error("[saveNote] ERROR", e);
             setError("No se pudo guardar la nota.");
+            //showAlert("Error", "No se pudo guardar la nota. Intente nuevamente.");
         } finally {
             setSaving(false);
         }
@@ -446,7 +491,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                                 <input
                                                     type="number"
                                                     min={0}
-                                                    max={100}
+                                                    max={currentMaxScore?.max_score ?? 100}
                                                     step={1}
                                                     value={draftNote}
                                                     autoFocus
@@ -510,7 +555,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 >
                     <div className="pointer-events-auto" role="alert" aria-live="polite">
                         <Alert
-                            variant="success"
+                            variant={alertVariant}
                             title={alertTitle}
                             message={alertMessage}
                         />
