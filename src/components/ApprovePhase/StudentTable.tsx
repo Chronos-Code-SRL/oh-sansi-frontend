@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CommentIcon, DownloadIcon } from "../../icons";
+import { CheckLineIcon, CommentIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
-import { Contestant } from "../../types/Contestant";
-import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
+import { Contestant, Evaluation } from "../../types/Contestant";
+import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
@@ -32,11 +32,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
+
+    // Polling refs
+    const lastUpdateAtRef = useRef<string | null>(null);
+    const pollingRef = useRef<number | null>(null);
+
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilters, setSelectedFilters] = useState({
         estado: [] as string[],
-
         grado: [] as string[],
     });
 
@@ -104,6 +108,105 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
         loadContestants();
         return () => { alive = false; };
+    }, [idPhase, idOlympiad, idArea, selectedLevelId]);
+
+
+    useEffect(() => {
+
+        if (selectedLevelId == null) return;
+
+        async function pollOnce() {
+            const since = lastUpdateAtRef.current ?? new Date().toISOString();
+            console.log(since);
+
+            try {
+                console.debug("[poll] tick -> lastUpdateAt:", since);
+                const res = await checkUpdates(since);
+                console.debug("[poll] response:", {
+                    newCount: res?.new_evaluations?.length ?? 0,
+                    last_updated_at: res?.last_updated_at
+                });
+
+                if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
+                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
+                        id: (ev as any).id ?? (ev as any).evaluation_id,
+                        contestant_id: (ev as any).contestant_id
+                    })));
+
+                    // Construimos dos índices: por contestant_id y por evaluation_id (id || evaluation_id)
+                    const byContestant = new Map<number, Evaluation>();
+                    const byEvaluation = new Map<number, Evaluation>();
+                    for (const ev of res.new_evaluations as any[]) {
+                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
+                        const evalId = (typeof ev.id === "number") ? ev.id : (typeof ev.evaluation_id === "number" ? ev.evaluation_id : undefined);
+                        if (typeof evalId === "number") byEvaluation.set(evalId as number, ev);
+                    }
+
+                    setStudents((prev) =>
+                        prev.map((st) => {
+                            const evalId = (st as any).evaluation_id as number | undefined;
+                            const ev = byContestant.get(st.contestant_id) ??
+                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
+
+                            if (!ev) return st;
+
+                            // Actualizamos nota, estado, descripción y clasificación en tiempo real
+                            const nextScore = typeof ev.score === "number" ? ev.score : st.score;
+                            const nextStatus = typeof ev.status === "boolean" ? ev.status : st.status;
+                            const hasDescription = Object.prototype.hasOwnProperty.call(ev as any, "description");
+                            const nextDescription = hasDescription ? ((ev as any).description ?? null) : st.description;
+                            const hasClassStatus = Object.prototype.hasOwnProperty.call(ev as any, "classification_status");
+                            const hasClassPlace = Object.prototype.hasOwnProperty.call(ev as any, "classification_place");
+                            const nextClassStatus = hasClassStatus ? ((ev as any).classification_status ?? null) : (st as any).classification_status;
+                            const nextClassPlace = hasClassPlace ? ((ev as any).classification_place ?? null) : (st as any).classification_place;
+                            if (
+                                nextScore === st.score &&
+                                nextStatus === st.status &&
+                                nextDescription === st.description &&
+                                nextClassStatus === (st as any).classification_status &&
+                                nextClassPlace === (st as any).classification_place
+                            ) return st;
+                            return { ...st, score: nextScore, status: nextStatus, description: nextDescription, classification_status: nextClassStatus, classification_place: nextClassPlace };
+                        }),
+                    );
+                }
+
+                // Cursor seguro
+                const serverLast = res?.last_updated_at ?? since;
+                const t = new Date(serverLast);
+                const safe = new Date(t.getTime() - 1).toISOString();
+                lastUpdateAtRef.current = safe;
+                console.debug("[poll] next lastUpdateAt:", safe);
+            } catch (err) {
+                console.warn("[StudentTable] polling:error", err);
+            }
+        }
+
+        // Reiniciar cursor cuando cambian los filtros principales
+        lastUpdateAtRef.current = new Date().toISOString();
+
+        // Iniciar intervalo
+        pollingRef.current = window.setInterval(pollOnce, 3000);
+        console.log("[poll] start (3000ms)");
+
+        // Tick inmediato para no esperar al primer intervalo
+        void pollOnce();
+
+        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
+        const onFocus = () => { void pollOnce(); };
+        const onVis = () => { if (!document.hidden) void pollOnce(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVis);
+
+        return () => {
+            if (pollingRef.current) {
+                window.clearInterval(pollingRef.current);
+                pollingRef.current = null;
+                console.log("[poll] stopped");
+            }
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVis);
+        };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
 
@@ -219,15 +322,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             </div>
 
             <div className="flex items-center mb-3">
-                <div className="flex items-center flex-grow"> 
-                <SearchBar
-                    onSearch={setSearchQuery}
-                    placeholder="Buscar por nombre, apellido o CI..."
-                />
-                <Filter
-                    selectedFilters={selectedFilters}
-                    setSelectedFilters={setSelectedFilters}
-                />
+                <div className="flex items-center flex-grow">
+                    <SearchBar
+                        onSearch={setSearchQuery}
+                        placeholder="Buscar por nombre, apellido o CI..."
+                    />
+                    <Filter
+                        selectedFilters={selectedFilters}
+                        setSelectedFilters={setSelectedFilters}
+                    />
                 </div>
                 <Button
                     type="submit"
@@ -283,9 +386,18 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                     <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
                                     <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
                                     <td className="px-6 py-4 text-sm text-center">
-                                        <Badge color={s.status === true ? "success" : "error"}>
-                                            {s.status ? "Evaluado" : "No Evaluado"}
-                                        </Badge>
+                                        {s.classification_status === "clasificado" && (
+                                            <Badge color="success">Clasificado</Badge>
+                                        )}
+                                        {s.classification_status === "desclasificado" && (
+                                            <Badge color="warning">Desclasificado</Badge>
+                                        )}
+                                        {s.classification_status === "descalificado" && (
+                                            <Badge color="error">Descalificado</Badge>
+                                        )}
+                                        {(!s.classification_status || (s.classification_status as any) === null) && (
+                                            <Badge color="light">—</Badge>
+                                        )}
                                     </td>
 
                                     {/* Nota */}
