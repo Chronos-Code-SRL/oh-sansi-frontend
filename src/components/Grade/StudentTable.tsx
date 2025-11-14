@@ -12,7 +12,7 @@ import Filter from "./Filter";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
-import { getScoresByOlympiadAreaPhaseLevel, scoreCutsService } from "../../api/services/ScoreCutsService";
+import { getScoresByOlympiadAreaPhaseLevel } from "../../api/services/ScoreCutsService";
 import { Score } from "../../types/ScoreCuts";
 
 interface Props {
@@ -115,31 +115,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setError(null);
         async function loadContestants() {
             try {
-
-                // const scoreCuts = await scoreCutsService.getScoreCuts(idOlympiad, idArea);
-
-                // const currentPhase = Array.isArray(scoreCuts)
-                //     ? scoreCuts.find((phase) => phase.phase_id === idPhase)
-                //     : null;
-
-                // const levelData = currentPhase?.olympiad_area_phase_level_grades?.find(
-                //     (lg: any) => lg.level_grade?.level?.id === levelId
-                // );
-
-                // //const firstMin = levelData?.score_cut ?? 0;
-                // const firstMax = levelData?.max_score ?? 0;
-                // console.log(typeof firstMax, firstMax);
-
                 const scoreData = await getScoresByOlympiadAreaPhaseLevel(idOlympiad, idArea, idPhase, levelId);
                 setCurrentMaxScore(scoreData);
-
-                //setMinScore(firstMin);
-                //setCurrentMinScore(firstMin);
-                //setMaxScore(firstMax);
-
-
-                //console.log(currentMaxScore);
-                //onChangeScoreCut?.(firstMin);
                 console.log(idPhase, idOlympiad, idArea, levelId);
                 const data = await getContestantByPhaseOlympiadAreaLevel(
                     idPhase,
@@ -148,7 +125,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     levelId,
                 );
                 if (alive) setStudents(data);
-
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
