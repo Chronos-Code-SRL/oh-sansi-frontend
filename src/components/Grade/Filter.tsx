@@ -7,7 +7,6 @@ import { OptionsPanel } from "./Filter-elements/OptionFilter";
 interface FilterProps {
   selectedFilters: {
     estado: string[];
-    nivel: string[];
     grado: string[];
   };
   setSelectedFilters: (filters: any) => void;

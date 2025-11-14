@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import {  CommentIcon } from "../../icons";
+import { CheckLineIcon, CommentIcon, DownloadIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant } from "../../types/Contestant";
-import {updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
+import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Filter from "../Grade/Filter";
 import CommentModal from "../Grade/CommentModal";
+import Button from "../ui/button/Button";
 
 interface Props {
     idPhase: number;
@@ -22,7 +23,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-     // Estado del modal de comentario
+    // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
@@ -35,7 +36,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilters, setSelectedFilters] = useState({
         estado: [] as string[],
-        nivel: [] as string[],
+
         grado: [] as string[],
     });
 
@@ -45,7 +46,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
     };
-      function openCommentModal(student: Contestant): void {
+    function openCommentModal(student: Contestant): void {
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
@@ -105,7 +106,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    
+
     // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -121,17 +122,13 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             selectedFilters.estado.length === 0 ||
             selectedFilters.estado.includes(statusLabel(s.status)); // <- mapear boolean a string
 
-        const matchesNivel =
-            selectedFilters.nivel.length === 0 ||
-            selectedFilters.nivel.includes(s.level_name);
-
         const matchesGrado =
             selectedFilters.grado.length === 0 ||
             selectedFilters.grado.includes(s.grade_name);
 
-        return matchesSearch && matchesEstado && matchesNivel && matchesGrado;
+        return matchesSearch && matchesEstado && matchesGrado;
     });
-async function saveComment(): Promise<void> {
+    async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
         const texto = commentDraft.trim();
 
@@ -156,9 +153,50 @@ async function saveComment(): Promise<void> {
             setCommentSaving(false);
         }
     }
-    
+
     return (
         <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {/* Total Competidores */}
+                <div className="p-4 rounded-xl shadow bg-white border">
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                        Total competidores
+                    </p>
+                    <p className="text-3xl font-bold mt-2">{students.length}</p>
+                </div>
+
+                {/* Clasificados */}
+                <div className="p-4 rounded-xl shadow bg-white border">
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                        Clasificados
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-green-600">
+                        {students.filter(s => s.status === true).length}
+                    </p>
+                </div>
+
+                {/* Desclasificados */}
+                <div className="p-4 rounded-xl shadow bg-white border">
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                        Desclasificados
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-yellow-600">
+                        {/* {students.filter(s => s.status === false && s.score >= 51).length} */}
+                    </p>
+                </div>
+
+                {/* Descalificados */}
+                <div className="p-4 rounded-xl shadow bg-white border">
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                        Descalificados
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-red-600">
+                        {/* {students.filter(s => s.status === false && s.score < 51).length} */}
+                    </p>
+                </div>
+
+            </div>
+
             <div className="relative xl:w-118 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
@@ -181,6 +219,7 @@ async function saveComment(): Promise<void> {
             </div>
 
             <div className="flex items-center mb-3">
+                <div className="flex items-center flex-grow"> 
                 <SearchBar
                     onSearch={setSearchQuery}
                     placeholder="Buscar por nombre, apellido o CI..."
@@ -189,6 +228,17 @@ async function saveComment(): Promise<void> {
                     selectedFilters={selectedFilters}
                     setSelectedFilters={setSelectedFilters}
                 />
+                </div>
+                <Button
+                    type="submit"
+                    size="sm"
+                    onClick={() => {
+                        // Lógica 
+                    }}
+                    startIcon={<CheckLineIcon className="w-5 h-5" />}
+                >
+                    Avalar Fase
+                </Button>
             </div>
 
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -208,12 +258,12 @@ async function saveComment(): Promise<void> {
                     </TableHeader>
                     <TableBody>
                         {loading === true && (
-                            <TableRow>                              
+                            <TableRow>
                                 <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                             </TableRow>
                         )}
                         {error !== null && loading === false && (
-                            <TableRow>                                
+                            <TableRow>
                                 <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
