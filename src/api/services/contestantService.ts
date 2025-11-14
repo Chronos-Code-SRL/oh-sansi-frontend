@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, EvaluationDelta, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { Contestant, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -29,7 +29,7 @@ export async function checkUpdates(lastUpdateAt?: string | null) {
         headers: { "Cache-Control": "no-cache" },
     });
     return res.data as {
-        new_evaluations: EvaluationDelta[];
+        new_evaluations: Evaluation[];
         last_updated_at: string;
         status: number;
     };
