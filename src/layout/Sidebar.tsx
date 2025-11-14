@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -34,7 +34,6 @@ const rolePermissions: Record<number, UPermission[]> = {
   2: [ // Responsable Académico
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
-    UPermission.GRADE_COMPETITOR,
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,
@@ -95,9 +94,10 @@ const navItems: NavItem[] = [
     permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
   {
-    icon: <Slider />,
+    icon: <CheckLineIcon />,
     name: "Avalar Fase",
     path: "/aprobar-fase",
+    subItems: [],
     permission: UPermission.APPROVE_PHASE,
   },
 ];
@@ -280,6 +280,37 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
+
+
+      if (item.name === "Avalar Fase") {
+  if (userAreas.length > 0) {
+    const areasWithPhases = userAreas.map((area) => {
+      const olympiadId = area.path.split("/")[2];
+
+      const areaSubItems = phases.length
+        ? phases.map((phase) => ({
+            name: phase.name,
+            path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
+              area.name
+            )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+          }))
+        : [];
+
+      return {
+        id: area.id,
+        name: area.name,
+        path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
+          area.name
+        )}/${area.id}`,
+        subItems: areaSubItems,
+      };
+    });
+
+    return { ...item, subItems: areasWithPhases };
+  }
+  return { ...item, subItems: item.subItems };
+}
+
       return item;
     });
 

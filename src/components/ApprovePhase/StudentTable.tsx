@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
-import Alert from "../ui/alert/Alert";
+import {  CommentIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
-import type { KeyboardEventHandler } from "react";
-import { Contestant, Evaluation } from "../../types/Contestant";
-import { checkUpdates, updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
+import { Contestant } from "../../types/Contestant";
+import {updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
@@ -24,18 +22,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-
-    // States for editing notes in time real
-    const [editingCi, setEditingCi] = useState<string | null>(null);
-    const [draftNote, setDraftNote] = useState<number | "">("");
-    const [saving, setSaving] = useState(false);
-
-    // Estado para el Alert
-    const [alertOpen, setAlertOpen] = useState(false);
-    const [alertTitle, setAlertTitle] = useState<string>("");
-    const [alertMessage, setAlertMessage] = useState<string>("");
-
-    // Estado del modal de comentario
+     // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
@@ -44,21 +31,21 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
-
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
-    const autoHideTimerRef = useRef<number | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedFilters, setSelectedFilters] = useState({
+        estado: [] as string[],
+        nivel: [] as string[],
+        grado: [] as string[],
+    });
 
-    // Polling refs
-    const lastUpdateAtRef = useRef<string | null>(null);
-    const pollingRef = useRef<number | null>(null);
-
-    // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
+    // Helper para mapear boolean -> etiqueta usada por el filtro
+    const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
     const getEvaluationId = (s: Contestant): number | string => {
         // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
     };
-
-    function openCommentModal(student: Contestant): void {
+      function openCommentModal(student: Contestant): void {
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
@@ -69,16 +56,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setCommentStudent(null);
         setCommentDraft("");
     }
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedFilters, setSelectedFilters] = useState({
-        estado: [] as string[],
-        nivel: [] as string[],
-        grado: [] as string[],
-    });
-
-    // Helper para mapear boolean -> etiqueta usada por el filtro
-    const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
-
     useEffect(() => {
         let alive = true;
         async function fetchLevels() {
@@ -128,91 +105,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    useEffect(() => {
-        async function pollOnce() {
-            const since = lastUpdateAtRef.current ?? new Date().toISOString();
-            console.log(since);
-
-            try {
-                console.debug("[poll] tick -> lastUpdateAt:", since);
-                const res = await checkUpdates(since);
-                console.debug("[poll] response:", {
-                    newCount: res?.new_evaluations?.length ?? 0,
-                    last_updated_at: res?.last_updated_at
-                });
-
-                if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
-                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
-                        id: (ev as any).id,
-                        contestant_id: (ev as any).contestant_id
-                    })));
-
-                    // Construimos dos índices: por contestant_id y por evaluation_id
-                    const byContestant = new Map<number, Evaluation>();
-                    const byEvaluation = new Map<number, Evaluation>();
-                    for (const ev of res.new_evaluations as any[]) {
-                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
-                        if (typeof ev.id === "number") byEvaluation.set(ev.id, ev);
-                    }
-
-                    setStudents((prev) =>
-                        prev.map((st) => {
-                            // No pisar si la fila está en edición en esta pestaña
-                            if (editingCi === st.ci_document) return st;
-
-                            const evalId = (st as any).evaluation_id as number | undefined;
-                            const ev = byContestant.get(st.contestant_id) ??
-                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
-
-                            if (!ev) return st;
-
-                            return {
-                                ...st,
-                                score: ev.score ?? st.score,
-                                status: typeof ev.status === "boolean" ? ev.status : st.status,
-                                description: typeof ev.description === "string" ? ev.description : st.description,
-                            };
-                        }),
-                    );
-                }
-
-                // Cursor seguro
-                const serverLast = res?.last_updated_at ?? since;
-                const t = new Date(serverLast);
-                const safe = new Date(t.getTime() - 1).toISOString();
-                lastUpdateAtRef.current = safe;
-                console.debug("[poll] next lastUpdateAt:", safe);
-            } catch (err) {
-                console.warn("[StudentTable] polling:error", err);
-            }
-        }
-
-        if (!lastUpdateAtRef.current) lastUpdateAtRef.current = new Date().toISOString();
-
-        // Iniciar intervalo
-        pollingRef.current = window.setInterval(pollOnce, 3000);
-        console.log("[poll] start (3000ms)");
-
-        // Tick inmediato para no esperar al primer intervalo
-        void pollOnce();
-
-        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
-        const onFocus = () => { void pollOnce(); };
-        const onVis = () => { if (!document.hidden) void pollOnce(); };
-        window.addEventListener("focus", onFocus);
-        document.addEventListener("visibilitychange", onVis);
-
-        return () => {
-            if (pollingRef.current) {
-                window.clearInterval(pollingRef.current);
-                pollingRef.current = null;
-                console.log("[poll] stopped");
-            }
-            window.removeEventListener("focus", onFocus);
-            document.removeEventListener("visibilitychange", onVis);
-        };
-    }, [editingCi]);
-
+    
     // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -238,8 +131,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
         return matchesSearch && matchesEstado && matchesNivel && matchesGrado;
     });
-
-    async function saveComment(): Promise<void> {
+async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
         const texto = commentDraft.trim();
 
@@ -256,99 +148,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st,
                 ),
             );
-            showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
+            // showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
             closeCommentModal();
         } catch {
-            showAlert("Error", "No se pudo guardar el comentario. Intenta nuevamente.");
+            // showAlert("Error", "No se pudo guardar el comentario. Intenta nuevamente.");
         } finally {
             setCommentSaving(false);
         }
     }
-
-    function showAlert(title: string, message: string): void {
-        // Limpia un timer previo si existiera
-        if (autoHideTimerRef.current !== null) {
-            window.clearTimeout(autoHideTimerRef.current);
-            autoHideTimerRef.current = null;
-        }
-        setAlertTitle(title);
-        setAlertMessage(message);
-        setAlertOpen(true);
-
-        // Auto-cerrar a los 3 segundos (ajustable)
-        autoHideTimerRef.current = window.setTimeout(() => {
-            setAlertOpen(false);
-            autoHideTimerRef.current = null;
-        }, 3000);
-    }
-
-    const startEdit = (s: Contestant) => {
-        if (saving === true) {
-            return
-        };
-        // Permitir editar incluso si está Evaluado
-        setEditingCi(s.ci_document);
-        if (typeof s.score === "number") {
-            setDraftNote(s.score);
-        } else {
-            setDraftNote("");
-        }
-    };
-
-    const saveNote = async (s: Contestant) => {
-        if (saving) return;
-        if (draftNote === "" || isNaN(Number(draftNote))) return;
-        const nota = Math.max(0, Math.min(100, Number(draftNote)));
-
-        try {
-            setSaving(true);
-            const id = getEvaluationId(s);
-            console.log("[saveNote] PATCH", { id, score: nota });
-
-            await updatePartialEvaluation(id, { score: nota });
-
-            console.log("[saveNote] OK", { id, score: nota });
-            setStudents((prev) =>
-                prev.map((st) =>
-                    st.contestant_id === s.contestant_id
-                        ? { ...st, score: nota, status: true }
-                        : st,
-                ),
-            );
-            setEditingCi(null);
-        } catch (e) {
-            console.error("[saveNote] ERROR", e);
-            setError("No se pudo guardar la nota.");
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const rejectNote = (_s: Contestant) => {
-        if (saving) return;
-        // Cancelar edición sin modificar nota ni estado
-        setEditingCi(null);
-        setDraftNote("");
-    };
-
-
-    // Limpia el timer del Alert al desmontar el componente
-    useEffect(() => {
-        return () => {
-            if (autoHideTimerRef.current !== null) {
-                window.clearTimeout(autoHideTimerRef.current);
-                autoHideTimerRef.current = null;
-            }
-        };
-    }, []);
-
-    const onKeyDown: KeyboardEventHandler<HTMLInputElement> = (e) => {
-        if (e.key === "Enter") {
-            const s = students.find((x) => x.ci_document === editingCi);
-            if (s) void saveNote(s);
-        }
-    };
-
+    
     return (
         <>
             <div className="relative xl:w-118 mb-4">
@@ -400,14 +208,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     </TableHeader>
                     <TableBody>
                         {loading === true && (
-                            <TableRow>
-                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
+                            <TableRow>                              
                                 <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                             </TableRow>
                         )}
                         {error !== null && loading === false && (
-                            <TableRow>
-                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
+                            <TableRow>                                
                                 <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
@@ -419,7 +225,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             </tr>
                         )}
                         {!loading && !error && filteredStudents.map((s) => {
-                            const isEditing = editingCi === s.ci_document;
                             return (
                                 <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                     <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
@@ -434,54 +239,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                     </td>
 
                                     {/* Nota */}
-                                    <td className={`px-6 py-4 text-sm items-center justify-center ${isEditing === false && s.status !== true ? "cursor-text" : ""}`}
-                                        onClick={() => {
-                                            if (isEditing === false) {
-                                                startEdit(s);
-                                            }
-                                        }}
-                                    >
-                                        {isEditing === true ? (
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={draftNote}
-                                                    autoFocus
-                                                    onKeyDown={onKeyDown}
-                                                    onChange={(e) => {
-                                                        const v = e.target.value;
-                                                        setDraftNote(v === "" ? "" : Number(v));
-                                                    }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => saveNote(s)} //Aca en el end point patch
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Aceptar"
-                                                >
-                                                    <CheckLineIcon className="size-5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true}
-                                                    onClick={() => rejectNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Rechazar"
-                                                >
-                                                    <CloseLineIcon className="size-5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 justify-center">
-                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
-                                                {/* Solo permitir edición cuando no está evaluado */}
-                                            </div>
-                                        )}
+                                    <td className="px-6 py-4 text-sm items-center justify-center">
+                                        {s.score}
                                     </td>
 
                                     <td className="px-6 py-4 text-sm text-center">
@@ -498,12 +257,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             );
                         })}
                     </TableBody>
-
                 </Table>
 
             </div>
-
-            {alertOpen && (
+            {/* {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
                     role="presentation"
@@ -517,7 +274,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     </div>
                 </div>
             )
-            }
+            } */}
             {/* Modal de comentario */}
             <CommentModal
                 open={commentModalOpen}
