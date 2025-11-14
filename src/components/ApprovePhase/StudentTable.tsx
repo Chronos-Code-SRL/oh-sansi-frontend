@@ -278,6 +278,16 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     </p>
                 </div>
 
+                {/* No clasificados */}
+                <div className="p-4 rounded-xl shadow bg-white border">
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                        No clasificados
+                    </p>
+                    <p className="text-3xl font-bold mt-2 text-red-600">
+                        {/* {students.filter(s => s.status === false && s.score < 51).length} */}
+                    </p>
+                </div>
+
                 {/* Desclasificados */}
                 <div className="p-4 rounded-xl shadow bg-white border">
                     <p className="text-gray-600 text-sm flex items-center gap-2">
@@ -285,16 +295,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     </p>
                     <p className="text-3xl font-bold mt-2 text-yellow-600">
                         {/* {students.filter(s => s.status === false && s.score >= 51).length} */}
-                    </p>
-                </div>
-
-                {/* Descalificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Descalificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-red-600">
-                        {/* {students.filter(s => s.status === false && s.score < 51).length} */}
                     </p>
                 </div>
 
@@ -389,22 +389,19 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "clasificado" && (
                                             <Badge color="success">Clasificado</Badge>
                                         )}
+                                        {s.classification_status === "no_clasificado" && (
+                                            <Badge color="error">No clasificado</Badge>
+                                        )}
                                         {s.classification_status === "desclasificado" && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
-                                        {s.classification_status === "descalificado" && (
-                                            <Badge color="error">Descalificado</Badge>
-                                        )}
+                                        
                                         {(!s.classification_status || (s.classification_status as any) === null) && (
                                             <Badge color="light">—</Badge>
                                         )}
                                     </td>
 
-                                    {/* Nota */}
-                                    <td className="px-6 py-4 text-sm items-center justify-center">
-                                        {s.score}
-                                    </td>
-
+                                    <td className="px-6 py-4 text-sm text-center">{s.score} </td>
                                     <td className="px-6 py-4 text-sm text-center">
                                         <button
                                             type="button"
