@@ -51,3 +51,9 @@ export interface FilterList {
     level_name: string;
 }
 
+export interface ContestantStats {
+    total: number;
+    classified: number;
+    no_classified: number;
+    disqualified: number;
+}
