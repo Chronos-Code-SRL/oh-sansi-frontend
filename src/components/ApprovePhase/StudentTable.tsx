@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, CommentIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates, getContestantStats } from "../../api/services/contestantService";
@@ -9,7 +9,7 @@ import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesServic
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Filter from "../Grade/Filter";
-import CommentModal from "../ApprovePhase/CommentModal";
+import CommentModal from "./DisqualifyModal";
 import Button from "../ui/button/Button";
 import Alert from "../ui/alert/Alert";
 
@@ -426,7 +426,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Descripción</th>
+                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acciones</th>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -532,7 +532,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                                             title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                         >
-                                            <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                            <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
                                         </button>
                                     </td>
                                 </TableRow>
