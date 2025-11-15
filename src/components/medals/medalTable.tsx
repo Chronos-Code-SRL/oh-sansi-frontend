@@ -6,6 +6,9 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
+import { getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
+import { Contestant } from "../../types/Contestant";
+import MedalSelector from "./MedalSelector";
 
 export default function MedalsPage() {
 
@@ -24,6 +27,9 @@ export default function MedalsPage() {
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
+
+    const [students, setStudents] = useState<Contestant[]>([]);
+
     type SelectedOlympiad = {
         id: number;
         name: string;
@@ -34,99 +40,6 @@ export default function MedalsPage() {
         return stored ? (JSON.parse(stored) as SelectedOlympiad) : null;
     });
 
-    type Medal =
-        | "oro"
-        | "plata"
-        | "bronce"
-        | "mencion"
-        | "none"; // Sin medalla
-
-    type MedalStudent = {
-        contestant_id: number;
-        first_name: string;
-        last_name: string;
-        colegio: string;       // Unidad Educativa
-        area_name?: string;    // Area (para alinear con header)
-        level_name: string;    // Nivel
-        status: boolean;
-        score: number | null;  // Nota
-        description: string | null; // Posición
-    };
-
-    const medalOptions: { value: Medal; label: string; icon: string }[] = [
-        { value: "oro", label: "Oro", icon: "🏆" },
-        { value: "plata", label: "Plata", icon: "🥈" },
-        { value: "bronce", label: "Bronce", icon: "🥉" },
-        { value: "mencion", label: "Mención de Honor", icon: "🎖️" },
-        { value: "none", label: "Sin medalla", icon: "⚪" },
-    ];
-
-    // Mapea medal -> texto visible si quieres también un tooltip/description
-    const medalToDescription: Record<Medal, string | null> = {
-        oro: "1er lugar",
-        plata: "2do lugar",
-        bronce: "3er lugar",
-        mencion: "Participación destacada",
-        none: null,
-    };
-
-    const [students, setStudents] = useState<MedalStudent[]>([
-        {
-            contestant_id: 1,
-            first_name: "Ana",
-            last_name: "Gómez",
-            colegio: "Unidad Educativa Central",
-            area_name: "Matemática",
-            level_name: "Nivel 1",
-            status: true,
-            score: 256,
-            description: "1er lugar",
-        },
-        {
-            contestant_id: 2,
-            first_name: "Luis",
-            last_name: "Pérez",
-            colegio: "Colegio Libertad",
-            area_name: "Matemática",
-            level_name: "Nivel 1",
-            status: true,
-            score: 240,
-            description: "2do lugar",
-        },
-        {
-            contestant_id: 3,
-            first_name: "María",
-            last_name: "Vargas",
-            colegio: "Colegio Libertad",
-            area_name: "Matemática",
-            level_name: "Nivel 1",
-            status: true,
-            score: 230,
-            description: "3er lugar",
-        },
-        {
-            contestant_id: 4,
-            first_name: "José",
-            last_name: "Rojas",
-            colegio: "Unidad Educativa Central",
-            area_name: "Física",
-            level_name: "Nivel 2",
-            status: false,
-            score: null,
-            description: null,
-        },
-        {
-            contestant_id: 5,
-            first_name: "Carla",
-            last_name: "Fernández",
-            colegio: "Instituto Alfa",
-            area_name: "Química",
-            level_name: "Nivel 2",
-            status: true,
-            score: 190,
-            description: "Participación destacada",
-        },
-    ]);
 
     // For the areas Select
     useEffect(() => {
@@ -144,6 +57,7 @@ export default function MedalsPage() {
         };
         fetchAreas();
     }, []);
+
     useEffect(() => {
         let alive = true;
         async function fetchLevels() {
@@ -170,36 +84,53 @@ export default function MedalsPage() {
         return () => { alive = false; };
     }, [selectedAreaId, selectedOlympiad?.id]);
 
-    console.log(areas);
-
     useEffect(() => {
         setLoading(true);
         const t = setTimeout(() => setLoading(false), 500);
         return () => clearTimeout(t);
     }, []);
 
-    const normalize = (t: string) =>
-        t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    const filtered = students.filter((s) =>
-        [s.first_name, s.last_name, s.colegio].some((v) =>
-            normalize(v).includes(normalize(searchQuery))
-        )
-    );
+    // Cargar concursantes cuando hay área, nivel y olimpiada
     useEffect(() => {
-        setSelectedLevelId(null);
-        setLevels([]);
-    }, [selectedAreaId]);
+        let alive = true;
 
-    const handleChangeMedal = (id: number, medal: Medal) => {
-        setStudents((prev) =>
-            prev.map((st) =>
-                st.contestant_id === id
-                    ? { ...st, medal, description: medalToDescription[medal] }
-                    : st
-            )
-        );
-    };
+        async function fetchContestants() {
+            const idPhase = 1;
+            const idOlympiad = selectedOlympiad?.id ?? 0;
+            const idArea = selectedAreaId ?? 0;
+            const levelId = selectedLevelId ?? 0;
+
+            if (idOlympiad === 0 || idArea === 0 || levelId === 0) {
+                if (alive) setStudents([]);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError(null);
+
+                const data = await getContestantByPhaseOlympiadAreaLevel(
+                    idPhase,
+                    idOlympiad,
+                    idArea,
+                    levelId
+                );
+                setStudents(data);
+            } catch (e) {
+                if (alive) {
+                    setStudents([]);
+                    setError("No se pudieron cargar los competidores.");
+                }
+            } finally {
+                if (alive) setLoading(false);
+            }
+        }
+        fetchContestants();
+        return () => {
+            alive = false;
+        };
+    }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
+
     return (
         <>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -270,66 +201,33 @@ export default function MedalsPage() {
                                 <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
-                        {/* {selectedLevelId === null && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Por favor, seleccione un nivel para ver los estudiantes.
-                                </td>
-                            </tr>
-                        )} */}
-                        {/* {!loading && !error && filteredStudents.map((s) => {
-                            // const isEditing = editingCi === s.ci_document;
-                            return (
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.status}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.score}</td>
-                                </TableRow>
-                            );
-                        })} */}
-                        {/* {!loading && !error && filteredStudents.map((s) => {
-                            // const isEditing = editingCi === s.ci_document;
-                            return (
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.status}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.score}</td>
-                                </TableRow>
-                            );
-                        })} */}
-
                         {!loading && !error && students.map((s) => (
                             <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                <td className="px-6 py-4 text-sm text-center">{s.colegio}</td>
-                                <td className="px-6 py-4 text-sm text-center">{s.area_name ?? "—"}</td>     {/* Area */}
-                                <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>           {/* Nivel */}
-                                <td className="px-6 py-4 text-sm text-center">
-                                    {typeof s.score === "number" ? s.score : "—"}                              {/* Nota */}
-                                </td>
-                                <td className="px-6 py-4 text-sm text-center">
-                                    <Select
-                                        value={s.medal} // Medal
-                                        options={medalOptions.map(m => ({
-                                            value: m.value, // string union
-                                            label: `${m.icon} ${m.label}`, // string
-                                        }))}
-                                        onChange={(val: string) => handleChangeMedal(s.contestant_id, val as Medal)}
-                                        placeholder="Seleccione"
-                                    />
-                                    <div className="mt-1 text-xs text-gray-500">
-                                        {s.description ?? (s.medal === "none" ? "Sin medalla" : "—")}
-                                    </div>                        {/* Posición */}
-                                </td>
+                                {[
+                                    <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
+                                    <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
+                                    <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
+                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.grade_name ?? "—"}</td>,
+                                    <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
+                                    <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
+                                    <td key="medal" className="px-6 py-4 text-sm text-center">
+                                        <MedalSelector
+                                            value={s.classification_place as unknown as string | null}
+                                            onChange={(newPlace) => {
+                                                setStudents((prev) =>
+                                                    prev.map((st) =>
+                                                        st.contestant_id === s.contestant_id
+                                                            ? {
+                                                                ...st,
+                                                                classification_place: newPlace,
+                                                            }
+                                                            : st
+                                                    )
+                                                );
+                                            }}
+                                        />
+                                    </td>,
+                                ]}
                             </TableRow>
                         ))}
                     </TableBody>
@@ -337,24 +235,6 @@ export default function MedalsPage() {
                 </Table>
 
             </div>
-
-            {/* {alertOpen && (
-                <div
-                    className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
-                    role="presentation"
-                >
-                    <div className="pointer-events-auto" role="alert" aria-live="polite">
-                        <Alert
-                            variant={alertVariant}
-                            title={alertTitle}
-                            message={alertMessage}
-                        />
-                    </div>
-                </div>
-            )
-            } */}
-
-
         </>
     )
 }

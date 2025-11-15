@@ -10,7 +10,6 @@ export default function MedalsPage() {
 
             <ComponentCard title="Gestión de Medallas">
                 <MedalTable />
-
             </ComponentCard>
 
         </>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -37,6 +37,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,
+    UPermission.MEDAL_PAGE,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -100,6 +101,12 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.APPROVE_PHASE,
   },
+  {
+    icon: <Medal />,
+    name: "Medallero",
+    path: "/medallero",
+    permission: UPermission.MEDAL_PAGE,
+  }
 ];
 const othersItems: NavItem[] = [];
 
@@ -259,11 +266,11 @@ const AppSidebar: React.FC = () => {
 
             const areaSubItems = phases.length
               ? phases.map((phase) => ({
-                  name: phase.name,
-                  path: `/editar-umbral/${olympiadId}/${encodeURIComponent(
-                    area.name
-                  )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
-                }))
+                name: phase.name,
+                path: `/editar-umbral/${olympiadId}/${encodeURIComponent(
+                  area.name
+                )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+              }))
               : [];
 
             return {
@@ -283,33 +290,33 @@ const AppSidebar: React.FC = () => {
 
 
       if (item.name === "Avalar Fase") {
-  if (userAreas.length > 0) {
-    const areasWithPhases = userAreas.map((area) => {
-      const olympiadId = area.path.split("/")[2];
+        if (userAreas.length > 0) {
+          const areasWithPhases = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
 
-      const areaSubItems = phases.length
-        ? phases.map((phase) => ({
-            name: phase.name,
-            path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
-              area.name
-            )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
-          }))
-        : [];
+            const areaSubItems = phases.length
+              ? phases.map((phase) => ({
+                name: phase.name,
+                path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
+                  area.name
+                )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+              }))
+              : [];
 
-      return {
-        id: area.id,
-        name: area.name,
-        path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
-          area.name
-        )}/${area.id}`,
-        subItems: areaSubItems,
-      };
-    });
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/aprobar-fase/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`,
+              subItems: areaSubItems,
+            };
+          });
 
-    return { ...item, subItems: areasWithPhases };
-  }
-  return { ...item, subItems: item.subItems };
-}
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
+      }
 
       return item;
     });
@@ -497,8 +504,8 @@ const AppSidebar: React.FC = () => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
               }}
               className={`overflow-hidden transition-all ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                ? "duration-150" 
-                : "duration-0"   
+                ? "duration-150"
+                : "duration-0"
                 }`}
               style={{
                 height:
