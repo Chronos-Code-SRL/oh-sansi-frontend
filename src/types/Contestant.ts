@@ -15,7 +15,7 @@ export interface Contestant {
     grade_name: string;
     status: boolean;
     classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
-    classification_place: number | null;
+    classification_place: string | null;
 }
 
 //Type for comment and score update
@@ -30,7 +30,7 @@ export interface Evaluation {
     score: number | null;
     status: boolean;
     description: string | null;
-    updated_at: string; 
+    updated_at: string;
     evaluation_id?: number; // algunos endpoints devuelven evaluation_id en vez de id
     classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
     classification_place?: number | null;
