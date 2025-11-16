@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon, MoreDotIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates, getContestantStats } from "../../api/services/contestantService";
+import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Filter from "../Grade/Filter";
-import CommentModal from "./DisqualifyModal";
+// Eliminado CommentModal: usamos DisqualifyModal para desclasificar con comentario
 import Button from "../ui/button/Button";
+// import Alert from "../ui/alert/Alert";
+import DisqualifyModal from "./DisqualifyModal";
 import Alert from "../ui/alert/Alert";
 
 interface Props {
@@ -39,10 +42,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [draftNote, setDraftNote] = useState<number | "">("");
     const [saving, setSaving] = useState(false);
 
-    // // Estado para el Alert
-    // const [alertOpen, setAlertOpen] = useState(false);
-    // const [alertTitle, setAlertTitle] = useState<string>("");
-    // const [alertMessage, setAlertMessage] = useState<string>("");
+    // Estado para el Alert
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState<string>("");
+    const [alertMessage, setAlertMessage] = useState<string>("");
 
 
     // Polling refs
@@ -50,6 +53,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const pollingRef = useRef<number | null>(null);
 
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
+    const autoHideTimerRef = useRef<number | null>(null);
+
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedFilters, setSelectedFilters] = useState({
         estado: [] as string[],
@@ -270,24 +275,54 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
         try {
             setCommentSaving(true);
-            const id = getEvaluationId(commentStudent);
-            console.log("[saveComment] PATCH", { id, description: texto });
-            await updatePartialEvaluation(id, { description: texto });
-            console.log("[saveComment] OK", { id });
+            const id = Number(getEvaluationId(commentStudent));
+            // Cambia el estado a descalificado y guarda descripción
+            await updateClassification(id, {
+                classification_status: "descalificado",
+                classification_place: null,
+                description: texto,
+            });
 
-            // Actualiza estado local
+            // Actualiza estado local (classification_status y description)
             setStudents((prev) =>
                 prev.map((st) =>
-                    st.ci_document === commentStudent.ci_document ? { ...st, description: texto } : st,
+                    st.ci_document === commentStudent.ci_document
+                        ? { ...st, classification_status: "descalificado", description: texto }
+                        : st,
                 ),
             );
-            // showAlert("Comentario guardado", "Se guardó la retroalimentación del estudiante.");
+            // Refrescar estadísticas
+            if (selectedLevelId != null) {
+                try {
+                    const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
+                    setStats(st);
+                } catch {
+                    // ignore
+                }
+            }
             closeCommentModal();
         } catch {
-            // showAlert("Error", "No se pudo guardar el comentario. Intenta nuevamente.");
+            showAlert("Error", "No se pudo guardar el comentario ni estado. Intenta nuevamente.");
         } finally {
             setCommentSaving(false);
         }
+    }
+
+    function showAlert(title: string, message: string): void {
+        // Limpia un timer previo si existiera
+        if (autoHideTimerRef.current !== null) {
+            window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = null;
+        }
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertOpen(true);
+
+        // Auto-cerrar a los 3 segundos (ajustable)
+        autoHideTimerRef.current = window.setTimeout(() => {
+            setAlertOpen(false);
+            autoHideTimerRef.current = null;
+        }, 3000);
     }
 
     // Guardar nota parcial
@@ -326,6 +361,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setSaving(false);
         }
     }
+
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current !== null) {
+                window.clearTimeout(autoHideTimerRef.current);
+                autoHideTimerRef.current = null;
+            }
+        };
+    }, []);
 
     return (
         <>
@@ -463,7 +507,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "no_clasificado" && (
                                             <Badge color="error">No clasificado</Badge>
                                         )}
-                                        {(s.classification_status === "desclasificado" || s.classification_status === null) && (
+                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
                                     </td>
@@ -542,7 +586,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Table>
 
             </div>
-            {/* {alertOpen && (
+            {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
                     role="presentation"
@@ -556,9 +600,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     </div>
                 </div>
             )
-            } */}
+            }
             {/* Modal de comentario */}
-            <CommentModal
+            <DisqualifyModal
                 open={commentModalOpen}
                 student={commentStudent}
                 draft={commentDraft}

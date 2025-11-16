@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { Contestant } from "../../types/Contestant";
 import { useEffect } from "react";
+import { AlertHexaIcon } from "../../icons";
 
 interface DisqualifyModalProps {
     open: boolean;
@@ -53,18 +54,16 @@ export default function DisqualifyModal({
                 <div className="mb-4 flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-lg">
-                                ⚠
-                            </div>
+                            <AlertHexaIcon/>
                             <h2 id="disqualify-title" className="text-lg font-semibold text-gray-900">
-                                Descalificar Estudiante
+                                Deslasificar Competidor
                             </h2>
                         </div>
 
                         {student && (
                             <p className="mt-1 text-sm text-gray-700">
-                                Estás a punto de descalificar a <strong>{student.first_name} {student.last_name}</strong>.
-                                Esta acción indica que el estudiante no ha cumplido con las reglas de ética y 
+                                Estás a punto de deslasificar a <strong>{student.first_name} {student.last_name}</strong>.
+                                Esta acción indica que el competidor no ha cumplido con las reglas de ética y 
                                 comportamiento definidas en la convocatoria.
                             </p>
                         )}
@@ -83,7 +82,7 @@ export default function DisqualifyModal({
                 {/* Textarea */}
                 <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-800 mb-1">
-                        Descripción del motivo de descalificación *
+                        Descripción del motivo de desclasificación *
                     </label>
 
                     <textarea
@@ -94,7 +93,7 @@ export default function DisqualifyModal({
                     />
 
                     <p className="mt-1 text-xs text-gray-500">
-                        Este campo es obligatorio y quedará registrado en el expediente del estudiante.
+                        Este campo es obligatorio y quedará registrado.
                     </p>
                 </div>
 
@@ -115,7 +114,7 @@ export default function DisqualifyModal({
                         disabled={saving || draft.trim().length === 0}
                         className="inline-flex items-center justify-center rounded-md bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700 disabled:opacity-50"
                     >
-                        Confirmar Descalificación
+                        Confirmar Desclasificación
                     </button>
                 </div>
 
