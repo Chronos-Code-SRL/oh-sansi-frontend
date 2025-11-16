@@ -59,7 +59,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
     const getEvaluationId = (s: Contestant): number | string => {
         // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
-        return (s as any).evaluation_id ?? s.contestant_id;
+        return (s as any).evaluation_id;
     };
 
     function openCommentModal(student: Contestant): void {
