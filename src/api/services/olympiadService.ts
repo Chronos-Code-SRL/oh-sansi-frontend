@@ -1,5 +1,6 @@
 import { ohSansiApi } from "../ohSansiApi";
 import { Olympiad, AllOlympiads, OlympiadPayload, OlympiadApi } from "../../types/Olympiad";
+import { Area } from "../../types/Area";
 
 const OLYMPIADS_URL = `/olympiads`;
 
@@ -31,3 +32,10 @@ export const getOlympiadsByUser = async (): Promise<OlympiadApi[]> => {
   const res = await ohSansiApi.get<OlympiadApi[]>(`/user${OLYMPIADS_URL}`);
   return res.data;
 }
+
+//For getting only areas 
+export const getAreasFromUserOlympiads = async (): Promise<Area[]> => {
+  const res = await ohSansiApi.get<OlympiadApi[]>(`/user${OLYMPIADS_URL}`);
+  const all = res.data.flatMap(o => o.areas ?? []);
+  return Array.from(new Map(all.map(a => [a.id, a])).values());
+};

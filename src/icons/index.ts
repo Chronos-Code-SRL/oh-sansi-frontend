@@ -60,6 +60,11 @@ import { ReactComponent as Slider } from "./sliders.svg?react";
 import { ReactComponent as Clean } from "./clean-b.svg?react";
 import { ReactComponent as UpWhiteArrow } from "./arrow-up-white.svg?react";
 import { ReactComponent as HomeIcon } from "./home.svg?react";
+import { ReactComponent as Award } from "./award.svg?react";
+import { ReactComponent as Medal } from "./medal.svg?react";
+import { ReactComponent as TrophyGold } from "./trophy-Gold.svg?react";
+import { ReactComponent as TrophySilver } from "./trophy-Silver.svg?react";
+import { ReactComponent as TrophyBronze } from "./trophy-Bronze.svg?react";
 export {
   HomeIcon,
   ErrorHexaIcon,
@@ -123,4 +128,9 @@ export {
   Slider,
   Clean,
   UpWhiteArrow,
+  TrophyGold,
+  TrophySilver,
+  TrophyBronze,
+  Award,
+  Medal,
 };

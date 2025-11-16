@@ -15,7 +15,7 @@ export interface Contestant {
     grade_name: string;
     status: boolean;
     classification_status?: "clasificado" | "no_clasificado" | "desclasificado" | null;
-    classification_place: number | null;
+    classification_place: string | null; // e.g., "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null
 }
 
 //Type for comment and score update
@@ -33,7 +33,7 @@ export interface Evaluation {
     updated_at: string; 
     evaluation_id?: number; // algunos endpoints devuelven evaluation_id en vez de id
     classification_status?: "clasificado" | "no_clasificado" | "desclasificado" | null;
-    classification_place?: number | null;
+    classification_place?: string | null;
 }
 
 export interface FilterList {
