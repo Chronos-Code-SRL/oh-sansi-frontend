@@ -22,3 +22,12 @@ export interface UpdateScoreCutPayload {
   level_id: number;
   score_cut: number;
 }
+export interface Score {
+  score_cut: number;
+  max_score: number;
+  olympiad_id: number;
+  area_id: number;
+  phase_id: number;
+  level_id: number;
+  status: number;
+}

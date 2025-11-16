@@ -19,6 +19,7 @@ import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
 import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
 import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
+import MedalsPage from "./pages/Medals/MedalsPage";
 
 export default function App() {
   return (
@@ -63,6 +64,8 @@ export default function App() {
               path="/calificaciones/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId"
               element={<MarksStudents />}
             />
+            {/* Medallas */}
+            <Route path="/medallero" element={<MedalsPage />} />
 
             {/*Filters on list */}
             <Route index path="/filtros-de-lista" element={<FilterElements />} />
