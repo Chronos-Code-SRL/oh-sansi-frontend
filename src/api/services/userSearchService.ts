@@ -1,6 +1,6 @@
 import { ohSansiApi } from "../ohSansiApi";
 
-export const userSearchApi = {
+export const userSearch = {
   getOlympiadsActiveOrPlanning: async () => {
     try {
       return await ohSansiApi.get("/olympiads/status/active-or-planning");

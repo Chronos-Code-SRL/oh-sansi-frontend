@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
@@ -10,6 +10,7 @@ import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 import Select from "../../components/form/Select";
+import { userSearch } from "../../api/services/userSearchService"
 
 export default function AcademicManagerForm() {
   const [first_name, setfirst_name] = useState("");
@@ -39,82 +40,94 @@ export default function AcademicManagerForm() {
     setPersonalDataDisabled(value);
   };
 
-  {/* función para buscar usuario
-  const handleSearchUser = async () => { 
+  const [olympiadOptions, setOlympiadOptions] = useState([]);
+
+  useEffect(() => {
+  const loadOlympiads = async () => {
+    try {
+      const res = await userSearch.getOlympiadsActiveOrPlanning();
+      const list = res.data.data || [];
+
+      setOlympiadOptions(
+        list.map((o: any) => ({
+          value: o.id.toString(),
+          label: o.name
+        }))
+      );
+    } catch (error) {
+      console.error("Error cargando olimpiadas");
+    }
+  };
+
+  loadOlympiads();
+}, []);
+
+
+ //función para buscar usuario
+  const handleSearchUser = async () => {
     if (!ci.trim() || !olympiadId) {
       alert("Debe ingresar CI y seleccionar una Olimpiada.");
       return;
     }
 
+    setIsSearching(true);
+
     try {
-      setIsSearching(true);
-
-      // Adaptar
-      const response = await registerApi.searchUser({
+      // === LLAMADA REAL ===
+      const response = await userSearch.searchUser(
+        Number(olympiadId),
         ci,
-        olympiad_id: olympiadId,
-        role_id: 2,
-      });
+        2 // rol Responsable Académico
+      );
 
-      const data = response.data;
+      const user = response.data.user;
+      const userAreas = response.data.areas || [];
 
-      setUserExists(data.exists);
-      setRegisteredInOlympiad(data.registered_in_olympiad);
-      setRoleMatches(data.role_matches);
-      setCurrentRole(data.role || "");
+      // Guardamos estado
+      setUserExists(true);
+      setRegisteredInOlympiad(true);
+      setRoleMatches(true);
 
-      //mismo rol + misma olimpiada
-      if (data.exists && data.registered_in_olympiad && data.role_matches) {
-        disablePersonalFields(true);
-        setfirst_name(data.user.first_name);
-        setlast_name(data.user.last_name);
-        setEmail(data.user.email);
-        setphone_number(data.user.phone);
-        setProfesion(data.user.profesion);
-        setgenre(data.user.genre);
-        setAreas(data.areas_ids || []);
-        return;
-      }
+      disablePersonalFields(true);
 
-      // usuario no existe, habilita campos
-      if (!data.exists) {
+      // Cargar datos
+      setfirst_name(user.first_name);
+      setlast_name(user.last_name);
+      setEmail(user.email);
+      setphone_number(user.phone_number);
+      setProfesion(user.profesion);
+      setgenre(user.genre);
+
+      // cargar áreas
+      setAreas(userAreas.map((a: any) => a.id));//hhhhhhhhhhhhhhhhhhhhhh
+
+
+    } catch (error: any) {
+
+      // Caso: usuario NO existe
+      if (error.response?.status === 404) {
+        setUserExists(false);
+        setRegisteredInOlympiad(false);
+        setRoleMatches(false);
+        setfirst_name("");
+        setlast_name("");
+        setEmail("");
+        setphone_number("");
+        setProfesion("");
+        setgenre("");
+
         disablePersonalFields(false);
-        return;
-      }
-
-      // usuario existe pero no está en la olimpiada
-      if (data.exists && !data.registered_in_olympiad) {
-        disablePersonalFields(true);
         setAreas([]);
-        setfirst_name(data.user.first_name);
-        setlast_name(data.user.last_name);
-        setEmail(data.user.email);
-        setphone_number(data.user.phone);
-        setProfesion(data.user.profesion);
-        setgenre(data.user.genre);
+
         return;
       }
 
-      // usuario existe, está en olimpiada y con rol diferente
-      if (data.exists && data.registered_in_olympiad && !data.role_matches) {
-        disablePersonalFields(true);
-        setAreas([]);
-        setfirst_name(data.user.first_name);
-        setlast_name(data.user.last_name);
-        setEmail(data.user.email);
-        setphone_number(data.user.phone);
-        setProfesion(data.user.profesion);
-        setgenre(data.user.genre);
-        return;
-      }
-
-    } catch (error) {
-      alert("Error al buscar usuario");
+      console.error(error);
+      alert("Error al buscar usuario.");
     } finally {
       setIsSearching(false);
     }
   };
-  */}
 
 
 
@@ -241,17 +254,14 @@ export default function AcademicManagerForm() {
         description="Página para registrar Responsable Académico"
       />
       <TitleBreadCrumb pageTitle="Registrar Responsable Académico" />
-      <ComponentCard title="Buscar información del Respinsable académico" className="mb-6">
+      <ComponentCard title="Buscar información del Responsable académico" className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Select olimpiada */}
           <div>
             <Label>Seleccionar Olimpiada</Label>
             <Select
-              options={[
-                { value: "1", label: "Olimpiada 2024" },
-                { value: "2", label: "Olimpiada 2025" },
-              ]}
+              options={olympiadOptions}
               value={olympiadId}
               onChange={setOlympiadId}
               placeholder="Seleccione una olimpiada"
@@ -275,7 +285,7 @@ export default function AcademicManagerForm() {
               type="button"
               variant="outline"
               className="w-full"
-              //onClick={handleSearchUser}
+              onClick={handleSearchUser}
             >
               {isSearching ? "Buscando..." : "Buscar información"}
             </Button>
@@ -382,6 +392,7 @@ export default function AcademicManagerForm() {
                     onChange={(e) => setProfesion(e.target.value)}
                     error={!!errors.profesion}
                     hint={errors.profesion}
+                    disabled={personalDataDisabled}
                   />
                 </div>
               </div>
@@ -408,6 +419,7 @@ export default function AcademicManagerForm() {
                       label="Femenino"
                       checked={genre === "femenino"}
                       onChange={setgenre}
+                      disabled={personalDataDisabled}
                     />
                     <Radio
                       id="genre-m"
@@ -416,6 +428,7 @@ export default function AcademicManagerForm() {
                       label="Masculino"
                       checked={genre === "masculino"}
                       onChange={setgenre}
+                      disabled={personalDataDisabled}
                     />
                   </div>
                   {errors.genre && (
@@ -426,6 +439,7 @@ export default function AcademicManagerForm() {
                 <div>
                   <AreaSelectInputs
                     key={multiSelectKey}
+                    initialSelected={areas_id.map(String)}
                     onChange={(values) => {
                       setAreas(values);
                       setErrors(prev => {
