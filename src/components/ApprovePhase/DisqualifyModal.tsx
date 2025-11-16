@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { Contestant } from "../../types/Contestant";
 import { useEffect } from "react";
 import { AlertHexaIcon } from "../../icons";
+import Button from "../ui/button/Button";
 
 interface DisqualifyModalProps {
     open: boolean;
@@ -49,21 +50,21 @@ export default function DisqualifyModal({
             <div className="absolute inset-0 bg-black/55" onClick={onClose} />
 
             <div className="relative z-10 w-[620px] max-w-[92vw] rounded-xl border border-gray-200 bg-white p-6 shadow-2xl">
-                
+
                 {/* Header */}
                 <div className="mb-4 flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <AlertHexaIcon/>
+                            <AlertHexaIcon />
                             <h2 id="disqualify-title" className="text-lg font-semibold text-gray-900">
-                                Deslasificar Competidor
+                                Desclasificar Competidor
                             </h2>
                         </div>
 
                         {student && (
                             <p className="mt-1 text-sm text-gray-700">
-                                Estás a punto de deslasificar a <strong>{student.first_name} {student.last_name}</strong>.
-                                Esta acción indica que el competidor no ha cumplido con las reglas de ética y 
+                                Se desclasificará a <strong>{student.first_name} {student.last_name}</strong>.
+                                Esta acción indica que el competidor no ha cumplido con las reglas de ética y
                                 comportamiento definidas en la convocatoria.
                             </p>
                         )}
@@ -93,29 +94,28 @@ export default function DisqualifyModal({
                     />
 
                     <p className="mt-1 text-xs text-gray-500">
-                        Este campo es obligatorio y quedará registrado.
+                        Este campo es obligatorio y quedará registrado en la evaluación del competidor.
                     </p>
                 </div>
 
                 {/* Footer */}
                 <div className="mt-6 flex items-center justify-end gap-2">
-                    <button
-                        type="button"
+                    <Button
+                        size="sm"
                         onClick={onClose}
                         disabled={saving}
-                        className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+                        variant="outline"
                     >
                         Cancelar
-                    </button>
-
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
+                        size="sm"
                         onClick={onSave}
                         disabled={saving || draft.trim().length === 0}
-                        className="inline-flex items-center justify-center rounded-md bg-yellow-600 px-4 py-2 text-sm text-white hover:bg-yellow-700 disabled:opacity-50"
+                        variant="primary"
                     >
                         Confirmar Desclasificación
-                    </button>
+                    </Button>
                 </div>
 
             </div>
