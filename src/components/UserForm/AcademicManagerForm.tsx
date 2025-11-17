@@ -26,13 +26,14 @@ export default function AcademicManagerForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [multiSelectKey, setMultiSelectKey] = useState(0);
   const [profesion, setProfesion] = useState("");
+  const [showFormSections, setShowFormSections] = useState(false);
 
   const [olympiadId, setOlympiadId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
   const [userExists, setUserExists] = useState(false);
-  const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
-  const [roleMatches, setRoleMatches] = useState(false);
+  //const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
+  //const [roleMatches, setRoleMatches] = useState(false);
   const [searchAlert, setSearchAlert] = useState<{
     type: "success" | "info" | "warning" | "error";
     title: string;
@@ -71,7 +72,7 @@ export default function AcademicManagerForm() {
 }, []);
 
 
- //Buscar usuario
+  //Buscar usuario
   const handleSearchUser = async () => {
     setSearchErrors({});
     setSearchAlert(null);
@@ -94,28 +95,53 @@ export default function AcademicManagerForm() {
       const user = response.data.user;
       const userAreas = response.data.areas || [];
 
-      disablePersonalFields(true);
+      setUserExists(true);
 
+      disablePersonalFields(true);
       setfirst_name(user.first_name);
       setlast_name(user.last_name);
       setEmail(user.email);
       setphone_number(user.phone_number);
       setProfesion(user.profesion);
       setgenre(user.genre);
-      setAreas(userAreas.map((a: any) => a.id));
 
-      // ALERTA DE ÉXITO
-      setSearchAlert({
-        type: "success",
-        title: "Usuario encontrado",
-        message: "El usuario ya está registrado en esta olimpiada."
-      });
+
+      //Usuario sí está registrado en esta olimpiada
+      if (userAreas.length > 0) {
+        setAreas(userAreas.map((a: any) => a.id));
+        setShowFormSections(true);
+
+        setSearchAlert({
+          type: "success",
+          title: "Usuario encontrado",
+          message: "El usuario ya está registrado en esta olimpiada."
+        });
+
+        return;
+      }
+
+      //Usuario existe PERO NO está registrado en esta olimpiada
+      if (userAreas.length === 0) {
+        setAreas([]);
+        setShowFormSections(true);
+
+        setSearchAlert({
+          type: "info",
+          title: "Usuario no registrado en esta olimpiada",
+          message: "El usuario existe en el sistema, pero NO en la olimpiada seleccionada. Seleccione las áreas para registrarlo."
+        });
+
+        return;
+      }
 
     } catch (error: any) {
 
+      //Usuario NO existe en el sistema
       if (error.response?.status === 404) {
+        setUserExists(false);
         disablePersonalFields(false);
         setAreas([]);
+        
 
         setfirst_name("");
         setlast_name("");
@@ -130,9 +156,11 @@ export default function AcademicManagerForm() {
           message: "El usuario no existe en el sistema. Puede registrar los datos."
         });
 
+        setShowFormSections(true);
         return;
       }
 
+      //Error
       setSearchAlert({
         type: "error",
         title: "Error inesperado",
@@ -143,7 +171,6 @@ export default function AcademicManagerForm() {
       setIsSearching(false);
     }
   };
-
 
 
 
@@ -285,12 +312,16 @@ export default function AcademicManagerForm() {
         <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
           <div>
             <Label>Seleccionar Olimpiada</Label>
-            <Select
-              options={olympiadOptions}
-              value={olympiadId}
-              onChange={setOlympiadId}
-              placeholder="Seleccione una olimpiada"
-            />
+              <Select
+                options={olympiadOptions}
+                value={olympiadId}
+                onChange={setOlympiadId}
+                placeholder="Seleccione una olimpiada"
+              />
+            {searchErrors.olympiad && (
+              <p className="text-xs text-red-500 mt-1">{searchErrors.olympiad}
+              </p>
+            )}
           </div>
 
           <div>
@@ -301,6 +332,8 @@ export default function AcademicManagerForm() {
               placeholder="Ingresa tu CI"
               value={ci}
               onChange={(e) => setCi(e.target.value)}
+              error={!!searchErrors.ci}            // borde rojo
+              hint={searchErrors.ci}
             />
           </div>
 
@@ -329,6 +362,7 @@ export default function AcademicManagerForm() {
 
       </ComponentCard>
 
+      {showFormSections && (
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
@@ -443,7 +477,7 @@ export default function AcademicManagerForm() {
                     />
                   </div>
                   {errors.genre && (
-                    <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
+                    <p className="text-xs text-red-500 mt-1">{errors.genre}</p>
                   )}
                 </div>
 
@@ -474,6 +508,7 @@ export default function AcademicManagerForm() {
           </div>
         </div>
       </form>
+      )}
 
       <Modal
         isOpen={isModalOpen}
