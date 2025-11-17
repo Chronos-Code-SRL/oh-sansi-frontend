@@ -19,6 +19,7 @@ import MarksStudents from "./pages/Grade/GradingContestant";
 import FilterElements from "./pages/Filters/FilterElements";
 import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
 import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
+import RankedContestantsList from "./pages/Lists/RankedContestatsList";
 
 export default function App() {
   return (
@@ -69,6 +70,9 @@ export default function App() {
 
             {/*Approve Phase */}
             <Route path="/aprobar-fase/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<ApprovePhase />} />
+
+            {/*List ranked contestants */}
+            <Route path="/lista-competidores-clasificados/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<RankedContestantsList />} />
 
 
           </Route>

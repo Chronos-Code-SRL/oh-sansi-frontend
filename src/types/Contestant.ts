@@ -51,3 +51,12 @@ export interface FilterList {
     level_name: string;
 }
 
+export interface ConstestantRanked {
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    grade_name: string;
+    classification_status: "clasificado" | "no_clasificado" | "desclasificado" | null;
+    score: number | null;
+}
+
