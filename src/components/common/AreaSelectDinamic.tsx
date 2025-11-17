@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import MultiSelect from "../form/MultiSelect";
 import { Area } from "../../types/Area";
 import { getAreas } from "../../api/services/areaServices";

@@ -30,10 +30,12 @@ export default function AcademicManagerForm() {
 
   const [olympiadId, setOlympiadId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [isEvaluator, setIsEvaluator] = useState(false);
 
   const [userExists, setUserExists] = useState(false);
   //const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
   //const [roleMatches, setRoleMatches] = useState(false);
+  //const [userRealRole, setUserRealRole] = useState<number | null>(null);
   const [searchAlert, setSearchAlert] = useState<{
     type: "success" | "info" | "warning" | "error";
     title: string;
@@ -89,24 +91,23 @@ export default function AcademicManagerForm() {
 
     setIsSearching(true);
 
+    //Busca como responsable
     try {
       const response = await userSearch.searchUser(Number(olympiadId), ci, 2);
-
       const user = response.data.user;
       const userAreas = response.data.areas || [];
 
       setUserExists(true);
+      setIsEvaluator(false);
 
-      disablePersonalFields(true);
       setfirst_name(user.first_name);
       setlast_name(user.last_name);
       setEmail(user.email);
       setphone_number(user.phone_number);
-      setProfesion(user.profesion);
       setgenre(user.genre);
+      setProfesion(user.profesion);
 
-
-      //Usuario sí está registrado en esta olimpiada
+      //Responsable registrado en la olimpiada selccionada
       if (userAreas.length > 0) {
         setAreas(userAreas.map((a: any) => a.id));
         setShowFormSections(true);
@@ -114,58 +115,113 @@ export default function AcademicManagerForm() {
         setSearchAlert({
           type: "success",
           title: "Usuario encontrado",
-          message: "El usuario ya está registrado en esta olimpiada."
+          message: "El usuario ya está registrado como Responsable Académico en esta olimpiada.",
         });
 
         return;
       }
 
-      //Usuario existe PERO NO está registrado en esta olimpiada
-      if (userAreas.length === 0) {
-        setAreas([]);
-        setShowFormSections(true);
+      //Responsable no rsgistrado en la olimpiada seleccionada
+      setAreas([]);
+      setShowFormSections(true);
 
-        setSearchAlert({
-          type: "info",
-          title: "Usuario no registrado en esta olimpiada",
-          message: "El usuario existe en el sistema, pero NO en la olimpiada seleccionada. Seleccione las áreas para registrarlo."
-        });
-
-        return;
-      }
-
-    } catch (error: any) {
-
-      //Usuario NO existe en el sistema
-      if (error.response?.status === 404) {
-        setUserExists(false);
-        disablePersonalFields(false);
-        setAreas([]);
-        
-
-        setfirst_name("");
-        setlast_name("");
-        setEmail("");
-        setphone_number("");
-        setProfesion("");
-        setgenre("");
-
-        setSearchAlert({
-          type: "warning",
-          title: "Nuevo usuario",
-          message: "El usuario no existe en el sistema. Puede registrar los datos."
-        });
-
-        setShowFormSections(true);
-        return;
-      }
-
-      //Error
       setSearchAlert({
-        type: "error",
-        title: "Error inesperado",
-        message: "Ocurrió un error al buscar información."
+        type: "info",
+        title: "Usuario no registrado en esta olimpiada",
+        message:
+          "El usuario existe como Responsable Académico, pero NO está registrado en la olimpiada seleccionada. Seleccione las áreas para registrarlo.",
       });
+
+      return;
+
+    } catch (errorResponsable: any) {
+
+      //No existe como responsable, busca como evaluador
+      if (errorResponsable.response?.status === 404) {
+        try {
+          const response2 = await userSearch.searchUser(Number(olympiadId), ci, 3);
+          const user = response2.data.user;
+          const userAreas = response2.data.areas || [];
+
+          setUserExists(true);
+          setIsEvaluator(true);
+
+          setfirst_name(user.first_name);
+          setlast_name(user.last_name);
+          setEmail(user.email);
+          setphone_number(user.phone_number);
+          setgenre(user.genre);
+
+          setProfesion(user.profesion ?? "");//Profesión editable
+
+          //Evaluador registrado la olimpiada seleccionada
+          if (userAreas.length > 0) {
+            setAreas(userAreas.map((a: any) => a.id));
+            setShowFormSections(true);
+
+            setSearchAlert({
+              type: "success",
+              title: "Registrado como Evaluador",
+              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI desea cambiar a Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
+            });
+
+            return;
+          }
+
+          setAreas([]);
+          setShowFormSections(true);
+
+          setSearchAlert({
+            type: "info",
+            title: "Registrado como Evaluador pero NO en esta olimpiada",
+            message:
+              "El usuario existe como Evaluador pero NO está registrado en esta olimpiada. Puede registrarlo como Responsable Académoco ingresando el dato de Profesión y selecione las Áreas.",
+          });
+
+          return;
+
+        } catch (errorEvaluador: any) {
+
+          // Usuario no existe
+          if (errorEvaluador.response?.status === 404) {
+            setUserExists(false);
+            setIsEvaluator(false);
+
+            setfirst_name("");
+            setlast_name("");
+            setEmail("");
+            setphone_number("");
+            setgenre("");
+            setProfesion("");
+            setAreas([]);
+
+            setShowFormSections(true);
+
+            setSearchAlert({
+              type: "warning",
+              title: "Nuevo usuario",
+              message: "El usuario no existe en el sistema. Puede registrarlo.",
+            });
+
+            return;
+          }
+
+          // Error al buscar como evaluador
+          setSearchAlert({
+            type: "error",
+            title: "Error inesperado",
+            message: "Ocurrió un error al buscar información como Evaluador.",
+          });
+        }
+
+      } else {
+        // Error inesperado al buscar responsable
+        setSearchAlert({
+          type: "error",
+          title: "Error inesperado",
+          message: "Ocurrió un error al buscar información como Responsable.",
+        });
+      }
 
     } finally {
       setIsSearching(false);
@@ -332,7 +388,7 @@ export default function AcademicManagerForm() {
               placeholder="Ingresa tu CI"
               value={ci}
               onChange={(e) => setCi(e.target.value)}
-              error={!!searchErrors.ci}            // borde rojo
+              error={!!searchErrors.ci}           
               hint={searchErrors.ci}
             />
           </div>
@@ -379,7 +435,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu nombre(s)"
                     value={first_name}
                     onChange={(e) => setfirst_name(e.target.value)}
-                    disabled={personalDataDisabled}
+                    disabled={userExists}
                     error={!!errors.first_name}
                     hint={errors.first_name}
                   />
@@ -393,7 +449,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu apellido(s)"
                     value={last_name}
                     onChange={(e) => setlast_name(e.target.value)}
-                    disabled={personalDataDisabled}
+                    disabled={userExists}
                     error={!!errors.last_name}
                     hint={errors.last_name}
                   />
@@ -407,7 +463,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu número de teléfono"
                     value={phone_number}
                     onChange={(e) => setphone_number(e.target.value)}
-                    disabled={personalDataDisabled}
+                    disabled={userExists}
                     error={!!errors.phone_number}
                     hint={errors.phone_number}
                   />
@@ -421,7 +477,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu correo electrónico"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={personalDataDisabled}
+                    disabled={userExists}
                     error={!!errors.email}
                     hint={errors.email}
                   />
@@ -437,7 +493,7 @@ export default function AcademicManagerForm() {
                     onChange={(e) => setProfesion(e.target.value)}
                     error={!!errors.profesion}
                     hint={errors.profesion}
-                    disabled={personalDataDisabled}
+                    disabled={userExists && !isEvaluator}
                   />
                 </div>
               </div>
@@ -464,7 +520,7 @@ export default function AcademicManagerForm() {
                       label="Femenino"
                       checked={genre === "femenino"}
                       onChange={setgenre}
-                      disabled={personalDataDisabled}
+                      disabled={userExists}
                     />
                     <Radio
                       id="genre-m"
@@ -473,7 +529,7 @@ export default function AcademicManagerForm() {
                       label="Masculino"
                       checked={genre === "masculino"}
                       onChange={setgenre}
-                      disabled={personalDataDisabled}
+                      disabled={userExists}
                     />
                   </div>
                   {errors.genre && (
