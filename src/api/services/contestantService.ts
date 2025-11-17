@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { ConstestantRanked, Contestant, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 const CONTESTANTS_URL1 = `/contestants/1`;
@@ -48,3 +48,18 @@ export const getContestantsClassifieds = async (
 
     return res.data;
 };
+
+export const getAwardWinningCompetitors = async (
+  olympiadId: number,
+  areaId: number,
+): Promise<AwardWinningCompetitors[]> => {
+
+  const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+    `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
+  );
+
+  return res.data.contestants; // ✔️ ahora sí devuelves un array
+};
+
+
+

@@ -60,3 +60,16 @@ export interface ConstestantRanked {
     score: number | null;
 }
 
+export interface AwardWinningCompetitorsResponse {
+  contestants: AwardWinningCompetitors[];
+  status: number;
+}
+export interface AwardWinningCompetitors {
+  contestant_id: number;
+  first_name: string;
+  last_name: string;
+  ci_document: string;
+  school_name: string;
+  department: string;
+  classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+}

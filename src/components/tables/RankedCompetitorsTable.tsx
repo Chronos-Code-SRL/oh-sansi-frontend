@@ -21,12 +21,12 @@ export default function ClassifiedByLevelSimple({ idPhase, idOlympiad, idArea }:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [students, setStudents] = useState<Contestant[]>([]);
-  const [selectedFilters, setSelectedFilters] = useState({
-        estado: [] as string[],
-        grado: [] as string[],
-    });
+  // const [searchQuery, setSearchQuery] = useState("");
+  // const [students, setStudents] = useState<Contestant[]>([]);
+  // const [selectedFilters, setSelectedFilters] = useState({
+  //       estado: [] as string[],
+  //       grado: [] as string[],
+  //   });
 
   // 1) Cargar niveles del área → olympiadId + areaId
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function ClassifiedByLevelSimple({ idPhase, idOlympiad, idArea }:
     <div className="mx-auto w-full space-y-4 ">
       <h2 className="block text-left text-lg font-semibold mb-3">Concursantes por nivel</h2>
 
-      <div className="flex items-center flex-grow">
+      {/* <div className="flex items-center flex-grow">
         <SearchBar
             onSearch={setSearchQuery}
             placeholder="Buscar por nombre, apellido o CI..."
@@ -100,7 +100,7 @@ export default function ClassifiedByLevelSimple({ idPhase, idOlympiad, idArea }:
             selectedFilters={selectedFilters}
             setSelectedFilters={setSelectedFilters}
         />
-      </div>
+      </div> */}
 
       <div className="mt-6 overflow-x-auto rounded-xl ">
         <Table className="min-w-full border border-gray-200 text-sm text-center">

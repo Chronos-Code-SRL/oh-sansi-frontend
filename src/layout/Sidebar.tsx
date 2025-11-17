@@ -38,6 +38,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,
     UPermission.RANKED_CONTESTANTS_LIST,
+    UPermission.AWARDED_CONTESTANTS_LIST,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -104,10 +105,17 @@ const navItems: NavItem[] = [
   },
   {
     icon: <CheckLineIcon />,
-    name: "Lista de competidores Clasificados",
+    name: "Lista de Competidores Clasificados",
     path: "/lista-competidores-clasificados",
     subItems: [],
     permission: UPermission.RANKED_CONTESTANTS_LIST,
+  },
+  {
+    icon: <CheckLineIcon />,
+    name: "Lista de Competidores Premiados",
+    path: "/lista-competidores-premiados",
+    subItems: [],
+    permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
 ];
 const othersItems: NavItem[] = [];
@@ -320,7 +328,7 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
 
-      if (item.name === "Lista de competidores Clasificados") {
+      if (item.name === "Lista de Competidores Clasificados") {
         if (userAreas.length > 0) {
           const areasWithPhases = userAreas.map((area) => {
             const olympiadId = area.path.split("/")[2];
@@ -348,6 +356,27 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
+
+      if (item.name === "Lista de Competidores Premiados") {
+        if (userAreas.length > 0) {
+          const areasOnly = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/lista-competidores-premiados/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`
+            };
+          });
+
+          return { ...item, subItems: areasOnly };
+        }
+
+        return { ...item, subItems: item.subItems };
+      }
+
 
       return item;
     });

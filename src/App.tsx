@@ -20,6 +20,7 @@ import FilterElements from "./pages/Filters/FilterElements";
 import { SelectOlympiad } from "./pages/Home/SelectOlympiad";
 import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
 import RankedContestantsList from "./pages/Lists/RankedContestatsList";
+import AwardedList from "./pages/Lists/AwardedList";
 
 export default function App() {
   return (
@@ -73,6 +74,10 @@ export default function App() {
 
             {/*List ranked contestants */}
             <Route path="/lista-competidores-clasificados/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<RankedContestantsList />} />
+
+            {/*Awarded List contestants */}
+            <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} />
+
 
 
           </Route>
