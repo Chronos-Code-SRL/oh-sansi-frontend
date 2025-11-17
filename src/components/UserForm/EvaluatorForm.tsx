@@ -315,7 +315,7 @@ export default function EvaluatorForm() {
           <div className="flex items-center mt-4">
             <Button
               type="button"
-              variant="outline"
+              variant="primary"
               className="w-full px-4"
               onClick={handleSearchUser}
             >
