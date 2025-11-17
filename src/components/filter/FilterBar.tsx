@@ -237,7 +237,7 @@ export const FilterBar: React.FC = () => {
         </div>
 
 
-        {/* 🔹 Tabla de resultados */}
+        {/*Tabla de resultados */}
         <div className="mt-6 overflow-x-auto rounded-xl ">
           {loading ? (
             <p className="text-gray-500 text-center">Cargando datos...</p>

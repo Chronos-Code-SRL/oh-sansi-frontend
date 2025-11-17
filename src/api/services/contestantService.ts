@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, EvaluationDelta, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { Contestant, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -29,8 +29,21 @@ export async function checkUpdates(lastUpdateAt?: string | null) {
         headers: { "Cache-Control": "no-cache" },
     });
     return res.data as {
-        new_evaluations: EvaluationDelta[];
+        new_evaluations: Evaluation[];
         last_updated_at: string;
         status: number;
     };
 }
+
+//Conteo de concursantes por estado de clasificación
+export const getContestantStats = async (
+    olympiadId: number,
+    areaId: number,
+    phaseId: number,
+    levelId: number
+): Promise<ContestantStats> => {
+    const res = await ohSansiApi.get<ContestantStats>(
+        `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
+    );
+    return res.data;
+};

@@ -1,3 +1,5 @@
+// Nota: Se usan uniones de string para clasificación; enums importados no son necesarios
+
 export interface Contestant {
     evaluation_id: number;
     contestant_id: number;
@@ -12,6 +14,8 @@ export interface Contestant {
     level_name: string;
     grade_name: string;
     status: boolean;
+    classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
+    classification_place: string | null;
 }
 
 //Type for comment and score update
@@ -26,7 +30,10 @@ export interface Evaluation {
     score: number | null;
     status: boolean;
     description: string | null;
-    updated_at: string; // ISO
+    updated_at: string;
+    evaluation_id?: number; // algunos endpoints devuelven evaluation_id en vez de id
+    classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
+    classification_place?: number | null;
 }
 
 export interface FilterList {
@@ -44,14 +51,9 @@ export interface FilterList {
     level_name: string;
 }
 
-//Type for check updates response
-export type EvaluationDelta = {
-    id_evaluation: number;
-    registration_id: number;
-    contestant_id: number;
-    score: number | null;
-    description: string | null;
-    status: boolean;
-    created_at: string;
-    updated_at: string;
-};
+export interface ContestantStats {
+    total: number;
+    classified: number;
+    no_classified: number;
+    disqualified: number;
+}
