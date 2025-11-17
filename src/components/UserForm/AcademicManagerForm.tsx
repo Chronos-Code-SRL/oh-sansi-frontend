@@ -6,11 +6,12 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
+import AreaSelectDinamic from "../../components/common/AreaSelectDinamic";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
 import Select from "../../components/form/Select";
 import { userSearch } from "../../api/services/userSearchService"
+import Alert from "../../components/ui/alert/Alert";
 
 export default function AcademicManagerForm() {
   const [first_name, setfirst_name] = useState("");
@@ -32,6 +33,13 @@ export default function AcademicManagerForm() {
   const [userExists, setUserExists] = useState(false);
   const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
   const [roleMatches, setRoleMatches] = useState(false);
+  const [searchAlert, setSearchAlert] = useState<{
+    type: "success" | "info" | "warning" | "error";
+    title: string;
+    message: string;
+  } | null>(null);
+  const [searchErrors, setSearchErrors] = useState<{ olympiad?: string; ci?: string }>({});
+
   //const [currentRole, setCurrentRole] = useState("");
 
   const [personalDataDisabled, setPersonalDataDisabled] = useState(false);
@@ -65,48 +73,50 @@ export default function AcademicManagerForm() {
 
  //Buscar usuario
   const handleSearchUser = async () => {
-    if (!ci.trim() || !olympiadId) {
-      alert("Debe ingresar CI y seleccionar una Olimpiada.");
+    setSearchErrors({});
+    setSearchAlert(null);
+
+    let newErrors: any = {};
+
+    if (!olympiadId) newErrors.olympiad = "Debe seleccionar una olimpiada.";
+    if (!ci.trim()) newErrors.ci = "Debe ingresar un CI.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setSearchErrors(newErrors);
       return;
     }
 
     setIsSearching(true);
 
     try {
-      const response = await userSearch.searchUser(
-        Number(olympiadId),
-        ci,
-        2 
-      );
+      const response = await userSearch.searchUser(Number(olympiadId), ci, 2);
 
       const user = response.data.user;
       const userAreas = response.data.areas || [];
 
-      // Guardamos estado
-      setUserExists(true);
-      setRegisteredInOlympiad(true);
-      setRoleMatches(true);
-
       disablePersonalFields(true);
 
-      // Cargar datos
       setfirst_name(user.first_name);
       setlast_name(user.last_name);
       setEmail(user.email);
       setphone_number(user.phone_number);
       setProfesion(user.profesion);
       setgenre(user.genre);
+      setAreas(userAreas.map((a: any) => a.id));
 
-      setAreas(userAreas.map((a: any) => a.id)); // cargar áreas
-
+      // ALERTA DE ÉXITO
+      setSearchAlert({
+        type: "success",
+        title: "Usuario encontrado",
+        message: "El usuario ya está registrado en esta olimpiada."
+      });
 
     } catch (error: any) {
 
-      // cuando el usuario no existe.
       if (error.response?.status === 404) {
-        setUserExists(false);
-        setRegisteredInOlympiad(false);
-        setRoleMatches(false);
+        disablePersonalFields(false);
+        setAreas([]);
+
         setfirst_name("");
         setlast_name("");
         setEmail("");
@@ -114,14 +124,21 @@ export default function AcademicManagerForm() {
         setProfesion("");
         setgenre("");
 
-        disablePersonalFields(false);
-        setAreas([]);
+        setSearchAlert({
+          type: "warning",
+          title: "Nuevo usuario",
+          message: "El usuario no existe en el sistema. Puede registrar los datos."
+        });
 
         return;
       }
 
-      console.error(error);
-      alert("Error al buscar usuario.");
+      setSearchAlert({
+        type: "error",
+        title: "Error inesperado",
+        message: "Ocurrió un error al buscar información."
+      });
+
     } finally {
       setIsSearching(false);
     }
@@ -202,8 +219,12 @@ export default function AcademicManagerForm() {
       return;
     }
 
-    try {
-      const datos = {
+    const isNewUser = !userExists;
+
+    let datos;
+
+    if (isNewUser) {
+      datos = {
         first_name,
         last_name,
         ci,
@@ -216,9 +237,19 @@ export default function AcademicManagerForm() {
         olympiad_id: olympiadId,
       };
 
+      } else {
+      datos = {
+        ci,
+        roles_id,
+        areas_id,
+        olympiad_id: olympiadId,
+      };
+    }
+
+    try {
       const resultado = await registerApi.postRegister(datos);
 
-      if (resultado.status === 201) {
+      if (resultado.status === 201 || resultado.status === 200) {
         setIsModalOpen(true);
         resetForm();
       }
@@ -286,29 +317,16 @@ export default function AcademicManagerForm() {
         </div>
 
         {/* Alertas */}
-        {userExists && registeredInOlympiad && roleMatches && (
-          <p className="text-green-600 mt-2">
-            El usuario ya está registrado en esta olimpiada con este rol.
-          </p>
+        {searchAlert && (
+          <div className="mt-4">
+            <Alert
+              variant={searchAlert.type}
+              title={searchAlert.title}
+              message={searchAlert.message}
+            />
+          </div>
         )}
 
-        {userExists && !registeredInOlympiad && (
-          <p className="text-blue-600 mt-2">
-            El usuario existe, pero NO está registrado en esta olimpiada.
-          </p>
-        )}
-
-        {/*{userExists && registeredInOlympiad && !roleMatches && (
-          <p className="text-yellow-600 mt-2">
-            El usuario está registrado con el rol: {currentRole}. Se actualizará el rol.
-          </p>
-        )}*/}
-
-        {!userExists && ci.length > 5 && (
-          <p className="text-purple-600 mt-2">
-            Usuario nuevo. Puede registrar todos los datos.
-          </p>
-        )}
       </ComponentCard>
 
       <form onSubmit={handleSubmit}>
@@ -430,7 +448,7 @@ export default function AcademicManagerForm() {
                 </div>
 
                 <div>
-                  <AreaSelectInputs
+                  <AreaSelectDinamic
                     key={multiSelectKey}
                     initialSelected={areas_id.map(String)}
                     onChange={(values) => {

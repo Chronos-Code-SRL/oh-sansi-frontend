@@ -16,16 +16,6 @@ export default function AreaSelectInputs({ onChange, error, initialSelected = []
     const [areas, setAreas] = useState<Area[]>([]);
     const [loading, setLoading] = useState(true);
 
-    //Actualiza la selección automática de las areas de un usuario
-    useEffect(() => {
-        if (
-            initialSelected.length > 0 &&
-            JSON.stringify(initialSelected) !== JSON.stringify(selectedValues)
-        ) {
-            setSelectedValues(initialSelected);
-        }
-    }, [initialSelected]);
-
     useEffect(() => {
         const fetchAreas = async () => {
             try {
@@ -58,7 +48,6 @@ export default function AreaSelectInputs({ onChange, error, initialSelected = []
     return (
         <div className="space-y-2">
             <MultiSelect
-                key={selectedValues.join("-")} //para el montaje de areas registradas de un usuario
                 label="Seleccionar Área(s)"
                 options={multiOptions}
                 defaultSelected={initialSelected}
