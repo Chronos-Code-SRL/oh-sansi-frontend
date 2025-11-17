@@ -291,22 +291,25 @@ export default function AcademicManagerForm() {
     setgenre("");
     setAreas([]);
     setErrors({});
-    setMultiSelectKey((prev) => prev + 1);
+    setSearchErrors({});
+    setSearchAlert(null);
+    setMultiSelectKey(prev => prev + 1);
     disablePersonalFields(false);
-  };
+    setOlympiadId("");
+    setShowFormSections(false);
+    setIsEvaluator(false);
+    setUserExists(false);
+    };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
-
-    const isNewUser = !userExists;
+    if (!validateForm()) return;
 
     let datos;
 
-    if (isNewUser) {
+    if (!userExists) {
       datos = {
         first_name,
         last_name,
@@ -319,10 +322,32 @@ export default function AcademicManagerForm() {
         profesion,
         olympiad_id: olympiadId,
       };
+    }
 
-      } else {
+    else if (isEvaluator) {
       datos = {
+        first_name,
+        last_name,
         ci,
+        phone_number,
+        email,
+        genre,
+        profesion,     
+        roles_id,      
+        areas_id,
+        olympiad_id: olympiadId,
+      };
+    }
+
+    else {
+      datos = {
+        first_name,
+        last_name,
+        ci,
+        phone_number,
+        email,
+        genre,
+        profesion,
         roles_id,
         areas_id,
         olympiad_id: olympiadId,
@@ -338,20 +363,24 @@ export default function AcademicManagerForm() {
       }
 
     } catch (error: any) {
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
+        if (error.response) {
+        const backendMessage = error.response.data?.message || "";
 
-        if (status === 400) {
-          setErrors(data.error);
+        if (
+          backendMessage.includes("duplicate key") ||
+          backendMessage.includes("llave duplicada") ||
+          backendMessage.includes("unique constraint") ||
+          backendMessage.toLowerCase().includes("email")
+        ) {
+          setErrors({ email: "Este correo ya está registrado en el sistema." });
+          return;
         }
 
-        if (status === 500) {
-          alert(data.message)
-        }
-      } else {
-        alert("Error de conexión con el servidor");
+        setErrors(error.response.data.error || {});
+        return;
       }
+
+      alert("Error de conexión con el servidor");
     }
   };
 
