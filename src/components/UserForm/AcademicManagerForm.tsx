@@ -45,11 +45,6 @@ export default function AcademicManagerForm() {
 
   //const [currentRole, setCurrentRole] = useState("");
 
-  const [personalDataDisabled, setPersonalDataDisabled] = useState(false);
-
-  const disablePersonalFields = (value: boolean) => { //función para habilitar campos
-    setPersonalDataDisabled(value);
-  };
 
   const [olympiadOptions, setOlympiadOptions] = useState([]);
 
@@ -115,7 +110,7 @@ export default function AcademicManagerForm() {
         setSearchAlert({
           type: "success",
           title: "Usuario encontrado",
-          message: "El usuario ya está registrado como Responsable Académico en esta olimpiada.",
+          message: "El usuario ya está registrado como Responsable Académico en esta olimpiada. Puede editar las áreas.",
         });
 
         return;
@@ -294,7 +289,6 @@ export default function AcademicManagerForm() {
     setSearchErrors({});
     setSearchAlert(null);
     setMultiSelectKey(prev => prev + 1);
-    disablePersonalFields(false);
     setOlympiadId("");
     setShowFormSections(false);
     setIsEvaluator(false);
