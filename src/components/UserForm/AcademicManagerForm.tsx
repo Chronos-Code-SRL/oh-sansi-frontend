@@ -32,7 +32,7 @@ export default function AcademicManagerForm() {
   const [userExists, setUserExists] = useState(false);
   const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
   const [roleMatches, setRoleMatches] = useState(false);
-  const [currentRole, setCurrentRole] = useState("");
+  //const [currentRole, setCurrentRole] = useState("");
 
   const [personalDataDisabled, setPersonalDataDisabled] = useState(false);
 
@@ -63,7 +63,7 @@ export default function AcademicManagerForm() {
 }, []);
 
 
- //función para buscar usuario
+ //Buscar usuario
   const handleSearchUser = async () => {
     if (!ci.trim() || !olympiadId) {
       alert("Debe ingresar CI y seleccionar una Olimpiada.");
@@ -73,11 +73,10 @@ export default function AcademicManagerForm() {
     setIsSearching(true);
 
     try {
-      // === LLAMADA REAL ===
       const response = await userSearch.searchUser(
         Number(olympiadId),
         ci,
-        2 // rol Responsable Académico
+        2 
       );
 
       const user = response.data.user;
@@ -98,13 +97,12 @@ export default function AcademicManagerForm() {
       setProfesion(user.profesion);
       setgenre(user.genre);
 
-      // cargar áreas
-      setAreas(userAreas.map((a: any) => a.id));//hhhhhhhhhhhhhhhhhhhhhh
+      setAreas(userAreas.map((a: any) => a.id)); // cargar áreas
 
 
     } catch (error: any) {
 
-      // Caso: usuario NO existe
+      // cuando el usuario no existe.
       if (error.response?.status === 404) {
         setUserExists(false);
         setRegisteredInOlympiad(false);
@@ -232,12 +230,9 @@ export default function AcademicManagerForm() {
 
         if (status === 400) {
           setErrors(data.error);
-          //alert("Errores en el formulario, revisa los campos.");
-          //alert(data.message)
         }
 
         if (status === 500) {
-          //alert(data.message || "Error interno al crear el usuario");
           alert(data.message)
         }
       } else {
@@ -255,9 +250,8 @@ export default function AcademicManagerForm() {
       />
       <TitleBreadCrumb pageTitle="Registrar Responsable Académico" />
       <ComponentCard title="Buscar información del Responsable académico" className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* Select olimpiada */}
+        
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
           <div>
             <Label>Seleccionar Olimpiada</Label>
             <Select
@@ -268,7 +262,6 @@ export default function AcademicManagerForm() {
             />
           </div>
 
-          {/* CI */}
           <div>
             <Label>Carnet de Identidad</Label>
             <InputField
@@ -280,11 +273,11 @@ export default function AcademicManagerForm() {
             />
           </div>
 
-          <div className="md:col-span-2 flex justify-start">
+          <div className="flex items-center mt-4">
             <Button
               type="button"
               variant="outline"
-              className="w-full"
+              className="w-full px-4"
               onClick={handleSearchUser}
             >
               {isSearching ? "Buscando..." : "Buscar información"}
@@ -292,28 +285,28 @@ export default function AcademicManagerForm() {
           </div>
         </div>
 
-        {/* Mensajes dinámicos */}
+        {/* Alertas */}
         {userExists && registeredInOlympiad && roleMatches && (
           <p className="text-green-600 mt-2">
-            ✔ El usuario ya está registrado en esta olimpiada con este rol.
+            El usuario ya está registrado en esta olimpiada con este rol.
           </p>
         )}
 
         {userExists && !registeredInOlympiad && (
           <p className="text-blue-600 mt-2">
-            ℹ El usuario existe, pero NO está registrado en esta olimpiada.
+            El usuario existe, pero NO está registrado en esta olimpiada.
           </p>
         )}
 
-        {userExists && registeredInOlympiad && !roleMatches && (
+        {/*{userExists && registeredInOlympiad && !roleMatches && (
           <p className="text-yellow-600 mt-2">
-            ⚠ El usuario está registrado con el rol: {currentRole}. Se actualizará el rol.
+            El usuario está registrado con el rol: {currentRole}. Se actualizará el rol.
           </p>
-        )}
+        )}*/}
 
         {!userExists && ci.length > 5 && (
           <p className="text-purple-600 mt-2">
-            ➕ Usuario nuevo. Puede registrar todos los datos.
+            Usuario nuevo. Puede registrar todos los datos.
           </p>
         )}
       </ComponentCard>
@@ -321,7 +314,7 @@ export default function AcademicManagerForm() {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-          <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
+          <div className="space-y-6" tabIndex={1}> 
 
             <ComponentCard title="Ingrese información" className="mb-6">
               <div className="grid grid-cols-1 gap-6">
@@ -399,7 +392,7 @@ export default function AcademicManagerForm() {
             </ComponentCard>
           </div>
 
-          <div className="space-y-6" tabIndex={2}> {/*Columna derecha*/}
+          <div className="space-y-6" tabIndex={2}> 
             <ComponentCard title="Seleccione">
               <div className="grid grid-cols-1 gap-6">
 
