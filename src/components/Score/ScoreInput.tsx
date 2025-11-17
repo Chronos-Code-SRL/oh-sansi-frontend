@@ -5,6 +5,7 @@ import InputField from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
 import { scoreCutsService } from "../../api/services/ScoreCutsService";
+import { CheckLineIcon, CloseLineIcon } from "../../icons";
 
 interface ScoreInputProps {
   olympiadId: number;
@@ -28,7 +29,10 @@ export default function ScoreInput({
   const [error, setError] = useState("");
   const [successModal, setSuccessModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [saveType, setSaveType] = useState<"umbral" | "maxima" | null>(null);
+  const [_saveType, setSaveType] = useState<"umbral" | "maxima" | null>(null);
+  const [editingMin, setEditingMin] = useState(false);
+  const [editingMax, setEditingMax] = useState(false);
+
 
   useEffect(() => {
     const fetchScores = async () => {
@@ -101,88 +105,127 @@ export default function ScoreInput({
   };
 
   return (
-    <>
-      <ComponentCard title="Nota de Clasificación">
-        <div className="flex flex-col gap-8">
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-              <div>
-                <Label htmlFor="currentMinScore">Umbral actual</Label>
-                <InputField
-                  id="currentMinScore"
-                  type="number"
-                  value={currentMinScore}
-                  disabled
-                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 w-full"
-                />
+  <>
+    <div className="w-full flex justify-center">
+        <ComponentCard
+          title="Nota de Clasificación"
+          className="max-w-3xl w-full mx-auto rounded-2xl p-4 shadow-lg"
+        >
+          <div className="flex flex-col gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="flex flex-col gap-4">
+                <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                  <p className="text-gray-600 dark:text-gray-300 text-xs">Umbral actual</p>
+                  <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{currentMinScore}</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
+
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
+                    <InputField
+                      id="minScore"
+                      type="number"
+                      value={minScore}
+                      onChange={(e) => {
+                        setMinScore(Number(e.target.value));
+                        setEditingMin(true);
+                      }}
+                      placeholder="Ej. 60"
+                      className="flex-1"
+                    />
+
+                    {editingMin && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => {
+                            setEditingMin(false);    
+                            handleUpdateWithType("umbral");
+                          }}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        >
+                          <CheckLineIcon className="usersize-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => {
+                            setMinScore(currentMinScore);
+                            setEditingMin(false);
+                          }}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        >
+                          <CloseLineIcon className="size-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
-                <InputField
-                  id="minScore"
-                  type="number"
-                  value={minScore}
-                  onChange={(e) => setMinScore(Number(e.target.value))}
-                  placeholder="Ej. 60"
-                />
+              <div className="flex flex-col gap-4">
+
+                <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+                  <p className="text-gray-600 dark:text-gray-300 text-xs">Nota máxima actual</p>
+                  <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{currentMaxScore}</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="maxScore">Nueva nota máxima</Label>
+
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
+                    <InputField
+                      id="maxScore"
+                      type="number"
+                      value={maxScore}
+                      onChange={(e) => {
+                        setMaxScore(Number(e.target.value));
+                        setEditingMax(true);
+                      }}
+                      placeholder="Ej. 100"
+                      className="flex-1"
+                    />
+
+                    {editingMax && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => {
+                            setEditingMax(false); 
+                            handleUpdateWithType("maxima");
+                          }}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        >
+                          <CheckLineIcon className="usersize-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => {
+                            setMaxScore(currentMaxScore);
+                            setEditingMax(false);
+                          }}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        >
+                          <CloseLineIcon className="usersize-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex justify-end">
-                <Button
-                  size="md"
-                  variant="primary"
-                  disabled={loading}
-                  onClick={() => handleUpdateWithType("umbral")}
-                  className="w-full sm:w-auto mt-2"
-                >
-                  {loading && saveType === "umbral" ? "Guardando..." : "Guardar"}
-                </Button>
-              </div>
             </div>
+
+            {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
           </div>
-
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-              <div>
-                <Label htmlFor="currentMaxScore">Nota máxima actual</Label>
-                <InputField
-                  id="currentMaxScore"
-                  type="number"
-                  value={currentMaxScore}
-                  disabled
-                  className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 w-full"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="maxScore">Nueva nota máxima</Label>
-                <InputField
-                  id="maxScore"
-                  type="number"
-                  value={maxScore}
-                  onChange={(e) => setMaxScore(Number(e.target.value))}
-                  placeholder="Ej. 100"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  size="md"
-                  variant="primary"
-                  disabled={loading}
-                  onClick={() => handleUpdateWithType("maxima")}
-                  className="w-full sm:w-auto mt-2"
-                >
-                  {loading && saveType === "maxima" ? "Guardando..." : "Guardar"}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-        </div>
-      </ComponentCard>
+        </ComponentCard>
+      </div>
 
       <Modal
         isOpen={successModal}
@@ -196,6 +239,7 @@ export default function ScoreInput({
           <p className="text-sm text-gray-600 dark:text-gray-300">
             Los valores fueron actualizados exitosamente.
           </p>
+
           <Button
             variant="primary"
             className="w-full mt-4"

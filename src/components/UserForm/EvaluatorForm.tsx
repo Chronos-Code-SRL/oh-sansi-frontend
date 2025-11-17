@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
@@ -6,26 +6,171 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
+import Select from "../../components/form/Select";
+import AreaSelectDinamic from "../../components/common/AreaSelectDinamic";
+import Alert from "../../components/ui/alert/Alert";
 
-import { registerApi } from "../../api/services/postRegisterUser"
-import { Modal } from "../../components/ui/modal/index";
-import AreaSelectInputs from "../common/AreaSelectInputs ";
+import { registerApi } from "../../api/services/postRegisterUser";
+import { userSearch } from "../../api/services/userSearchService";
+import { Modal } from "../../components/ui/modal";
 
 export default function EvaluatorForm() {
+
   const [first_name, setfirst_name] = useState("");
   const [last_name, setlast_name] = useState("");
   const [ci, setCi] = useState("");
   const [phone_number, setphone_number] = useState("");
   const [email, setEmail] = useState("");
   const [genre, setgenre] = useState("");
-  const [roles_id] = useState("3");
   const [areas_id, setAreas] = useState<string[]>([]);
+  const [roles_id] = useState("3"); 
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
+  const [searchAlert, setSearchAlert] = useState<{
+    type: "success" | "warning" | "error" | "info";
+    title: string;
+    message: string;
+  } | null>(null);
+
+  const [isSearching, setIsSearching] = useState(false);
+  const [showFormSections, setShowFormSections] = useState(false);
+  const [userExists, setUserExists] = useState(false);
+  const [_isResponsible, setIsResponsible] = useState(false);
+  const [_isEvaluator, setIsEvaluator] = useState(false);
+
+  const [olympiadId, setOlympiadId] = useState("");
+  const [olympiadOptions, setOlympiadOptions] = useState([]);
+
   const [multiSelectKey, setMultiSelectKey] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
-  {/*Validaciones*/ }
+
+  useEffect(() => {
+    const loadOlympiads = async () => {
+      try {
+        const res = await userSearch.getOlympiadsActiveOrPlanning();
+        const list = res.data.data || [];
+
+        setOlympiadOptions(
+          list.map((o: any) => ({
+            value: o.id.toString(),
+            label: o.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error cargando olimpiadas");
+      }
+    };
+
+    loadOlympiads();
+  }, []);
+
+
+  const handleSearchUser = async () => {
+    setSearchErrors({});
+    setSearchAlert(null);
+
+    let newErrors: any = {};
+
+    if (!olympiadId) newErrors.olympiad = "Debe seleccionar una olimpiada.";
+    if (!ci.trim()) newErrors.ci = "Debe ingresar un CI.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setSearchErrors(newErrors);
+      return;
+    }
+
+    setIsSearching(true);
+
+    try {
+      //Buscar como Evaluador
+      try {
+        const resEvaluator = await userSearch.searchUser(Number(olympiadId), ci, 3);
+        const user = resEvaluator.data.user;
+        const userAreas = resEvaluator.data.areas || [];
+
+        setUserExists(true);
+        setIsEvaluator(true);
+        setIsResponsible(false);
+
+        setfirst_name(user.first_name);
+        setlast_name(user.last_name);
+        setEmail(user.email);
+        setphone_number(user.phone_number);
+        setgenre(user.genre);
+
+        if (userAreas.length > 0) {
+          setAreas(userAreas.map((a: any) => a.id));
+          setSearchAlert({
+            type: "success",
+            title: "Usuario encontrado",
+            message: "El usuario está registrado como Evaluador en esta olimpiada. Puede editar las áreas.",
+          });
+          setShowFormSections(true);
+          return;
+        }
+
+        setAreas([]);
+        setSearchAlert({
+          type: "info",
+          title: "No registrado en esta olimpiada",
+          message: "Este usuario es Evaluador, pero NO está registrado en esta olimpiada. Seleccione las áreas para registrarlo.",
+        });
+        setShowFormSections(true);
+        return;
+
+      } catch (_) {
+      }
+
+      //Buscar como Responsable (NO permitir)
+      try {
+        await userSearch.searchUser(Number(olympiadId), ci, 2);
+
+        setIsResponsible(true);
+        setUserExists(true);
+        setIsEvaluator(false);
+
+        setSearchAlert({
+          type: "error",
+          title: "Cambio de Rol no permitido",
+          message: "Este usuario es Responsable Académico. No puede registrarse como Evaluador.",
+        });
+
+        setShowFormSections(false);
+        return;
+
+      } catch (_) {
+      }
+
+      //Nuevo usuario
+      setUserExists(false);
+      setIsEvaluator(false);
+      setIsResponsible(false);
+
+      setfirst_name("");
+      setlast_name("");
+      setEmail("");
+      setphone_number("");
+      setgenre("");
+      setAreas([]);
+
+      setShowFormSections(true);
+
+      setSearchAlert({
+        type: "warning",
+        title: "Nuevo usuario",
+        message: "El usuario no existe en el sistema. Puede registrarlo como Evaluador.",
+      });
+
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -69,6 +214,7 @@ export default function EvaluatorForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+
   const resetForm = () => {
     setfirst_name("");
     setlast_name("");
@@ -78,71 +224,126 @@ export default function EvaluatorForm() {
     setgenre("");
     setAreas([]);
     setErrors({});
-    setMultiSelectKey((prev) => prev + 1);
+    setSearchErrors({});
+    setSearchAlert(null);
+    setShowFormSections(false);
+    setOlympiadId("");
+    setUserExists(false);
+    setIsEvaluator(false);
+    setIsResponsible(false);
+    setMultiSelectKey(prev => prev + 1);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
+
+    let datos = {
+      first_name,
+      last_name,
+      ci,
+      phone_number,
+      email,
+      genre,
+      roles_id,
+      areas_id,
+      olympiad_id: olympiadId,
+    };
 
     try {
-      const datos = {
-        first_name,
-        last_name,
-        ci,
-        phone_number,
-        email,
-        genre,
-        roles_id,
-        areas_id,
-      };
+      const res = await registerApi.postRegister(datos);
 
-      const resultado = await registerApi.postRegister(datos);
-
-      if (resultado.status === 201) {
+      if (res.status === 201 || res.status === 200) {
         setIsModalOpen(true);
         resetForm();
       }
 
     } catch (error: any) {
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
+      const backendMessage = error.response?.data?.message || "";
 
-        if (status === 400) {
-          setErrors(data.error);
-          //alert("Errores en el formulario, revisa los campos.");
-          //alert(data.message)
-        }
-
-        if (status === 500) {
-          //alert(data.message || "Error interno al crear el usuario");
-          alert(data.message)
-        }
-      } else {
-        alert("Error de conexión con el servidor");
+      if (
+        backendMessage.includes("duplicate") ||
+        backendMessage.includes("llave duplicada") ||
+        backendMessage.includes("unique") ||
+        backendMessage.toLowerCase().includes("email")
+      ) {
+        setErrors({ email: "Este correo ya está registrado en el sistema." });
+        return;
       }
+
+      setErrors(error.response?.data?.error || {});
     }
   };
 
-  
+
   return (
     <>
-      <PageMeta
-        title="Registro | Oh! SanSi"
-        description="Página para registrar evaluadores"
-      />
+      <PageMeta title="Registro | Oh! SanSi" description="Página para registrar Evaluadores" />
       <TitleBreadCrumb pageTitle="Registrar Evaluador" />
 
+      <ComponentCard title="Buscar información del Evaluador" className="mb-6">
+       <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
+          <div>
+            <Label>Seleccionar Olimpiada</Label>
+              <Select
+                options={olympiadOptions}
+                value={olympiadId}
+                onChange={setOlympiadId}
+                placeholder="Seleccione una olimpiada"
+              />
+            {searchErrors.olympiad && (
+              <p className="text-xs text-red-500 mt-1">{searchErrors.olympiad}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label>Carnet de Identidad</Label>
+            <InputField
+              id="ci"
+              type="text"
+              placeholder="Ingresa tu CI"
+              value={ci}
+              onChange={(e) => setCi(e.target.value)}
+              error={!!searchErrors.ci}           
+              hint={searchErrors.ci}
+            />
+          </div>
+
+          <div className="flex items-center mt-4">
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full px-4"
+              onClick={handleSearchUser}
+            >
+              {isSearching ? "Buscando..." : "Buscar información"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Alertas */}
+        {searchAlert && (
+          <div className="mt-4">
+            <Alert
+              variant={searchAlert.type}
+              title={searchAlert.title}
+              message={searchAlert.message}
+            />
+          </div>
+        )}
+
+      </ComponentCard>
+
+      {showFormSections && (
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-          <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
+          <div className="space-y-6" tabIndex={1}> 
 
-            <ComponentCard title="Ingrese información">
+            <ComponentCard title="Ingrese información" className="mb-6">
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
@@ -153,6 +354,7 @@ export default function EvaluatorForm() {
                     placeholder="Ingresa tu nombre(s)"
                     value={first_name}
                     onChange={(e) => setfirst_name(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.first_name}
                     hint={errors.first_name}
                   />
@@ -166,21 +368,9 @@ export default function EvaluatorForm() {
                     placeholder="Ingresa tu apellido(s)"
                     value={last_name}
                     onChange={(e) => setlast_name(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.last_name}
                     hint={errors.last_name}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="ci">Carnet de Identidad</Label>
-                  <InputField
-                    id="ci"
-                    type="text"
-                    placeholder="Ingresa tu número de carnet de identidad"
-                    value={ci}
-                    onChange={(e) => setCi(e.target.value)}
-                    error={!!errors.ci}
-                    hint={errors.ci}
                   />
                 </div>
 
@@ -192,6 +382,7 @@ export default function EvaluatorForm() {
                     placeholder="Ingresa tu número de teléfono"
                     value={phone_number}
                     onChange={(e) => setphone_number(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.phone_number}
                     hint={errors.phone_number}
                   />
@@ -205,6 +396,7 @@ export default function EvaluatorForm() {
                     placeholder="Ingresa tu correo electrónico"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.email}
                     hint={errors.email}
                   />
@@ -213,7 +405,7 @@ export default function EvaluatorForm() {
             </ComponentCard>
           </div>
 
-          <div className="space-y-6" tabIndex={2}> {/*Columna derecha*/}
+          <div className="space-y-6" tabIndex={2}> 
             <ComponentCard title="Seleccione">
               <div className="grid grid-cols-1 gap-6">
 
@@ -233,6 +425,7 @@ export default function EvaluatorForm() {
                       label="Femenino"
                       checked={genre === "femenino"}
                       onChange={setgenre}
+                      disabled={userExists}
                     />
                     <Radio
                       id="genre-m"
@@ -241,16 +434,19 @@ export default function EvaluatorForm() {
                       label="Masculino"
                       checked={genre === "masculino"}
                       onChange={setgenre}
+                      disabled={userExists}
                     />
                   </div>
                   {errors.genre && (
-                    <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
+                    <p className="text-xs text-red-500 mt-1">{errors.genre}</p>
                   )}
                 </div>
 
                 <div>
-                  <AreaSelectInputs
-                  key={multiSelectKey}
+                    <AreaSelectDinamic
+                    olympiadId={Number(olympiadId)} 
+                    key={multiSelectKey}
+                    initialSelected={areas_id.map(String)}
                     onChange={(values) => {
                       setAreas(values);
                       setErrors(prev => {
@@ -274,6 +470,7 @@ export default function EvaluatorForm() {
           </div>
         </div>
       </form>
+      )}
 
       <Modal
         isOpen={isModalOpen}
@@ -286,7 +483,7 @@ export default function EvaluatorForm() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
             ¡Registro exitoso!
           </h2>
-          <Label>El Evaluador ha sido registrado exitosamente.</Label>
+          <Label>El Responsable Académico ha sido registrado exitosamente.</Label>
           <Button
             size="md"
             variant="primary"
