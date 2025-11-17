@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import MultiSelect from "../form/MultiSelect";
 import { Area } from "../../types/Area";
-import { getAreas } from "../../api/services/areaServices";
+import { getAreaByOlympiadId } from "../../api/services/areaServices";
 
 interface AreaSelectInputsProps {
     onChange: (values: string[]) => void;
     error?: string;
     initialSelected?: string[];
     valueType?: "id" | "name";
+    olympiadId: number;
 }
 
 export default function AreaSelectDinamic({
     onChange,
     error,
     initialSelected = [],
-    valueType = "id"
+    valueType = "id",
+    olympiadId
 }: AreaSelectInputsProps) {
 
     const [selectedValues, setSelectedValues] = useState<string[]>([]);
@@ -26,12 +28,12 @@ export default function AreaSelectDinamic({
     useEffect(() => {
         setSelectedValues(initialSelected);
         setMsKey(prev => prev + 1); 
-    }, [initialSelected]);
+    }, [initialSelected, olympiadId]);
 
     useEffect(() => {
         const fetchAreas = async () => {
             try {
-                const response = await getAreas();
+                const response = await getAreaByOlympiadId(olympiadId);
                 setAreas(response);
             } catch (error) {
                 console.error("Error al obtener áreas:", error);
@@ -40,7 +42,7 @@ export default function AreaSelectDinamic({
             }
         };
         fetchAreas();
-    }, []);
+    }, [olympiadId]);
 
     const multiOptions = areas.map(area => ({
         value: String(area.id),

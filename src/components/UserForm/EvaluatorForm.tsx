@@ -443,7 +443,8 @@ export default function EvaluatorForm() {
                 </div>
 
                 <div>
-                  <AreaSelectDinamic
+                    <AreaSelectDinamic
+                    olympiadId={Number(olympiadId)} 
                     key={multiSelectKey}
                     initialSelected={areas_id.map(String)}
                     onChange={(values) => {
