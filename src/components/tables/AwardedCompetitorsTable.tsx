@@ -20,10 +20,8 @@ type AwardedRow = AwardWinningCompetitors & {
 export default function AwardedTable({ idOlympiad, idArea }: Props) {
   const [rows, setRows] = useState<AwardedRow[]>([]);
   const [levels, setLevels] = useState<{ name: string }[]>([]);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   // Filtros
   const [filterNivel, setFilterNivel] = useState<string[]>([]);
   const [filterDepartamento, setFilterDepartamento] = useState<string[]>([]);
@@ -36,8 +34,13 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
         if (!idOlympiad || !idArea) return;
 
-        // 1) Obtener niveles
-        const levelsData = await getLevelsByOlympiadAndArea(idOlympiad, idArea);
+        //  Ejecutar ambas APIs en paralelo
+        const [levelsData, data] = await Promise.all([
+          getLevelsByOlympiadAndArea(idOlympiad, idArea),
+          getAwardWinningCompetitors(idOlympiad, idArea),
+        ]);
+
+        // 1) Setear niveles
         setLevels(levelsData);
 
         const levelOrder = levelsData.reduce((acc, level, index) => {
@@ -45,9 +48,7 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           return acc;
         }, {} as Record<string, number>);
 
-        // 2) Obtener competidores
-        const data = await getAwardWinningCompetitors(idOlympiad, idArea);
-
+        // 2) Normalizar datos
         const normalized: AwardedRow[] = data.map((item: any) => ({
           contestant_id: item.contestant_id,
           first_name: item.first_name ?? item.firstName ?? "",
@@ -56,13 +57,16 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           school_name: item.school_name ?? "",
           department: item.department ?? item.depto ?? "",
           classification_place:
-            item.classification_place ?? item.classificationPlace ?? null,
+            item.classification_place ??
+            item.classificationPlace ??
+            null,
 
-          // datos extra
+          // extras
           level_name: item.level_name ?? item.levelName ?? item.level ?? "",
           area_name: item.area_name ?? item.areaName ?? item.area ?? "",
         }));
 
+        // 3) Orden de medallas
         const medalOrder: Record<string, number> = {
           Oro: 1,
           Plata: 2,
@@ -70,16 +74,17 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           "Mención de Honor": 4,
         };
 
+        // 4) Orden final
         const sorted = [...normalized].sort((a, b) => {
-          const levelA = levelOrder[a.level_name] ?? 999;
-          const levelB = levelOrder[b.level_name] ?? 999;
+          const lvlA = levelOrder[a.level_name] ?? 999;
+          const lvlB = levelOrder[b.level_name] ?? 999;
 
-          if (levelA !== levelB) return levelA - levelB;
+          if (lvlA !== lvlB) return lvlA - lvlB;
 
-          const awardA = medalOrder[a.classification_place ?? ""] ?? 99;
-          const awardB = medalOrder[b.classification_place ?? ""] ?? 99;
+          const mA = medalOrder[a.classification_place ?? ""] ?? 99;
+          const mB = medalOrder[b.classification_place ?? ""] ?? 99;
 
-          return awardA - awardB;
+          return mA - mB;
         });
 
         setRows(sorted);
@@ -94,6 +99,7 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
     loadData();
   }, [idOlympiad, idArea]);
+
 
   const getColorByMedal = (
     place: AwardWinningCompetitors["classification_place"] | null
