@@ -12,7 +12,9 @@ export interface Level {
 export interface LevelResponse {
   levels: Level[];
   
-}export interface Datum {
+}
+
+export interface Datum {
   message: string;
   data: LevelOption[];
   status: number;

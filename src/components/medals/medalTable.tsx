@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Select from "../form/Select";
 import SearchBar from "../Grade/Searcher";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
@@ -6,9 +6,11 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
-import { Contestant } from "../../types/Contestant";
+import { getContestantMedals, updateMedal } from "../../api/services/contestantService";
+import { ContestantMedal } from "../../types/Contestant";
 import MedalSelector from "./MedalSelector";
+import type { ClassificationLabel } from "./MedalSelector";
+import Alert from "../ui/alert/Alert";
 
 export default function MedalsPage() {
 
@@ -28,7 +30,14 @@ export default function MedalsPage() {
     const [levelsError, setLevelsError] = useState<string | null>(null);
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
 
-    const [students, setStudents] = useState<Contestant[]>([]);
+    const [students, setStudents] = useState<ContestantMedal[]>([]);
+    const [savingRow, setSavingRow] = useState<number | null>(null);
+    // Alert states
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertVariant, setAlertVariant] = useState<"success" | "error" | "warning" | "info">("success");
+    const autoHideTimerRef = useRef<number | null>(null);
 
     type SelectedOlympiad = {
         id: number;
@@ -95,7 +104,6 @@ export default function MedalsPage() {
         let alive = true;
 
         async function fetchContestants() {
-            const idPhase = 1;
             const idOlympiad = selectedOlympiad?.id ?? 0;
             const idArea = selectedAreaId ?? 0;
             const levelId = selectedLevelId ?? 0;
@@ -109,13 +117,8 @@ export default function MedalsPage() {
                 setLoading(true);
                 setError(null);
 
-                const data = await getContestantByPhaseOlympiadAreaLevel(
-                    idPhase,
-                    idOlympiad,
-                    idArea,
-                    levelId
-                );
-                setStudents(data);
+                const data = await getContestantMedals(idOlympiad, idArea, levelId);
+                setStudents(sortStudentsByMedal(data));
             } catch (e) {
                 if (alive) {
                     setStudents([]);
@@ -130,13 +133,91 @@ export default function MedalsPage() {
             alive = false;
         };
     }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
+    console.log("Deberiamos imprimir los estudiantes", students);
 
+    async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
+        const student = students.find(s => s.evaluation_id === evaluationId);
+        const fullName = student ? `${student.first_name} ${student.last_name}` : `evaluación ${evaluationId}`;
+        setSavingRow(evaluationId);
+        setStudents(prev => sortStudentsByMedal(prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st)));
+        try {
+            await updateMedal(evaluationId, { classification_place: newPlace });
+            const placeText = newPlace ?? "Sin asignar";
+            showAlert("Medallero actualizado", `La posición es: ${placeText} para ${fullName}`, "success");
+        } catch (err) {
+            showAlert("Error al guardar", "No se pudo guardar la posición.", "error");
+            try {
+                const current = students.find(s => s.evaluation_id === evaluationId);
+                if (!current) return;
+                const idOlympiad = selectedOlympiad?.id ?? 0;
+                const idArea = selectedAreaId ?? 0;
+                const levelId = selectedLevelId ?? 0;
+                if (idOlympiad && idArea && levelId) {
+                    const data = await getContestantMedals(idOlympiad, idArea, levelId);
+                    setStudents(sortStudentsByMedal(data));
+                }
+            } catch {
+            }
+        } finally {
+            setSavingRow(null);
+        }
+    }
+
+    function sortStudentsByMedal(list: ContestantMedal[]): ContestantMedal[] {
+        const medalOrder: Record<string, number> = {
+            "Oro": 1,
+            "Plata": 2,
+            "Bronce": 3,
+            "Mención honorífica": 4,
+            "Mención de Honor": 4,
+        };
+        return [...list].sort((a, b) => {
+            const mA = medalOrder[a.classification_place ?? ""] ?? 99;
+            const mB = medalOrder[b.classification_place ?? ""] ?? 99;
+            if (mA !== mB) return mA - mB;
+            const sA = typeof a.score === "number" ? a.score : -Infinity;
+            const sB = typeof b.score === "number" ? b.score : -Infinity;
+            return sB - sA;
+        });
+    }
+
+    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info") {
+        if (autoHideTimerRef.current !== null) {
+            window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = null;
+        }
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertVariant(variant);
+        setAlertOpen(true);
+        autoHideTimerRef.current = window.setTimeout(() => {
+            setAlertOpen(false);
+            autoHideTimerRef.current = null;
+        }, 4000);
+    }
+
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current !== null) {
+                window.clearTimeout(autoHideTimerRef.current);
+                autoHideTimerRef.current = null;
+            }
+        };
+    }, []);
     return (
         <>
+            {alertOpen && (
+                <div className="pointer-events-auto" role="alert" aria-live="polite">
+                    <Alert
+                        variant={alertVariant}
+                        title={alertTitle}
+                        message={alertMessage}
+                    />
+                </div>
+            )}
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1 min-w-0">
                     <Select
-                        //className="w-full" // si tu Select no acepta className, el wrapper ya fuerza el ancho
                         placeholder="Seleccione un área"
                         options={areas.map(l => ({
                             value: String(l.id),
@@ -153,7 +234,6 @@ export default function MedalsPage() {
 
                 <div className="flex-1 min-w-0">
                     <Select
-                        //className="w-full"
                         placeholder="Seleccione un nivel"
                         options={levels.map(l => ({
                             value: String(l.id),
@@ -177,8 +257,8 @@ export default function MedalsPage() {
 
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
+                <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
+                    <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
                         <TableRow>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
@@ -202,29 +282,19 @@ export default function MedalsPage() {
                             </TableRow>
                         )}
                         {!loading && !error && students.map((s) => (
-                            <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                            <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
                                 {[
                                     <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
                                     <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
                                     <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
-                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.grade_name ?? "—"}</td>,
+                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
                                     <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
                                     <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
                                     <td key="medal" className="px-6 py-4 text-sm text-center">
                                         <MedalSelector
-                                            value={s.classification_place as unknown as string | null}
-                                            onChange={(newPlace) => {
-                                                setStudents((prev) =>
-                                                    prev.map((st) =>
-                                                        st.contestant_id === s.contestant_id
-                                                            ? {
-                                                                ...st,
-                                                                classification_place: newPlace,
-                                                            }
-                                                            : st
-                                                    )
-                                                );
-                                            }}
+                                            value={s.classification_place as string | null}
+                                            disabled={savingRow === s.evaluation_id}
+                                            onChange={(newPlace) => handleMedalChange(s.evaluation_id, newPlace)}
                                         />
                                     </td>,
                                 ]}
