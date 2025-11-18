@@ -9,8 +9,7 @@ import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
-import Filter from "../Grade/Filter";
-// Eliminado CommentModal: usamos DisqualifyModal para desclasificar con comentario
+// import Filter from "../Grade/Filter";
 import Button from "../ui/button/Button";
 // import Alert from "../ui/alert/Alert";
 import DisqualifyModal from "./DisqualifyModal";
@@ -296,15 +295,16 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
 
-        const matchesEstado =
-            selectedFilters.estado.length === 0 ||
-            selectedFilters.estado.includes(statusLabel(s.status));
+        // const matchesEstado =
+        //     selectedFilters.estado.length === 0 ||
+        //     selectedFilters.estado.includes(statusLabel(s.status));
 
-        const matchesGrado =
-            selectedFilters.grado.length === 0 ||
-            selectedFilters.grado.includes(s.grade_name);
+        // const matchesGrado =
+        //     selectedFilters.grado.length === 0 ||
+        //     selectedFilters.grado.includes(s.grade_name);
 
-        return matchesSearch && matchesEstado && matchesGrado;
+        // return matchesSearch && matchesEstado && matchesGrado;
+        return matchesSearch ;
     });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
@@ -492,7 +492,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
             </div>
 
-            <div className="relative xl:w-118 mb-4">
+            <div className="relative xl:w-90 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
                     options={levels.map(l => ({
@@ -519,10 +519,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         onSearch={setSearchQuery}
                         placeholder="Buscar por nombre, apellido o CI..."
                     />
-                    <Filter
+                    {/* <Filter
                         selectedFilters={selectedFilters}
                         setSelectedFilters={setSelectedFilters}
-                    />
+                    /> */}
                 </div>
                 <Button
                     type="button"
