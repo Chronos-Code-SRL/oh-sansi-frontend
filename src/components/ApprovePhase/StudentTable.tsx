@@ -15,6 +15,10 @@ import Button from "../ui/button/Button";
 // import Alert from "../ui/alert/Alert";
 import DisqualifyModal from "./DisqualifyModal";
 import Alert from "../ui/alert/Alert";
+import { updatePhaseStatus } from "../../api/services/phaseService";
+import { getPhaseStatus } from "../../api/services/phaseService";
+import ApprovePhaseModal from "./ApprovePhaseModal";
+import BoxFinishedPhase from "../common/BoxFinishedPhase";
 
 interface Props {
     idPhase: number;
@@ -32,6 +36,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
+    
+    // ---- Modal Avalar ----
+    const [openApproveModal, setOpenApproveModal] = useState(false);
+    const [savingApprove, setSavingApprove] = useState(false);
+    const [approveDraft, setApproveDraft] = useState("");
+    const [endorsed, setEndorsed] = useState(false);
 
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
@@ -67,6 +77,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         no_classified: 0,
         disqualified: 0
     });
+
+    // Estado de la fase para el nivel seleccionado
+    const [phaseStatus, setPhaseStatus] = useState<"active" | "finished" | "not_started" | null>(null);
+
+    // Reset aval (endorsed) al cambiar de nivel o fase
+    useEffect(() => {
+        setEndorsed(false);
+    }, [selectedLevelId, idPhase]);
 
     // Helper para mapear boolean -> etiqueta usada por el filtro
     const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
@@ -108,6 +126,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setStudents([]);
             setLoading(false);
             setError(null);
+            setPhaseStatus(null);
             return;
         }
         const levelId = selectedLevelId; // ahora TypeScript sabe que es number
@@ -115,6 +134,20 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         let alive = true;
         setLoading(true);
         setError(null);
+        // Consultar estado de fase para el nivel seleccionado
+        (async () => {
+            try {
+                const res = await getPhaseStatus(idOlympiad, idArea, levelId, idPhase);
+                const raw = (res as any)?.data?.status?.toString()?.toLowerCase?.() ?? "";
+                let mapped: "active" | "finished" | "not_started" = "active";
+                if (/(finished|ended|finalizada|finalized|endorsed)/.test(raw)) mapped = "finished";
+                else if (/(not_started|pending|inactive|no\s*iniciad[oa]|not started)/.test(raw)) mapped = "not_started";
+                if (alive) setPhaseStatus(mapped);
+            } catch (e) {
+                // Si falla, no bloqueamos; asumimos activa por defecto
+                if (alive) setPhaseStatus("active");
+            }
+        })();
         async function loadContestants() {
             try {
                 const data = await getContestantByPhaseOlympiadAreaLevel(
@@ -261,7 +294,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
         const matchesEstado =
             selectedFilters.estado.length === 0 ||
-            selectedFilters.estado.includes(statusLabel(s.status)); // <- mapear boolean a string
+            selectedFilters.estado.includes(statusLabel(s.status)); 
 
         const matchesGrado =
             selectedFilters.grado.length === 0 ||
@@ -362,6 +395,26 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
     }
 
+    // Avalar fase para el nivel seleccionado
+    async function handleApproveSave(): Promise<void> {
+        if (!selectedLevelId) return;
+        setSavingApprove(true);
+        try {
+            await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+            setEndorsed(true);
+            setAlertTitle("Fase avalada");
+            setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
+            setAlertOpen(true);
+            if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
+        } catch (e) {
+            setError("No se pudo avalar la fase. Intenta nuevamente.");
+        } finally {
+            setSavingApprove(false);
+            setOpenApproveModal(false);
+        }
+    }
+
     useEffect(() => {
         return () => {
             if (autoHideTimerRef.current !== null) {
@@ -373,6 +426,22 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     return (
         <>
+            {/* Avisos de estado de fase */}
+            {phaseStatus === "finished" && (
+                <div className="mb-4">
+                    <BoxFinishedPhase />
+                </div>
+            )}
+            {phaseStatus === "not_started" && (
+                <div className="mb-4">
+                    <Alert
+                        variant="info"
+                        title="FASE NO INICIADA"
+                        message="Esta fase aún no ha empezado para el nivel seleccionado."
+                    />
+                </div>
+            )}
+            {phaseStatus !== "not_started" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {/* Total Competidores */}
                 <div className="p-4 rounded-xl shadow bg-white border">
@@ -413,6 +482,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </div>
 
             </div>
+            )}
 
             <div className="relative xl:w-118 mb-4">
                 <Select
@@ -435,6 +505,28 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
 
+            <div className="relative xl:w-118 mb-4">
+                <Select
+                    placeholder="Seleccione un nivel"
+                    options={levels.map(l => ({
+                        value: String(l.id),
+                        label: l.name || `Nivel ${l.id}`
+                    }))}
+                    value={selectedLevelId == null ? "" : String(selectedLevelId)}
+                    onChange={(value: string) => {
+                        if (!value) {
+                            setSelectedLevelId(null);
+                            return;
+                        }
+                        const num = Number(value);
+                        if (!Number.isNaN(num)) setSelectedLevelId(num);
+                    }}
+                />
+                {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
+                {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
+            </div>
+
+            {phaseStatus !== "not_started" && (
             <div className="flex items-center mb-3">
                 <div className="flex items-center flex-grow">
                     <SearchBar
@@ -447,17 +539,24 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     />
                 </div>
                 <Button
-                    type="submit"
+                    type="button"
                     size="sm"
-                    onClick={() => {
-                        // Lógica 
-                    }}
+                    disabled={selectedLevelId == null || savingApprove || endorsed}
+                    onClick={() => setOpenApproveModal(true)}
                     startIcon={<CheckLineIcon className="w-5 h-5" />}
                 >
-                    Avalar Fase
+                    {endorsed ? "Fase Avalada" : "Avalar Fase"}
                 </Button>
-            </div>
 
+            </div>
+            )}
+
+            {/* {endorsed && (
+                <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm text-emerald-700">
+                    Esta fase ya fue avalada para el nivel seleccionado. No se permiten más modificaciones.
+                </div>
+            )} */}
+            {phaseStatus !== "not_started" && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="rounded-xl">
@@ -515,6 +614,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                     <td
                                         className={`px-6 py-4 text-sm items-center justify-center ${isEditing ? "" : "cursor-text"}`}
                                         onClick={() => {
+                                            if (endorsed) return; // Bloquear edición si avalado
                                             if (!isEditing) {
                                                 // Permitir editar incluso si está Evaluado
                                                 setEditingCi(s.ci_document);
@@ -586,6 +686,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Table>
 
             </div>
+            )}
             {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
@@ -610,6 +711,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onChangeDraft={setCommentDraft}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
+            />
+            <ApprovePhaseModal
+                open={openApproveModal}
+                student={null}
+                draft={approveDraft}
+                saving={savingApprove}
+                onChangeDraft={setApproveDraft}
+                onSave={() => void handleApproveSave()}
+                onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
             />
         </>
     )
