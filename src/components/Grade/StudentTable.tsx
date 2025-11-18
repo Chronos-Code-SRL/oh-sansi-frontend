@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, CommentIcon, LockIcon, InfoIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
@@ -13,7 +13,9 @@ import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import { getScoresByOlympiadAreaPhaseLevel } from "../../api/services/ScoreCutsService";
+import { getOlympiadPhases } from "../../api/services/phaseService";
 import { Score } from "../../types/ScoreCuts";
+import { BoxFaseLevel } from "../common/BoxFaseLevel";
 
 interface Props {
     idPhase: number;
@@ -51,6 +53,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [currentMaxScore, setCurrentMaxScore] = useState<Score>();
+    const [phases, setPhases] = useState<{ id: number; name: string; order: number }[]>([]);
 
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
@@ -99,6 +102,21 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         } fetchLevels();
         return () => { alive = false; };
     }, [idArea]);
+
+    // Cargar fases para mostrar nombre de la fase anterior en el panel informativo
+    useEffect(() => {
+        let alive = true;
+        async function loadPhases() {
+            try {
+                const data = await getOlympiadPhases(idOlympiad);
+                if (alive && Array.isArray(data)) setPhases(data);
+            } catch {
+                // si falla, el panel usará un texto genérico
+            }
+        }
+        loadPhases();
+        return () => { alive = false; };
+    }, [idOlympiad]);
 
     // Cargar estudiantes SOLO cuando haya nivel seleccionado
     useEffect(() => {
@@ -402,6 +420,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     setSelectedFilters={setSelectedFilters}
                 />
             </div>
+ 
+            <BoxFaseLevel />
 
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
@@ -440,7 +460,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         )}
                         {!loading && !error && filteredStudents.map((s) => {
                             const isEditing = editingCi === s.ci_document;
-                            return (
+                            return (   
                                 <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                     <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
                                     <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
@@ -518,7 +538,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             );
                         })}
                     </TableBody>
-
                 </Table>
 
             </div>
