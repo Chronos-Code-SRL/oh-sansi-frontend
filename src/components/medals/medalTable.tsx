@@ -36,7 +36,7 @@ export default function MedalsPage() {
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState("");
     const [alertMessage, setAlertMessage] = useState("");
-    const [alertVariant, setAlertVariant] = useState<"success" | "error">("success");
+    const [alertVariant, setAlertVariant] = useState<"success" | "error" | "warning" | "info">("success");
     const autoHideTimerRef = useRef<number | null>(null);
 
     type SelectedOlympiad = {
@@ -118,7 +118,7 @@ export default function MedalsPage() {
                 setError(null);
 
                 const data = await getContestantMedals(idOlympiad, idArea, levelId);
-                setStudents(data);
+                setStudents(sortStudentsByMedal(data));
             } catch (e) {
                 if (alive) {
                     setStudents([]);
@@ -136,11 +136,14 @@ export default function MedalsPage() {
     console.log("Deberiamos imprimir los estudiantes", students);
 
     async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
+        const student = students.find(s => s.evaluation_id === evaluationId);
+        const fullName = student ? `${student.first_name} ${student.last_name}` : `evaluación ${evaluationId}`;
         setSavingRow(evaluationId);
-        setStudents(prev => prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st));
+        setStudents(prev => sortStudentsByMedal(prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st)));
         try {
             await updateMedal(evaluationId, { classification_place: newPlace });
-            showAlert("Medalla guardada", `La posición que se guardo es : ${newPlace}`, "success");
+            const placeText = newPlace ?? "Sin asignar";
+            showAlert("Medallero actualizado", `La posición es: ${placeText} para ${fullName}`, "success");
         } catch (err) {
             showAlert("Error al guardar", "No se pudo guardar la posición.", "error");
             try {
@@ -151,7 +154,7 @@ export default function MedalsPage() {
                 const levelId = selectedLevelId ?? 0;
                 if (idOlympiad && idArea && levelId) {
                     const data = await getContestantMedals(idOlympiad, idArea, levelId);
-                    setStudents(data);
+                    setStudents(sortStudentsByMedal(data));
                 }
             } catch {
             }
@@ -160,7 +163,25 @@ export default function MedalsPage() {
         }
     }
 
-    function showAlert(title: string, message: string, variant: "success" | "error" = "success") {
+    function sortStudentsByMedal(list: ContestantMedal[]): ContestantMedal[] {
+        const medalOrder: Record<string, number> = {
+            "Oro": 1,
+            "Plata": 2,
+            "Bronce": 3,
+            "Mención honorífica": 4,
+            "Mención de Honor": 4,
+        };
+        return [...list].sort((a, b) => {
+            const mA = medalOrder[a.classification_place ?? ""] ?? 99;
+            const mB = medalOrder[b.classification_place ?? ""] ?? 99;
+            if (mA !== mB) return mA - mB;
+            const sA = typeof a.score === "number" ? a.score : -Infinity;
+            const sB = typeof b.score === "number" ? b.score : -Infinity;
+            return sB - sA;
+        });
+    }
+
+    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info") {
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -236,8 +257,8 @@ export default function MedalsPage() {
 
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
+                <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
+                    <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
                         <TableRow>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
                             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
