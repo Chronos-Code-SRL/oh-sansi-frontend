@@ -419,7 +419,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     <p className="text-gray-600 text-sm flex items-center gap-2">
                         Total competidores
                     </p>
-                    <p className="text-3xl font-bold mt-2">{stats.total}</p>
+                    <p className="text-3xl font-bold mt-2">{students.length}</p>
                 </div>
 
                 {/* Clasificados */}
@@ -428,7 +428,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Clasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-green-600">
-                        {stats.classified}
+                        {students.filter(s => s.classification_status === "clasificado").length}
                     </p>
                 </div>
 
@@ -438,7 +438,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         No clasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-red-600">
-                        {stats.no_classified}
+                        {students.filter(s => s.classification_status === "no_clasificado").length}
                     </p>
                 </div>
 
@@ -448,7 +448,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Desclasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {stats.disqualified}
+                        {students.filter(s => s.classification_status === "descalificado" ).length}
                     </p>
                 </div>
 
@@ -552,9 +552,13 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "no_clasificado" && (
                                             <Badge color="error">No clasificado</Badge>
                                         )}
-                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
+                                        {(s.classification_status === "descalificado" ) && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
+                                        {( s.classification_status === null) && (
+                                            <Badge color="light">Sin nota</Badge>
+                                        )}
+
                                     </td>
 
                                     <td
