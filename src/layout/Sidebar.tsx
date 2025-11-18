@@ -37,11 +37,14 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,
+    UPermission.RANKED_CONTESTANTS_LIST,
+    UPermission.AWARDED_CONTESTANTS_LIST,
     UPermission.MEDAL_PAGE,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
     UPermission.FILTER_COMPETITOR_BY_AREA,
+    UPermission.RANKED_CONTESTANTS_LIST,
   ],
 };
 
@@ -106,7 +109,21 @@ const navItems: NavItem[] = [
     name: "Medallero",
     path: "/medallero",
     permission: UPermission.MEDAL_PAGE,
-  }
+  },
+  {
+    icon: <ListIcon />,
+    name: "Lista de Competidores Clasificados",
+    path: "/lista-competidores-clasificados",
+    subItems: [],
+    permission: UPermission.RANKED_CONTESTANTS_LIST,
+  },
+  {
+    icon: <ListIcon />,
+    name: "Lista de Competidores Premiados",
+    path: "/lista-competidores-premiados",
+    subItems: [],
+    permission: UPermission.AWARDED_CONTESTANTS_LIST,
+  },
 ];
 const othersItems: NavItem[] = [];
 

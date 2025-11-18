@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -10,10 +10,17 @@ export const getContestantByPhaseOlympiadAreaLevel = async (idPhase: number, idO
     return res.data;
 }
 
-export const getContestantByFilters = async (): Promise<FilterList[]> => {
-    const res = await ohSansiApi.get<FilterList[]>(`${CONTESTANTS_URL}`);
+export const getContestantByFilters = async (
+    olympiadId: number
+): Promise<FilterList[]> => {
+
+    const res = await ohSansiApi.get<FilterList[]>(
+        `${CONTESTANTS_URL}/${olympiadId}`
+    );
+
     return res.data;
-}
+};
+
 
 export async function updatePartialEvaluation(
     id: number | string,
@@ -34,6 +41,35 @@ export async function checkUpdates(lastUpdateAt?: string | null) {
         status: number;
     };
 }
+
+export const getContestantsClassifieds = async (
+    olympiadId: number,
+    areaId: number,
+    phaseId: number,
+    levelId: number
+): Promise<ConstestantRanked[]> => {
+    const res = await ohSansiApi.get<ConstestantRanked[]>(
+        `${CONTESTANTS_URL}/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}/classifieds`
+    );
+
+    return res.data;
+};
+
+export const getAwardWinningCompetitors = async (
+    olympiadId: number,
+    areaId: number,
+): Promise<AwardWinningCompetitors[]> => {
+
+    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
+    );
+
+    return res.data.contestants; // ✔️ ahora sí devuelves un array
+};
+
+
+
+
 
 //Conteo de concursantes por estado de clasificación
 export const getContestantStats = async (

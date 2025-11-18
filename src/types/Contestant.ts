@@ -52,6 +52,28 @@ export interface FilterList {
     level_name: string;
 }
 
+export interface ConstestantRanked {
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    grade_name: string;
+    classification_status: "clasificado" | "no_clasificado" | "desclasificado" | null;
+    score: number | null;
+}
+
+export interface AwardWinningCompetitorsResponse {
+    contestants: AwardWinningCompetitors[];
+    status: number;
+}
+export interface AwardWinningCompetitors {
+    contestant_id: number;
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    school_name: string;
+    department: string;
+    classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+}
 export interface ContestantStats {
     total: number;
     classified: number;
