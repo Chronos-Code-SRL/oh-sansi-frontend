@@ -18,6 +18,7 @@ import Alert from "../ui/alert/Alert";
 import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
 import ApprovePhaseModal from "./ApprovePhaseModal";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
+import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 
 interface Props {
     idPhase: number;
@@ -26,7 +27,7 @@ interface Props {
 }
 
 export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
-    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "No empezada" | null>(null);
+    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -442,6 +443,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     <BoxFinishedPhase />
                 </div>
             )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+                    />
+                </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {/* Total Competidores */}
                 <div className="p-4 rounded-xl shadow bg-white border">
@@ -503,7 +512,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="flex items-center mb-3">
                 <div className="flex items-center flex-grow">
                     <SearchBar
@@ -526,8 +535,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Button>
 
             </div>
+        )}
 
-            
+            {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="rounded-xl">
@@ -664,6 +675,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Table>
 
             </div>
+            )}
             {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"

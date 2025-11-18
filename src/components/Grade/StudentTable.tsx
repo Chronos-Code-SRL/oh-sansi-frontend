@@ -16,6 +16,7 @@ import { LevelOption } from "../../types/Level";
 import { getScoresByOlympiadAreaPhaseLevel } from "../../api/services/ScoreCutsService";
 import { Score } from "../../types/ScoreCuts";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
+import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 
 interface Props {
     idPhase: number;
@@ -28,7 +29,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "No empezada" | null>(null);
+    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
     // const [phaseLoading, setPhaseLoading] = useState(false);
     // const [phaseError, setPhaseError] = useState<string | null>(null);
 
@@ -419,12 +420,20 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
     };
 
+ 
     return (
         <>
-
             {phaseStatus === "Terminada" && (
                 <div className="mb-4">
                     <BoxFinishedPhase />
+                </div>
+            )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+                    />
                 </div>
             )}
             <div className="relative xl:w-118 mb-4">
@@ -447,7 +456,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="flex items-center mb-3">
                 <SearchBar
                     onSearch={setSearchQuery}
@@ -458,7 +467,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     setSelectedFilters={setSelectedFilters}
                 />
             </div>
-
+            )}
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="rounded-xl">
@@ -579,6 +589,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Table>
 
             </div>
+            )}
 
             {alertOpen && (
                 <div
