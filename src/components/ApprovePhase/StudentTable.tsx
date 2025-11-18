@@ -3,18 +3,21 @@ import Badge from "../ui/badge/Badge";
 import { CheckLineIcon, CloseLineIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates, getContestantStats } from "../../api/services/contestantService";
+import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
-import Filter from "../Grade/Filter";
-// Eliminado CommentModal: usamos DisqualifyModal para desclasificar con comentario
+// import Filter from "../Grade/Filter";
 import Button from "../ui/button/Button";
 // import Alert from "../ui/alert/Alert";
 import DisqualifyModal from "./DisqualifyModal";
 import Alert from "../ui/alert/Alert";
+import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
+import ApprovePhaseModal from "./ApprovePhaseModal";
+import BoxFinishedPhase from "../common/BoxFinishedPhase";
+import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 
 interface Props {
     idPhase: number;
@@ -23,6 +26,7 @@ interface Props {
 }
 
 export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
+    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -32,6 +36,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
+
+    // ---- Modal Avalar ----
+    const [openApproveModal, setOpenApproveModal] = useState(false);
+    const [savingApprove, setSavingApprove] = useState(false);
+    const [approveDraft, setApproveDraft] = useState("");
+    const [endorsed, setEndorsed] = useState(false);
 
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
@@ -61,12 +71,17 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         grado: [] as string[],
     });
 
-    const [stats, setStats] = useState({
-        total: 0,
-        classified: 0,
-        no_classified: 0,
-        disqualified: 0
-    });
+    // const [stats, setStats] = useState({
+    //     total: 0,
+    //     classified: 0,
+    //     no_classified: 0,
+    //     disqualified: 0
+    // });
+
+    // Reset aval (endorsed) al cambiar de nivel o fase
+    useEffect(() => {
+        setEndorsed(false);
+    }, [selectedLevelId, idPhase]);
 
     // Helper para mapear boolean -> etiqueta usada por el filtro
     const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
@@ -124,8 +139,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     levelId,
                 );
                 if (alive) setStudents(data);
-                const st = await getContestantStats(idOlympiad, idArea, idPhase, levelId);
-                setStats(st);
+                // const st = await getContestantStats(idOlympiad, idArea, idPhase, levelId);
+                // setStats(st);
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
@@ -136,6 +151,27 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
+    // Obtener el estado de la fase para el nivel seleccionado y bloquear edición si está terminada
+    useEffect(() => {
+        let alive = true;
+        async function loadPhaseStatus() {
+            if (selectedLevelId == null) {
+                if (alive) setPhaseStatus(null);
+                return;
+            }
+            try {
+                const res = await getPhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+                if (!alive) return;
+                const status = res?.phase_status?.status ?? null;
+                setPhaseStatus(status as any);
+            } catch (err) {
+                console.warn("[StudentTable] getPhaseStatus error", err);
+                if (alive) setPhaseStatus(null);
+            }
+        }
+        void loadPhaseStatus();
+        return () => { alive = false; };
+    }, [selectedLevelId, idPhase, idOlympiad, idArea]);
 
     useEffect(() => {
 
@@ -199,14 +235,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     );
                 }
 
-                if (selectedLevelId != null) {
-                    try {
-                        const newStats = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-                        setStats(newStats);
-                    } catch (e) {
-                        console.warn("No se pudieron actualizar las estadísticas", e);
-                    }
-                }
+                // if (selectedLevelId != null) {
+                //     try {
+                //         const newStats = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
+                //         setStats(newStats);
+                //     } catch (e) {
+                //         console.warn("No se pudieron actualizar las estadísticas", e);
+                //     }
+                // }
 
 
                 // Cursor seguro
@@ -259,18 +295,23 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
 
-        const matchesEstado =
-            selectedFilters.estado.length === 0 ||
-            selectedFilters.estado.includes(statusLabel(s.status)); // <- mapear boolean a string
+        // const matchesEstado =
+        //     selectedFilters.estado.length === 0 ||
+        //     selectedFilters.estado.includes(statusLabel(s.status));
 
-        const matchesGrado =
-            selectedFilters.grado.length === 0 ||
-            selectedFilters.grado.includes(s.grade_name);
+        // const matchesGrado =
+        //     selectedFilters.grado.length === 0 ||
+        //     selectedFilters.grado.includes(s.grade_name);
 
-        return matchesSearch && matchesEstado && matchesGrado;
+        // return matchesSearch && matchesEstado && matchesGrado;
+        return matchesSearch ;
     });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.");
+            return;
+        }
         const texto = commentDraft.trim();
 
         try {
@@ -292,14 +333,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 ),
             );
             // Refrescar estadísticas
-            if (selectedLevelId != null) {
-                try {
-                    const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-                    setStats(st);
-                } catch {
-                    // ignore
-                }
-            }
+            // if (selectedLevelId != null) {
+            //     try {
+            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
+            //         setStats(st);
+            //     } catch {
+            //         // ignore
+            //     }
+            // }
             closeCommentModal();
         } catch {
             showAlert("Error", "No se pudo guardar el comentario ni estado. Intenta nuevamente.");
@@ -328,6 +369,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     // Guardar nota parcial
     async function saveNote(s: Contestant): Promise<void> {
         if (saving) return;
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.");
+            return;
+        }
         if (draftNote === "" || isNaN(Number(draftNote))) return;
         const nota = Math.max(0, Math.min(100, Number(draftNote)));
 
@@ -346,19 +391,39 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setEditingCi(null);
             setDraftNote("");
 
-            // Refrescar estadísticas si hay nivel seleccionado
-            if (selectedLevelId != null) {
-                try {
-                    const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-                    setStats(st);
-                } catch {
-                    // ignorar
-                }
-            }
+            // // Refrescar estadísticas si hay nivel seleccionado
+            // if (selectedLevelId != null) {
+            //     try {
+            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
+            //         setStats(st);
+            //     } catch {
+            //         // ignorar
+            //     }
+            // }
         } catch (e) {
             setError("No se pudo guardar la nota.");
         } finally {
             setSaving(false);
+        }
+    }
+
+    // Avalar fase para el nivel seleccionado
+    async function handleApproveSave(): Promise<void> {
+        if (!selectedLevelId) return;
+        setSavingApprove(true);
+        try {
+            await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+            setEndorsed(true);
+            setAlertTitle("Fase avalada");
+            setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
+            setAlertOpen(true);
+            if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
+        } catch (e) {
+            setError("No se pudo avalar la fase. Intenta nuevamente.");
+        } finally {
+            setSavingApprove(false);
+            setOpenApproveModal(false);
         }
     }
 
@@ -373,13 +438,26 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     return (
         <>
+            {phaseStatus === "Terminada" && (
+                <div className="mb-4">
+                    <BoxFinishedPhase />
+                </div>
+            )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+                    />
+                </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {/* Total Competidores */}
                 <div className="p-4 rounded-xl shadow bg-white border">
                     <p className="text-gray-600 text-sm flex items-center gap-2">
                         Total competidores
                     </p>
-                    <p className="text-3xl font-bold mt-2">{stats.total}</p>
+                    <p className="text-3xl font-bold mt-2">{students.length}</p>
                 </div>
 
                 {/* Clasificados */}
@@ -388,7 +466,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Clasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-green-600">
-                        {stats.classified}
+                        {students.filter(s => s.classification_status === "clasificado").length}
                     </p>
                 </div>
 
@@ -398,7 +476,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         No clasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-red-600">
-                        {stats.no_classified}
+                        {students.filter(s => s.classification_status === "no_clasificado").length}
                     </p>
                 </div>
 
@@ -408,13 +486,13 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Desclasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {stats.disqualified}
+                        {students.filter(s => s.classification_status === "descalificado" ).length}
                     </p>
                 </div>
 
             </div>
 
-            <div className="relative xl:w-118 mb-4">
+            <div className="relative xl:w-90 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
                     options={levels.map(l => ({
@@ -434,30 +512,33 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="flex items-center mb-3">
                 <div className="flex items-center flex-grow">
                     <SearchBar
                         onSearch={setSearchQuery}
                         placeholder="Buscar por nombre, apellido o CI..."
                     />
-                    <Filter
+                    {/* <Filter
                         selectedFilters={selectedFilters}
                         setSelectedFilters={setSelectedFilters}
-                    />
+                    /> */}
                 </div>
                 <Button
-                    type="submit"
+                    type="button"
                     size="sm"
-                    onClick={() => {
-                        // Lógica 
-                    }}
+                    disabled={selectedLevelId == null || savingApprove || endorsed || phaseStatus === "Terminada"}
+                    onClick={() => setOpenApproveModal(true)}
                     startIcon={<CheckLineIcon className="w-5 h-5" />}
                 >
-                    Avalar Fase
+                    {endorsed ? "Fase Avalada" : "Avalar Fase"}
                 </Button>
-            </div>
 
+            </div>
+        )}
+
+            {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="rounded-xl">
@@ -507,14 +588,19 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "no_clasificado" && (
                                             <Badge color="error">No clasificado</Badge>
                                         )}
-                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
+                                        {(s.classification_status === "descalificado" ) && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
+                                        {( s.classification_status === null) && (
+                                            <Badge color="light">-</Badge>
+                                        )}
+
                                     </td>
 
                                     <td
                                         className={`px-6 py-4 text-sm items-center justify-center ${isEditing ? "" : "cursor-text"}`}
                                         onClick={() => {
+                                            if (endorsed || phaseStatus === "Terminada") return; // Bloquear edición si avalado o fase terminada
                                             if (!isEditing) {
                                                 // Permitir editar incluso si está Evaluado
                                                 setEditingCi(s.ci_document);
@@ -568,12 +654,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                                 <span>{typeof s.score === "number" ? s.score : "—"}</span>
                                             </div>
                                         )}
+                                     
+                                            
                                     </td>
                                     <td className="px-6 py-4 text-sm text-center">
                                         <button
                                             type="button"
-                                            onClick={() => openCommentModal(s)}
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                            disabled={endorsed || phaseStatus === "Terminada"}
+                                            onClick={() => { if (endorsed || phaseStatus === "Terminada") return; openCommentModal(s); }}
+                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${endorsed || phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
                                             title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                         >
                                             <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
@@ -586,6 +675,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </Table>
 
             </div>
+            )}
             {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
@@ -610,6 +700,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onChangeDraft={setCommentDraft}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
+            />
+            <ApprovePhaseModal
+                open={openApproveModal}
+                student={null}
+                draft={approveDraft}
+                saving={savingApprove}
+                onChangeDraft={setApproveDraft}
+                onSave={() => void handleApproveSave()}
+                onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
             />
         </>
     )
