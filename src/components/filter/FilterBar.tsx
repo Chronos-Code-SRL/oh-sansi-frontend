@@ -10,9 +10,11 @@ import { LevelOption } from "../../types/Level";
 import { Clean, DownloadIcon } from "../../icons";
 
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
 import Button from "../ui/button/Button";
 import ScrollToTopButton from "../ui/button/ScrollToTopButton";
+import FloatingDownloadButton from "./FloatingDownloadButton";
 
 interface FilterBarProps {
   olympiadId: number;
@@ -35,6 +37,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   //Niveles
   const [levels, setLevels] = useState<LevelOption[]>([]);
 
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 
 
   const handleDownloadPDF = () => {
@@ -135,6 +138,61 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   const handleFilterNota = (min: number, max: number) => {
     setNotaRange({ min, max });
   };
+
+  // 🔹 descargar en csv
+  const handleDownloadCSV = () => {
+    const headers = [
+      "Nombre","Apellido","C.I","Género","Departamento",
+      "Área","Grado","Nivel","Nota","Estado",
+    ];
+
+    const rows = filteredContestants.map(c => [
+      c.first_name,
+      c.last_name,
+      c.ci_document,
+      c.gender,
+      c.department,
+      c.area_name,
+      c.grade_name,
+      c.level_name,
+      c.score !== null ? c.score : "",
+      c.status ? "Evaluado" : "No Evaluado",
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = "reporte_concursantes_filtrados.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 🔹 descargar en xlsx
+  const handleDownloadExcel = () => {
+    const data = filteredContestants.map(c => ({
+      Nombre: c.first_name,
+      Apellido: c.last_name,
+      CI: c.ci_document,
+      Género: c.gender,
+      Departamento: c.department,
+      Área: c.area_name,
+      Grado: c.grade_name,
+      Nivel: c.level_name,
+      Nota: c.score !== null ? c.score : "",
+      Estado: c.status ? "Evaluado" : "No Evaluado",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Concursantes");
+    XLSX.writeFile(wb, "reporte_concursantes_filtrados.xlsx");
+  };
+
 
   return (
     <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-5 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-8">
@@ -291,19 +349,16 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
           )}
         </div>
         {/* Botón de descargar PDF y Scroll to Top */}
-        <div >
-          <div >
-            <Button
-              onClick={handleDownloadPDF}
-              startIcon={<DownloadIcon className="w-5 h-5" />}
-            >
-              Descargar PDF
-            </Button>
-          </div>
-          <div>
-            <ScrollToTopButton />
-          </div>
-        </div>
+
+        <FloatingDownloadButton
+          hasData={filteredContestants.length > 0}
+          onPDF={handleDownloadPDF}
+          onCSV={handleDownloadCSV}
+          onExcel={handleDownloadExcel}
+        />
+      
+        <ScrollToTopButton />
+        
       </div>
     </div>
   );

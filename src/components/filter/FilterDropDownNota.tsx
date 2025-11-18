@@ -64,7 +64,10 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
               <input
                 type="number"
                 value={notaInicial}
-                onChange={(e) => setNotaInicial(Number(e.target.value))}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value >= 0 && value <= 100) setNotaInicial(value);
+                }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
             </div>
@@ -74,7 +77,10 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
               <input
                 type="number"
                 value={notaFinal}
-                onChange={(e) => setNotaFinal(Number(e.target.value))}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value >= 0 && value <= 100) setNotaFinal(value);
+                }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
             </div>
