@@ -1,3 +1,5 @@
+// Nota: Se usan uniones de string para clasificación; enums importados no son necesarios
+
 export interface Contestant {
     evaluation_id: number;
     contestant_id: number;
@@ -12,12 +14,15 @@ export interface Contestant {
     level_name: string;
     grade_name: string;
     status: boolean;
+    classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
+    classification_place: string | null;
 }
 
 //Type for comment and score update
 export interface EvaluationUpdatePayload {
     score?: number | null;
     description?: string | null;
+    classification_place?: string | null;
 };
 
 export interface Evaluation {
@@ -26,7 +31,10 @@ export interface Evaluation {
     score: number | null;
     status: boolean;
     description: string | null;
-    updated_at: string; // ISO
+    updated_at: string;
+    evaluation_id?: number; // algunos endpoints devuelven evaluation_id en vez de id
+    classification_status?: "clasificado" | "no_clasificado" | "descalificado" | null;
+    classification_place?: number | null;
 }
 
 export interface FilterList {
@@ -44,14 +52,54 @@ export interface FilterList {
     level_name: string;
 }
 
-//Type for check updates response
-export type EvaluationDelta = {
-    id_evaluation: number;
-    registration_id: number;
-    contestant_id: number;
+export interface ConstestantRanked {
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    grade_name: string;
+    classification_status: "clasificado" | "no_clasificado" | "desclasificado" | null;
     score: number | null;
-    description: string | null;
-    status: boolean;
-    created_at: string;
-    updated_at: string;
-};
+}
+
+export interface AwardWinningCompetitorsResponse {
+    contestants: AwardWinningCompetitors[];
+    status: number;
+}
+export interface AwardWinningCompetitors {
+    contestant_id: number;
+    first_name: string;
+    last_name: string;
+    ci_document: string;
+    school_name: string;
+    department: string;
+    classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+}
+export interface ContestantStats {
+    total: number;
+    classified: number;
+    no_classified: number;
+    disqualified: number;
+}
+
+export interface ContestantMedalList {
+    contestants: ContestantMedal[];
+    status: number;
+}
+
+export interface ContestantMedal {
+    contestant_id: number;
+    first_name: string;
+    last_name: string;
+    school_name: string;
+    ci_document: string;
+    area_name: string;
+    level_name: string;
+    score: number | null;
+    evaluation_id: number;
+    classification_place: string | null;
+}
+
+//For update medals
+// export interface UpdateMedalPayload {
+//     classification_place?: number | null;
+// }

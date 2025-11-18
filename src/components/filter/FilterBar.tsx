@@ -16,7 +16,11 @@ import Button from "../ui/button/Button";
 import ScrollToTopButton from "../ui/button/ScrollToTopButton";
 import FloatingDownloadButton from "./FloatingDownloadButton";
 
-export const FilterBar: React.FC = () => {
+interface FilterBarProps {
+  olympiadId: number;
+}
+
+export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   const [contestants, setContestants] = useState<FilterList[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +79,7 @@ export const FilterBar: React.FC = () => {
     const fetchContestants = async () => {
       try {
         setLoading(true);
-        const data = await getContestantByFilters();
+        const data = await getContestantByFilters(olympiadId);
         setContestants(data);
       } catch (err) {
         console.error(err);
@@ -86,7 +90,7 @@ export const FilterBar: React.FC = () => {
     };
 
     fetchContestants();
-  }, []);
+  }, [olympiadId]);
 
   // Llamada a la API de niveles
   useEffect(() => {
@@ -294,7 +298,8 @@ export const FilterBar: React.FC = () => {
           </button>
         </div>
 
-        {/* 🔹 Tabla de resultados */}
+
+        {/*Tabla de resultados */}
         <div className="mt-6 overflow-x-auto rounded-xl ">
           {loading ? (
             <p className="text-gray-500 text-center">Cargando datos...</p>

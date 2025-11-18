@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
@@ -6,9 +6,12 @@ import InputField from "../../components/form/input/InputField";
 import Radio from "../../components/form/input/Radio";
 import Button from "../../components/ui/button/Button";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
-import AreaSelectInputs from "../../components/common/AreaSelectInputs ";
+import AreaSelectDinamic from "../../components/common/AreaSelectDinamic";
 import { registerApi } from "../../api/services/postRegisterUser"
 import { Modal } from "../../components/ui/modal/index";
+import Select from "../../components/form/Select";
+import { userSearch } from "../../api/services/userSearchService"
+import Alert from "../../components/ui/alert/Alert";
 
 export default function AcademicManagerForm() {
   const [first_name, setfirst_name] = useState("");
@@ -23,10 +26,206 @@ export default function AcademicManagerForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [multiSelectKey, setMultiSelectKey] = useState(0);
   const [profesion, setProfesion] = useState("");
+  const [showFormSections, setShowFormSections] = useState(false);
+
+  const [olympiadId, setOlympiadId] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [isEvaluator, setIsEvaluator] = useState(false);
+
+  const [userExists, setUserExists] = useState(false);
+  //const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
+  //const [roleMatches, setRoleMatches] = useState(false);
+  //const [userRealRole, setUserRealRole] = useState<number | null>(null);
+  const [searchAlert, setSearchAlert] = useState<{
+    type: "success" | "info" | "warning" | "error";
+    title: string;
+    message: string;
+  } | null>(null);
+  const [searchErrors, setSearchErrors] = useState<{ olympiad?: string; ci?: string }>({});
+
+  //const [currentRole, setCurrentRole] = useState("");
+
+
+  const [olympiadOptions, setOlympiadOptions] = useState([]);
+
+  useEffect(() => {
+  const loadOlympiads = async () => {
+    try {
+      const res = await userSearch.getOlympiadsActiveOrPlanning();
+      const list = res.data.data || [];
+
+      setOlympiadOptions(
+        list.map((o: any) => ({
+          value: o.id.toString(),
+          label: o.name
+        }))
+      );
+    } catch (error) {
+      console.error("Error cargando olimpiadas");
+    }
+  };
+
+  loadOlympiads();
+}, []);
+
+
+  //Buscar usuario
+  const handleSearchUser = async () => {
+    setSearchErrors({});
+    setSearchAlert(null);
+
+    let newErrors: any = {};
+
+    if (!olympiadId) newErrors.olympiad = "Debe seleccionar una olimpiada.";
+    if (!ci.trim()) newErrors.ci = "Debe ingresar un CI.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setSearchErrors(newErrors);
+      return;
+    }
+
+    setIsSearching(true);
+
+    //Busca como responsable
+    try {
+      const response = await userSearch.searchUser(Number(olympiadId), ci, 2);
+      const user = response.data.user;
+      const userAreas = response.data.areas || [];
+
+      setUserExists(true);
+      setIsEvaluator(false);
+
+      setfirst_name(user.first_name);
+      setlast_name(user.last_name);
+      setEmail(user.email);
+      setphone_number(user.phone_number);
+      setgenre(user.genre);
+      setProfesion(user.profesion);
+
+      //Responsable registrado en la olimpiada selccionada
+      if (userAreas.length > 0) {
+        setAreas(userAreas.map((a: any) => a.id));
+        setShowFormSections(true);
+
+        setSearchAlert({
+          type: "success",
+          title: "Usuario encontrado",
+          message: "El usuario ya está registrado como Responsable Académico en esta olimpiada. Puede editar las áreas.",
+        });
+
+        return;
+      }
+
+      //Responsable no rsgistrado en la olimpiada seleccionada
+      setAreas([]);
+      setShowFormSections(true);
+
+      setSearchAlert({
+        type: "info",
+        title: "Usuario no registrado en esta olimpiada",
+        message:
+          "El usuario existe como Responsable Académico, pero NO está registrado en la olimpiada seleccionada. Seleccione las áreas para registrarlo.",
+      });
+
+      return;
+
+    } catch (errorResponsable: any) {
+
+      //No existe como responsable, busca como evaluador
+      if (errorResponsable.response?.status === 404) {
+        try {
+          const response2 = await userSearch.searchUser(Number(olympiadId), ci, 3);
+          const user = response2.data.user;
+          const userAreas = response2.data.areas || [];
+
+          setUserExists(true);
+          setIsEvaluator(true);
+
+          setfirst_name(user.first_name);
+          setlast_name(user.last_name);
+          setEmail(user.email);
+          setphone_number(user.phone_number);
+          setgenre(user.genre);
+
+          setProfesion(user.profesion ?? "");//Profesión editable
+
+          //Evaluador registrado la olimpiada seleccionada
+          if (userAreas.length > 0) {
+            setAreas(userAreas.map((a: any) => a.id));
+            setShowFormSections(true);
+
+            setSearchAlert({
+              type: "success",
+              title: "Registrado como Evaluador",
+              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI desea cambiar a Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
+            });
+
+            return;
+          }
+
+          setAreas([]);
+          setShowFormSections(true);
+
+          setSearchAlert({
+            type: "info",
+            title: "Registrado como Evaluador pero NO en esta olimpiada",
+            message:
+              "El usuario existe como Evaluador pero NO está registrado en esta olimpiada. Puede registrarlo como Responsable Académoco ingresando el dato de Profesión y selecione las Áreas.",
+          });
+
+          return;
+
+        } catch (errorEvaluador: any) {
+
+          // Usuario no existe
+          if (errorEvaluador.response?.status === 404) {
+            setUserExists(false);
+            setIsEvaluator(false);
+
+            setfirst_name("");
+            setlast_name("");
+            setEmail("");
+            setphone_number("");
+            setgenre("");
+            setProfesion("");
+            setAreas([]);
+
+            setShowFormSections(true);
+
+            setSearchAlert({
+              type: "warning",
+              title: "Nuevo usuario",
+              message: "El usuario no existe en el sistema. Puede registrarlo.",
+            });
+
+            return;
+          }
+
+          // Error al buscar como evaluador
+          setSearchAlert({
+            type: "error",
+            title: "Error inesperado",
+            message: "Ocurrió un error al buscar información como Evaluador.",
+          });
+        }
+
+      } else {
+        // Error inesperado al buscar responsable
+        setSearchAlert({
+          type: "error",
+          title: "Error inesperado",
+          message: "Ocurrió un error al buscar información como Responsable.",
+        });
+      }
+
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
 
 
-  {/*Validaciones*/ }
+  //validaciones
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -87,18 +286,25 @@ export default function AcademicManagerForm() {
     setgenre("");
     setAreas([]);
     setErrors({});
-    setMultiSelectKey((prev) => prev + 1);
-  };
+    setSearchErrors({});
+    setSearchAlert(null);
+    setMultiSelectKey(prev => prev + 1);
+    setOlympiadId("");
+    setShowFormSections(false);
+    setIsEvaluator(false);
+    setUserExists(false);
+    };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    try {
-      const datos = {
+    let datos;
+
+    if (!userExists) {
+      datos = {
         first_name,
         last_name,
         ci,
@@ -108,33 +314,67 @@ export default function AcademicManagerForm() {
         roles_id,
         areas_id,
         profesion,
+        olympiad_id: olympiadId,
       };
+    }
 
+    else if (isEvaluator) {
+      datos = {
+        first_name,
+        last_name,
+        ci,
+        phone_number,
+        email,
+        genre,
+        profesion,     
+        roles_id,      
+        areas_id,
+        olympiad_id: olympiadId,
+      };
+    }
+
+    else {
+      datos = {
+        first_name,
+        last_name,
+        ci,
+        phone_number,
+        email,
+        genre,
+        profesion,
+        roles_id,
+        areas_id,
+        olympiad_id: olympiadId,
+      };
+    }
+
+    try {
       const resultado = await registerApi.postRegister(datos);
 
-      if (resultado.status === 201) {
+      if (resultado.status === 201 || resultado.status === 200) {
         setIsModalOpen(true);
         resetForm();
       }
 
     } catch (error: any) {
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
+        if (error.response) {
+        const backendMessage = error.response.data?.message || "";
 
-        if (status === 400) {
-          setErrors(data.error);
-          //alert("Errores en el formulario, revisa los campos.");
-          //alert(data.message)
+        if (
+          backendMessage.includes("duplicate key") ||
+          backendMessage.includes("llave duplicada") ||
+          backendMessage.includes("unique constraint") ||
+          backendMessage.toLowerCase().includes("email")
+        ) {
+          setErrors({ email: "Este correo ya está registrado en el sistema." });
+          return;
         }
 
-        if (status === 500) {
-          //alert(data.message || "Error interno al crear el usuario");
-          alert(data.message)
-        }
-      } else {
-        alert("Error de conexión con el servidor");
+        setErrors(error.response.data.error || {});
+        return;
       }
+
+      alert("Error de conexión con el servidor");
     }
   };
 
@@ -143,16 +383,71 @@ export default function AcademicManagerForm() {
     <>
       <PageMeta
         title="Registro | Oh! SanSi"
-        description="Página para registrar evaluadores"
+        description="Página para registrar Responsable Académico"
       />
-      <TitleBreadCrumb pageTitle="Registrar Evaluador" />
+      <TitleBreadCrumb pageTitle="Registrar Responsable Académico" />
+      <ComponentCard title="Buscar información del Responsable académico" className="mb-6">
+        
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
+          <div>
+            <Label>Seleccionar Olimpiada</Label>
+              <Select
+                options={olympiadOptions}
+                value={olympiadId}
+                onChange={setOlympiadId}
+                placeholder="Seleccione una olimpiada"
+              />
+            {searchErrors.olympiad && (
+              <p className="text-xs text-red-500 mt-1">{searchErrors.olympiad}
+              </p>
+            )}
+          </div>
 
+          <div>
+            <Label>Carnet de Identidad</Label>
+            <InputField
+              id="ci"
+              type="text"
+              placeholder="Ingresa tu CI"
+              value={ci}
+              onChange={(e) => setCi(e.target.value)}
+              error={!!searchErrors.ci}           
+              hint={searchErrors.ci}
+            />
+          </div>
+
+          <div className="flex items-center mt-4">
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full px-4"
+              onClick={handleSearchUser}
+            >
+              {isSearching ? "Buscando..." : "Buscar información"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Alertas */}
+        {searchAlert && (
+          <div className="mt-4">
+            <Alert
+              variant={searchAlert.type}
+              title={searchAlert.title}
+              message={searchAlert.message}
+            />
+          </div>
+        )}
+
+      </ComponentCard>
+
+      {showFormSections && (
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-          <div className="space-y-6" tabIndex={1}> {/*Columna izquierda*/}
+          <div className="space-y-6" tabIndex={1}> 
 
-            <ComponentCard title="Ingrese información">
+            <ComponentCard title="Ingrese información" className="mb-6">
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
@@ -163,6 +458,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu nombre(s)"
                     value={first_name}
                     onChange={(e) => setfirst_name(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.first_name}
                     hint={errors.first_name}
                   />
@@ -176,21 +472,9 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu apellido(s)"
                     value={last_name}
                     onChange={(e) => setlast_name(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.last_name}
                     hint={errors.last_name}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="ci">Carnet de Identidad</Label>
-                  <InputField
-                    id="ci"
-                    type="text"
-                    placeholder="Ingresa tu número de carnet de identidad"
-                    value={ci}
-                    onChange={(e) => setCi(e.target.value)}
-                    error={!!errors.ci}
-                    hint={errors.ci}
                   />
                 </div>
 
@@ -202,6 +486,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu número de teléfono"
                     value={phone_number}
                     onChange={(e) => setphone_number(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.phone_number}
                     hint={errors.phone_number}
                   />
@@ -215,6 +500,7 @@ export default function AcademicManagerForm() {
                     placeholder="Ingresa tu correo electrónico"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={userExists}
                     error={!!errors.email}
                     hint={errors.email}
                   />
@@ -230,13 +516,14 @@ export default function AcademicManagerForm() {
                     onChange={(e) => setProfesion(e.target.value)}
                     error={!!errors.profesion}
                     hint={errors.profesion}
+                    disabled={userExists && !isEvaluator}
                   />
                 </div>
               </div>
             </ComponentCard>
           </div>
 
-          <div className="space-y-6" tabIndex={2}> {/*Columna derecha*/}
+          <div className="space-y-6" tabIndex={2}> 
             <ComponentCard title="Seleccione">
               <div className="grid grid-cols-1 gap-6">
 
@@ -256,6 +543,7 @@ export default function AcademicManagerForm() {
                       label="Femenino"
                       checked={genre === "femenino"}
                       onChange={setgenre}
+                      disabled={userExists}
                     />
                     <Radio
                       id="genre-m"
@@ -264,16 +552,19 @@ export default function AcademicManagerForm() {
                       label="Masculino"
                       checked={genre === "masculino"}
                       onChange={setgenre}
+                      disabled={userExists}
                     />
                   </div>
                   {errors.genre && (
-                    <p className="text-sm text-red-500 mt-1">{errors.genre}</p>
+                    <p className="text-xs text-red-500 mt-1">{errors.genre}</p>
                   )}
                 </div>
 
                 <div>
-                  <AreaSelectInputs
+                    <AreaSelectDinamic
+                    olympiadId={Number(olympiadId)}
                     key={multiSelectKey}
+                    initialSelected={areas_id.map(String)}
                     onChange={(values) => {
                       setAreas(values);
                       setErrors(prev => {
@@ -297,6 +588,7 @@ export default function AcademicManagerForm() {
           </div>
         </div>
       </form>
+      )}
 
       <Modal
         isOpen={isModalOpen}

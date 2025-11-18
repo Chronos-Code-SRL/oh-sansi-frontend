@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, EvaluationDelta, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -10,10 +10,17 @@ export const getContestantByPhaseOlympiadAreaLevel = async (idPhase: number, idO
     return res.data;
 }
 
-export const getContestantByFilters = async (): Promise<FilterList[]> => {
-    const res = await ohSansiApi.get<FilterList[]>(`${CONTESTANTS_URL}`);
+export const getContestantByFilters = async (
+    olympiadId: number
+): Promise<FilterList[]> => {
+
+    const res = await ohSansiApi.get<FilterList[]>(
+        `${CONTESTANTS_URL}/${olympiadId}`
+    );
+
     return res.data;
-}
+};
+
 
 export async function updatePartialEvaluation(
     id: number | string,
@@ -29,8 +36,71 @@ export async function checkUpdates(lastUpdateAt?: string | null) {
         headers: { "Cache-Control": "no-cache" },
     });
     return res.data as {
-        new_evaluations: EvaluationDelta[];
+        new_evaluations: Evaluation[];
         last_updated_at: string;
         status: number;
     };
+}
+
+export const getContestantsClassifieds = async (
+    olympiadId: number,
+    areaId: number,
+    phaseId: number,
+    levelId: number
+): Promise<ConstestantRanked[]> => {
+    const res = await ohSansiApi.get<ConstestantRanked[]>(
+        `${CONTESTANTS_URL}/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}/classifieds`
+    );
+
+    return res.data;
+};
+
+export const getAwardWinningCompetitors = async (
+    olympiadId: number,
+    areaId: number,
+): Promise<AwardWinningCompetitors[]> => {
+
+    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
+    );
+
+    return res.data.contestants; // ✔️ ahora sí devuelves un array
+};
+
+
+
+
+
+//Conteo de concursantes por estado de clasificación
+export const getContestantStats = async (
+    olympiadId: number,
+    areaId: number,
+    phaseId: number,
+    levelId: number
+): Promise<ContestantStats> => {
+    const res = await ohSansiApi.get<ContestantStats>(
+        `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
+    );
+    return res.data;
+};
+
+//For medals
+export const getContestantMedals = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number,
+): Promise<ContestantMedal[]> => {
+    const res = await ohSansiApi.get<ContestantMedal[]>(
+        `/contestants/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+
+    return res.data;
+};
+
+export async function updateMedal(
+    id: number,
+    payload: EvaluationUpdatePayload,
+) {
+    const { data } = await ohSansiApi.patch(`/evaluations/${id}/classification`, payload);
+    return data as { message: string; status: number };
 }

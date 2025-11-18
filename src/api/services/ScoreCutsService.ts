@@ -1,3 +1,4 @@
+import { Score } from "../../types/ScoreCuts";
 import { ohSansiApi } from "../ohSansiApi";
 
 export const scoreCutsService = {
@@ -19,8 +20,8 @@ export const scoreCutsService = {
     const items = Array.isArray(result?.data)
       ? result.data
       : Array.isArray(result)
-      ? result
-      : [];
+        ? result
+        : [];
 
     return items;
   },
@@ -43,8 +44,8 @@ export const scoreCutsService = {
     const items = Array.isArray(result?.data)
       ? result.data
       : Array.isArray(result)
-      ? result
-      : [];
+        ? result
+        : [];
 
     return items;
   },
@@ -65,3 +66,10 @@ export const scoreCutsService = {
     return response.data;
   },
 };
+
+export const getScoresByOlympiadAreaPhaseLevel = async (OlympiadId: number, areaId: number, phaseId: number, levelId: number): Promise<Score> => {
+  const res = await ohSansiApi.get(
+    `/olympiads/${OlympiadId}/areas/${areaId}/phases/${phaseId}/level/${levelId}/scores`
+  );
+  return res.data;
+}

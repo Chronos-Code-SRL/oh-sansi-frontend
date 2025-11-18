@@ -9,7 +9,6 @@ import { Olympiad } from "../../types/Olympiad";
 import { getOlympiads } from "../../api/services/olympiadService";
 import { uploadCompetitorCsv, downloadErrorCsv, getCsvUploadsByOlympiad } from "../../api/services/uploadContestantService"
 import { FileDetail, UploadCsv } from "../../types/CompetitorUpload";
-import BadgeInformation from "./InformationZone";
 import InformationZone from "./InformationZone";
 
 type FileWithDetails = UploadCsv & { details: FileDetail[] };

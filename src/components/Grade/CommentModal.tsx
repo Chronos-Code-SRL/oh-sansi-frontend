@@ -23,16 +23,21 @@ export default function CommentModal({
     onClose,
 }: CommentModalProps) {
 
-    if (!open) return null;
-
-    // Bloquea scroll del body mientras el modal está abierto
     useEffect(() => {
+        if (!open) return; 
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
-        return () => {
-            document.body.style.overflow = prev;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
         };
-    }, []);
+        window.addEventListener("keydown", onKey);
+        return () => {
+            window.removeEventListener("keydown", onKey);
+            document.body.style.overflow = prev; 
+        };
+    }, [open, onClose]);
+
+    if (!open) return null;
 
     const modal = (
         <div
