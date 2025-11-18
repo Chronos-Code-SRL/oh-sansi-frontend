@@ -334,6 +334,63 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
+      if (item.name === "Lista de Competidores Clasificados") {
+        if (userAreas.length > 0) {
+          const areasWithPhases = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
+
+            const areaSubItems = phases.length
+              ? phases.map((phase) => ({
+                name: phase.name,
+                path: `/lista-competidores-clasificados/${olympiadId}/${encodeURIComponent(
+                  area.name
+                )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+              }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/lista-competidores-clasificados/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
+      }
+
+      if (item.name === "Lista de Competidores Premiados") {
+        if (userAreas.length > 0) {
+          const areasOnly = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/lista-competidores-premiados/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`
+            };
+          });
+
+          return { ...item, subItems: areasOnly };
+        }
+
+        return { ...item, subItems: item.subItems };
+      }
+
+      // if (item.name === "Filtrar lista de Competidores") {
+      //   if (selectedOlympiad?.id) {
+      //     return {
+      //       ...item,
+      //       path: `/filtros-de-lista/${selectedOlympiad.id}`,
+      //     };
+      //   }
+      // }
 
       return item;
     });
