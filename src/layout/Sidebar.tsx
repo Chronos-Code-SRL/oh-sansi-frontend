@@ -377,6 +377,15 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
 
+      if (item.name === "Filtrar lista de Competidores") {
+        if (selectedOlympiad?.id) {
+            return {
+                ...item,
+                path: `/filtros-de-lista/${selectedOlympiad.id}`,
+            };
+        }
+}
+
 
       return item;
     });

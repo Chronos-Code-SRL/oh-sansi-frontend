@@ -2,7 +2,6 @@ import { ohSansiApi } from "../ohSansiApi";
 import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
-const CONTESTANTS_URL1 = `/contestants/1`;
 
 export const getContestantByPhaseOlympiadAreaLevel = async (idPhase: number, idOlympiad: number, idArea: number, levelId: number): Promise<Contestant[]> => {
     const res = await ohSansiApi.get<Contestant[]>(
@@ -11,10 +10,17 @@ export const getContestantByPhaseOlympiadAreaLevel = async (idPhase: number, idO
     return res.data;
 }
 
-export const getContestantByFilters = async (): Promise<FilterList[]> => {
-    const res = await ohSansiApi.get<FilterList[]>(`${CONTESTANTS_URL1}`);
-    return res.data;
-}
+export const getContestantByFilters = async (
+  olympiadId: number
+): Promise<FilterList[]> => {
+
+  const res = await ohSansiApi.get<FilterList[]>(
+    `${CONTESTANTS_URL}/${olympiadId}`
+  );
+
+  return res.data;
+};
+
 
 export async function updatePartialEvaluation(
     id: number | string,

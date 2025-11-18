@@ -67,7 +67,8 @@ export default function App() {
             />
 
             {/*Filters on list */}
-            <Route index path="/filtros-de-lista" element={<FilterElements />} />
+            <Route path="/filtros-de-lista/:olympiadId" element={<FilterElements />} />
+
 
             {/*Approve Phase */}
             <Route path="/aprobar-fase/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<ApprovePhase />} />
