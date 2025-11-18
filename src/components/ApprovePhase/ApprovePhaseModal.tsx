@@ -62,7 +62,7 @@ export default function ApprovePhaseModal({
                         </div>
 
                             <p className="mt-1 text-sm text-gray-700">
-                                Se avalará  x nivel.
+                                Se avalará este nivel.
                                 Esta acción indica que ya no se podrá modificar nada
                             </p>
                         

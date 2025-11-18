@@ -196,11 +196,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     })));
 
                     // Construimos dos índices: por contestant_id y por evaluation_id (id || evaluation_id)
-                    const byContestant = new Map<number, Evaluation>();
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
-                        const evalId = (typeof ev.id === "number") ? ev.id : (typeof ev.evaluation_id === "number" ? ev.evaluation_id : undefined);
+                        // Indexar únicamente por evaluation_id/id.
+                        const evalId = (typeof ev.evaluation_id === "number") ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
                         if (typeof evalId === "number") byEvaluation.set(evalId as number, ev);
                     }
 
@@ -209,8 +208,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             // Evitar que el polling pise la fila que se está editando
                             if (editingCi === st.ci_document) return st;
                             const evalId = (st as any).evaluation_id as number | undefined;
-                            const ev = byContestant.get(st.contestant_id) ??
-                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
+                            // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
+                            const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
 
                             if (!ev) return st;
 
@@ -419,6 +418,22 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setAlertOpen(true);
             if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
+            // Refrescar la lista de concursantes para este nivel/fase — el backend puede mover clasificados a la siguiente fase
+            try {
+                if (selectedLevelId != null) {
+                    const refreshed = await getContestantByPhaseOlympiadAreaLevel(
+                        idPhase,
+                        idOlympiad,
+                        idArea,
+                        selectedLevelId,
+                    );
+                    setStudents(refreshed);
+                    // Resetear cursor de polling para evitar aplicar actualizaciones antiguas
+                    lastUpdateAtRef.current = new Date().toISOString();
+                }
+            } catch (e) {
+                console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
+            }
         } catch (e) {
             setError("No se pudo avalar la fase. Intenta nuevamente.");
         } finally {
@@ -486,7 +501,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Desclasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {students.filter(s => s.classification_status === "descalificado" ).length}
+                        {students.filter(s => s.classification_status === "descalificado"|| s.classification_status === null ).length}
                     </p>
                 </div>
 
@@ -531,7 +546,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     onClick={() => setOpenApproveModal(true)}
                     startIcon={<CheckLineIcon className="w-5 h-5" />}
                 >
-                    {endorsed ? "Fase Avalada" : "Avalar Fase"}
+                    Avalar Fase
                 </Button>
 
             </div>
@@ -588,12 +603,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "no_clasificado" && (
                                             <Badge color="error">No clasificado</Badge>
                                         )}
-                                        {(s.classification_status === "descalificado" ) && (
+                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
-                                        {( s.classification_status === null) && (
+                                        {/* {( s.classification_status === null) && (
                                             <Badge color="light">-</Badge>
-                                        )}
+                                        )} */}
 
                                     </td>
 
