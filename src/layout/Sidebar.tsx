@@ -104,14 +104,14 @@ const navItems: NavItem[] = [
     permission: UPermission.APPROVE_PHASE,
   },
   {
-    icon: <CheckLineIcon />,
+    icon: <ListIcon />,
     name: "Lista de Competidores Clasificados",
     path: "/lista-competidores-clasificados",
     subItems: [],
     permission: UPermission.RANKED_CONTESTANTS_LIST,
   },
   {
-    icon: <CheckLineIcon />,
+    icon: <ListIcon />,
     name: "Lista de Competidores Premiados",
     path: "/lista-competidores-premiados",
     subItems: [],

@@ -5,8 +5,6 @@ import { LevelOption } from "../../types/Level";
 import { ConstestantRanked } from "../../types/Contestant";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import Badge from "../ui/badge/Badge";
-import SearchBar from "../Grade/Searcher";
-import Filter from "../Grade/Filter";
 
 interface Props {
   idPhase: number;
@@ -21,12 +19,6 @@ export default function ClassifiedByLevelSimple({ idPhase, idOlympiad, idArea }:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<any[]>([]);
-  // const [searchQuery, setSearchQuery] = useState("");
-  // const [students, setStudents] = useState<Contestant[]>([]);
-  // const [selectedFilters, setSelectedFilters] = useState({
-  //       estado: [] as string[],
-  //       grado: [] as string[],
-  //   });
 
   // 1) Cargar niveles del área → olympiadId + areaId
   useEffect(() => {
@@ -90,18 +82,6 @@ export default function ClassifiedByLevelSimple({ idPhase, idOlympiad, idArea }:
   return (
     <div className="mx-auto w-full space-y-4 ">
       <h2 className="block text-left text-lg font-semibold mb-3">Concursantes por nivel</h2>
-
-      {/* <div className="flex items-center flex-grow">
-        <SearchBar
-            onSearch={setSearchQuery}
-            placeholder="Buscar por nombre, apellido o CI..."
-        />
-        <Filter
-            selectedFilters={selectedFilters}
-            setSelectedFilters={setSelectedFilters}
-        />
-      </div> */}
-
       <div className="mt-6 overflow-x-auto rounded-xl ">
         <Table className="min-w-full border border-gray-200 text-sm text-center">
           <TableHeader className="bg-gray-100 border-b border-border bg-muted/50 ">
