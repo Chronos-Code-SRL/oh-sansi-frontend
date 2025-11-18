@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Select from "../form/Select";
 import SearchBar from "../Grade/Searcher";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
@@ -10,6 +10,7 @@ import { getContestantMedals, updateMedal } from "../../api/services/contestantS
 import { ContestantMedal } from "../../types/Contestant";
 import MedalSelector from "./MedalSelector";
 import type { ClassificationLabel } from "./MedalSelector";
+import Alert from "../ui/alert/Alert";
 
 export default function MedalsPage() {
 
@@ -31,6 +32,12 @@ export default function MedalsPage() {
 
     const [students, setStudents] = useState<ContestantMedal[]>([]);
     const [savingRow, setSavingRow] = useState<number | null>(null);
+    // Alert states
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertVariant, setAlertVariant] = useState<"success" | "error">("success");
+    const autoHideTimerRef = useRef<number | null>(null);
 
     type SelectedOlympiad = {
         id: number;
@@ -129,17 +136,16 @@ export default function MedalsPage() {
     console.log("Deberiamos imprimir los estudiantes", students);
 
     async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
-        // Optimistic update
         setSavingRow(evaluationId);
         setStudents(prev => prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st));
         try {
             await updateMedal(evaluationId, { classification_place: newPlace });
+            showAlert("Medalla guardada", `La posición que se guardo es : ${newPlace}`, "success");
         } catch (err) {
-            // Rollback: refetch or revert (here simple refetch of medals list)
+            showAlert("Error al guardar", "No se pudo guardar la posición.", "error");
             try {
                 const current = students.find(s => s.evaluation_id === evaluationId);
                 if (!current) return;
-                // If error, reload all contestants to keep consistency
                 const idOlympiad = selectedOlympiad?.id ?? 0;
                 const idArea = selectedAreaId ?? 0;
                 const levelId = selectedLevelId ?? 0;
@@ -148,18 +154,49 @@ export default function MedalsPage() {
                     setStudents(data);
                 }
             } catch {
-                // Silent fail; could set an error toast
             }
         } finally {
             setSavingRow(null);
         }
     }
+
+    function showAlert(title: string, message: string, variant: "success" | "error" = "success") {
+        if (autoHideTimerRef.current !== null) {
+            window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = null;
+        }
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertVariant(variant);
+        setAlertOpen(true);
+        autoHideTimerRef.current = window.setTimeout(() => {
+            setAlertOpen(false);
+            autoHideTimerRef.current = null;
+        }, 4000);
+    }
+
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current !== null) {
+                window.clearTimeout(autoHideTimerRef.current);
+                autoHideTimerRef.current = null;
+            }
+        };
+    }, []);
     return (
         <>
+            {alertOpen && (
+                <div className="pointer-events-auto" role="alert" aria-live="polite">
+                    <Alert
+                        variant={alertVariant}
+                        title={alertTitle}
+                        message={alertMessage}
+                    />
+                </div>
+            )}
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1 min-w-0">
                     <Select
-                        //className="w-full" // si tu Select no acepta className, el wrapper ya fuerza el ancho
                         placeholder="Seleccione un área"
                         options={areas.map(l => ({
                             value: String(l.id),
@@ -176,7 +213,6 @@ export default function MedalsPage() {
 
                 <div className="flex-1 min-w-0">
                     <Select
-                        //className="w-full"
                         placeholder="Seleccione un nivel"
                         options={levels.map(l => ({
                             value: String(l.id),
