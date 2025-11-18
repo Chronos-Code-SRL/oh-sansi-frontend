@@ -35,15 +35,15 @@ export async function checkUpdates(lastUpdateAt?: string | null) {
     };
 }
 
-//Conteo de concursantes por estado de clasificación
-export const getContestantStats = async (
-    olympiadId: number,
-    areaId: number,
-    phaseId: number,
-    levelId: number
-): Promise<ContestantStats> => {
-    const res = await ohSansiApi.get<ContestantStats>(
-        `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
-    );
-    return res.data;
-};
+// //Conteo de concursantes por estado de clasificación
+// export const getContestantStats = async (
+//     olympiadId: number,
+//     areaId: number,
+//     phaseId: number,
+//     levelId: number
+// ): Promise<ContestantStats> => {
+//     const res = await ohSansiApi.get<ContestantStats>(
+//         `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
+//     );
+//     return res.data;
+// };

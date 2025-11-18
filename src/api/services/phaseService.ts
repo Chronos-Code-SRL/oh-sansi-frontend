@@ -1,4 +1,4 @@
-import { Phase } from "../../types/Phase";
+import { Phase, PhaseResponse } from "../../types/Phase";
 import { ohSansiApi } from "../ohSansiApi";
 
 export const getOlympiadPhases = async (olympiadId: number): Promise<Phase[]> => {
@@ -10,9 +10,18 @@ export async function getPhaseStatuses(olympiadId: number, areaId: number, level
     return ohSansiApi.get(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phase-status`);
 }
 // Obtener el estado de una nivel y fase específica
-export async function getPhaseStatus(olympiadId: number, areaId: number, levelId: number, phaseId: number) {
-    return ohSansiApi.get(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/status`);
-}
+export const getPhaseStatus = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number,
+    phaseId: number
+): Promise<PhaseResponse> => {
+    const res = await ohSansiApi.get<PhaseResponse>(
+        `/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/status`
+    );
+    return res.data;
+};
+
 
 export const updatePhaseStatus = async (olympiadId: number, areaId: number, levelId: number, phaseId: number) => {
     return ohSansiApi.put(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/endorse`, { 
