@@ -3,7 +3,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { ChevronDownIcon, TrophyGold, TrophySilver, TrophyBronze, Award } from "../../icons";
 
-export type ClassificationLabel = "Oro" | "Plata" | "Bronce" | "Mención de Honor";
+export type ClassificationLabel = "Oro" | "Plata" | "Bronce" | "Mención honorífica";
 
 type MedalSelectorProps = {
     value: string | null; // siempre string o null (desde API/UI)
@@ -15,14 +15,14 @@ const options: { id: ClassificationLabel; Icon: React.FC<React.SVGProps<SVGSVGEl
     { id: "Oro", Icon: TrophyGold },
     { id: "Plata", Icon: TrophySilver },
     { id: "Bronce", Icon: TrophyBronze },
-    { id: "Mención de Honor", Icon: Award },
+    { id: "Mención honorífica", Icon: Award },
 ];
 
 export default function MedalSelector({ value, onChange, disabled }: MedalSelectorProps) {
     const [open, setOpen] = useState(false);
 
     const normalized: ClassificationLabel | null = useMemo(() => {
-        if (value === "Oro" || value === "Plata" || value === "Bronce" || value === "Mención de Honor") return value;
+        if (value === "Oro" || value === "Plata" || value === "Bronce" || value === "Mención honorífica") return value;
         return null; // null/undefined/otro -> Sin medalla
     }, [value]);
 

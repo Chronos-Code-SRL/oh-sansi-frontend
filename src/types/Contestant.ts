@@ -22,6 +22,7 @@ export interface Contestant {
 export interface EvaluationUpdatePayload {
     score?: number | null;
     description?: string | null;
+    classification_place?: string | null;
 };
 
 export interface Evaluation {
@@ -57,3 +58,26 @@ export interface ContestantStats {
     no_classified: number;
     disqualified: number;
 }
+
+export interface ContestantMedalList {
+    contestants: ContestantMedal[];
+    status: number;
+}
+
+export interface ContestantMedal {
+    contestant_id: number;
+    first_name: string;
+    last_name: string;
+    school_name: string;
+    ci_document: string;
+    area_name: string;
+    level_name: string;
+    score: number | null;
+    evaluation_id: number;
+    classification_place: string | null;
+}
+
+//For update medals
+// export interface UpdateMedalPayload {
+//     classification_place?: number | null;
+// }

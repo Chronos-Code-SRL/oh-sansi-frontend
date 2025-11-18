@@ -6,9 +6,10 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
-import { Contestant } from "../../types/Contestant";
+import { getContestantMedals, updateMedal } from "../../api/services/contestantService";
+import { ContestantMedal } from "../../types/Contestant";
 import MedalSelector from "./MedalSelector";
+import type { ClassificationLabel } from "./MedalSelector";
 
 export default function MedalsPage() {
 
@@ -28,7 +29,8 @@ export default function MedalsPage() {
     const [levelsError, setLevelsError] = useState<string | null>(null);
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
 
-    const [students, setStudents] = useState<Contestant[]>([]);
+    const [students, setStudents] = useState<ContestantMedal[]>([]);
+    const [savingRow, setSavingRow] = useState<number | null>(null);
 
     type SelectedOlympiad = {
         id: number;
@@ -95,7 +97,6 @@ export default function MedalsPage() {
         let alive = true;
 
         async function fetchContestants() {
-            const idPhase = 1;
             const idOlympiad = selectedOlympiad?.id ?? 0;
             const idArea = selectedAreaId ?? 0;
             const levelId = selectedLevelId ?? 0;
@@ -109,12 +110,7 @@ export default function MedalsPage() {
                 setLoading(true);
                 setError(null);
 
-                const data = await getContestantByPhaseOlympiadAreaLevel(
-                    idPhase,
-                    idOlympiad,
-                    idArea,
-                    levelId
-                );
+                const data = await getContestantMedals(idOlympiad, idArea, levelId);
                 setStudents(data);
             } catch (e) {
                 if (alive) {
@@ -130,7 +126,34 @@ export default function MedalsPage() {
             alive = false;
         };
     }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
+    console.log("Deberiamos imprimir los estudiantes", students);
 
+    async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
+        // Optimistic update
+        setSavingRow(evaluationId);
+        setStudents(prev => prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st));
+        try {
+            await updateMedal(evaluationId, { classification_place: newPlace });
+        } catch (err) {
+            // Rollback: refetch or revert (here simple refetch of medals list)
+            try {
+                const current = students.find(s => s.evaluation_id === evaluationId);
+                if (!current) return;
+                // If error, reload all contestants to keep consistency
+                const idOlympiad = selectedOlympiad?.id ?? 0;
+                const idArea = selectedAreaId ?? 0;
+                const levelId = selectedLevelId ?? 0;
+                if (idOlympiad && idArea && levelId) {
+                    const data = await getContestantMedals(idOlympiad, idArea, levelId);
+                    setStudents(data);
+                }
+            } catch {
+                // Silent fail; could set an error toast
+            }
+        } finally {
+            setSavingRow(null);
+        }
+    }
     return (
         <>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -202,29 +225,19 @@ export default function MedalsPage() {
                             </TableRow>
                         )}
                         {!loading && !error && students.map((s) => (
-                            <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                            <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
                                 {[
                                     <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
                                     <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
                                     <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
-                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.grade_name ?? "—"}</td>,
+                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
                                     <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
                                     <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
                                     <td key="medal" className="px-6 py-4 text-sm text-center">
                                         <MedalSelector
-                                            value={s.classification_place as unknown as string | null}
-                                            onChange={(newPlace) => {
-                                                setStudents((prev) =>
-                                                    prev.map((st) =>
-                                                        st.contestant_id === s.contestant_id
-                                                            ? {
-                                                                ...st,
-                                                                classification_place: newPlace,
-                                                            }
-                                                            : st
-                                                    )
-                                                );
-                                            }}
+                                            value={s.classification_place as string | null}
+                                            disabled={savingRow === s.evaluation_id}
+                                            onChange={(newPlace) => handleMedalChange(s.evaluation_id, newPlace)}
                                         />
                                     </td>,
                                 ]}

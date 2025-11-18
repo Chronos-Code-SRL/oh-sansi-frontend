@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { Contestant, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -47,3 +47,24 @@ export const getContestantStats = async (
     );
     return res.data;
 };
+
+//For medals
+export const getContestantMedals = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number,
+): Promise<ContestantMedal[]> => {
+    const res = await ohSansiApi.get<ContestantMedal[]>(
+        `/contestants/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+
+    return res.data;
+};
+
+export async function updateMedal(
+    id: number,
+    payload: EvaluationUpdatePayload,
+) {
+    const { data } = await ohSansiApi.patch(`/evaluations/${id}/classification`, payload);
+    return data as { message: string; status: number };
+}
