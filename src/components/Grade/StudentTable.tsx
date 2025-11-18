@@ -150,38 +150,37 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 });
 
                 if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
-                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
-                        id: (ev as any).id,
+                    // IMPORTANTE: El endpoint de check-updates retorna evaluation_id (no id) para cada evaluación.
+                    // Antes se intentaba indexar por ev.id (undefined) y se caía al match por contestant_id,
+                    // provocando que cualquier actualización de un concursante en otra fase/área/nivel "pintara"
+                    // la fila aquí de forma visual (y luego al refrescar desaparecía). Ahora sólo actualizamos
+                    // filas cuyo evaluation_id coincide exactamente.
+                    console.debug("[poll] evaluation_ids:", res.new_evaluations.map(ev => ({
+                        evaluation_id: (ev as any).evaluation_id,
                         contestant_id: (ev as any).contestant_id
                     })));
 
-                    // Construimos dos índices: por contestant_id y por evaluation_id
-                    const byContestant = new Map<number, Evaluation>();
+                    // Índice únicamente por evaluation_id para evitar contaminación entre tablas.
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
-                        if (typeof ev.id === "number") byEvaluation.set(ev.id, ev);
+                        const evalId = typeof ev.evaluation_id === "number" ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
+                        if (typeof evalId === "number") byEvaluation.set(evalId, ev);
                     }
 
-                    setStudents((prev) =>
-                        prev.map((st) => {
-                            // No pisar si la fila está en edición en esta pestaña
-                            if (editingCi === st.ci_document) return st;
-
-                            const evalId = (st as any).evaluation_id as number | undefined;
-                            const ev = byContestant.get(st.contestant_id) ??
-                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
-
-                            if (!ev) return st;
-
-                            return {
-                                ...st,
-                                score: ev.score ?? st.score,
-                                status: typeof ev.status === "boolean" ? ev.status : st.status,
-                                description: typeof ev.description === "string" ? ev.description : st.description,
-                            };
-                        }),
-                    );
+                    setStudents(prev => prev.map(st => {
+                        // No tocar si se está editando en esta pestaña
+                        if (editingCi === st.ci_document) return st;
+                        const evalId = (st as any).evaluation_id as number | undefined;
+                        if (typeof evalId !== "number") return st;
+                        const ev = byEvaluation.get(evalId);
+                        if (!ev) return st;
+                        return {
+                            ...st,
+                            score: ev.score ?? st.score,
+                            status: typeof ev.status === "boolean" ? ev.status : st.status,
+                            description: typeof ev.description === "string" ? ev.description : st.description,
+                        };
+                    }));
                 }
 
                 // Cursor seguro
