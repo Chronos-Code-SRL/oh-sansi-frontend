@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, CommentIcon, LockIcon, InfoIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import type { KeyboardEventHandler } from "react";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import { checkUpdates, updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
+import { getPhaseStatus } from "../../api/services/phaseService";
 import SearchBar from "./Searcher";
 import Filter from "./Filter";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import { getScoresByOlympiadAreaPhaseLevel } from "../../api/services/ScoreCutsService";
+import { getOlympiadPhases } from "../../api/services/phaseService";
 import { Score } from "../../types/ScoreCuts";
+import BoxFinishedPhase from "../common/BoxFinishedPhase";
+import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 
 interface Props {
     idPhase: number;
@@ -25,6 +29,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
+    // const [phaseLoading, setPhaseLoading] = useState(false);
+    // const [phaseError, setPhaseError] = useState<string | null>(null);
 
 
     // States for editing notes in time real
@@ -51,6 +59,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [currentMaxScore, setCurrentMaxScore] = useState<Score>();
+    const [phases, setPhases] = useState<{ id: number; name: string; order: number }[]>([]);
 
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
@@ -63,6 +72,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     };
 
     function openCommentModal(student: Contestant): void {
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
+            return;
+        }
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
@@ -100,6 +113,21 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idArea]);
 
+    // Cargar fases para mostrar nombre de la fase anterior en el panel informativo
+    useEffect(() => {
+        let alive = true;
+        async function loadPhases() {
+            try {
+                const data = await getOlympiadPhases(idOlympiad);
+                if (alive && Array.isArray(data)) setPhases(data);
+            } catch {
+                // si falla, el panel usará un texto genérico
+            }
+        }
+        loadPhases();
+        return () => { alive = false; };
+    }, [idOlympiad]);
+
     // Cargar estudiantes SOLO cuando haya nivel seleccionado
     useEffect(() => {
         if (selectedLevelId == null) {
@@ -135,6 +163,33 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
+    // Obtener estado de fase para el nivel seleccionado
+    useEffect(() => {
+        let alive = true;
+        async function loadPhaseStatus() {
+            if (selectedLevelId == null) {
+                if (alive) setPhaseStatus(null);
+                return;
+            }
+            // setPhaseLoading(true);
+            // setPhaseError(null);
+            try {
+                const res = await getPhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+                if (!alive) return;
+                const status = res?.phase_status?.status ?? null;
+                setPhaseStatus(status as any);
+            } catch (err) {
+                console.warn("[StudentTable] getPhaseStatus error", err);
+                // if (alive) setPhaseError("No se pudo obtener el estado de la fase.");
+                if (alive) setPhaseStatus(null);
+            } finally {
+                // if (alive) setPhaseLoading(false);
+            }
+        }
+        void loadPhaseStatus();
+        return () => { alive = false; };
+    }, [selectedLevelId, idPhase, idOlympiad, idArea]);
+
     // Polling para actualizaciones en tiempo real
     useEffect(() => {
         async function pollOnce() {
@@ -150,38 +205,37 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 });
 
                 if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
-                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
-                        id: (ev as any).id,
+                    // IMPORTANTE: El endpoint de check-updates retorna evaluation_id (no id) para cada evaluación.
+                    // Antes se intentaba indexar por ev.id (undefined) y se caía al match por contestant_id,
+                    // provocando que cualquier actualización de un concursante en otra fase/área/nivel "pintara"
+                    // la fila aquí de forma visual (y luego al refrescar desaparecía). Ahora sólo actualizamos
+                    // filas cuyo evaluation_id coincide exactamente.
+                    console.debug("[poll] evaluation_ids:", res.new_evaluations.map(ev => ({
+                        evaluation_id: (ev as any).evaluation_id,
                         contestant_id: (ev as any).contestant_id
                     })));
 
-                    // Construimos dos índices: por contestant_id y por evaluation_id
-                    const byContestant = new Map<number, Evaluation>();
+                    // Índice únicamente por evaluation_id para evitar contaminación entre tablas.
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        if (typeof ev.contestant_id === "number") byContestant.set(ev.contestant_id, ev);
-                        if (typeof ev.id === "number") byEvaluation.set(ev.id, ev);
+                        const evalId = typeof ev.evaluation_id === "number" ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
+                        if (typeof evalId === "number") byEvaluation.set(evalId, ev);
                     }
 
-                    setStudents((prev) =>
-                        prev.map((st) => {
-                            // No pisar si la fila está en edición en esta pestaña
-                            if (editingCi === st.ci_document) return st;
-
-                            const evalId = (st as any).evaluation_id as number | undefined;
-                            const ev = byContestant.get(st.contestant_id) ??
-                                (typeof evalId === "number" ? byEvaluation.get(evalId) : undefined);
-
-                            if (!ev) return st;
-
-                            return {
-                                ...st,
-                                score: ev.score ?? st.score,
-                                status: typeof ev.status === "boolean" ? ev.status : st.status,
-                                description: typeof ev.description === "string" ? ev.description : st.description,
-                            };
-                        }),
-                    );
+                    setStudents(prev => prev.map(st => {
+                        // No tocar si se está editando en esta pestaña
+                        if (editingCi === st.ci_document) return st;
+                        const evalId = (st as any).evaluation_id as number | undefined;
+                        if (typeof evalId !== "number") return st;
+                        const ev = byEvaluation.get(evalId);
+                        if (!ev) return st;
+                        return {
+                            ...st,
+                            score: ev.score ?? st.score,
+                            status: typeof ev.status === "boolean" ? ev.status : st.status,
+                            description: typeof ev.description === "string" ? ev.description : st.description,
+                        };
+                    }));
                 }
 
                 // Cursor seguro
@@ -249,6 +303,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
+            return;
+        }
         const texto = commentDraft.trim();
 
         try {
@@ -294,6 +352,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         if (saving === true) {
             return
         };
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
+            return;
+        }
         // Permitir editar incluso si está Evaluado
         setEditingCi(s.ci_document);
         if (typeof s.score === "number") {
@@ -305,6 +367,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     const saveNote = async (s: Contestant) => {
         if (saving) return;
+        if (phaseStatus === "Terminada") {
+            showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
+            return;
+        }
         if (draftNote === "" || isNaN(Number(draftNote))) {
             showAlert("Nota inválida", "Debe ingresar un número.");
             return;
@@ -370,8 +436,22 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
     };
 
+ 
     return (
         <>
+            {phaseStatus === "Terminada" && (
+                <div className="mb-4">
+                    <BoxFinishedPhase />
+                </div>
+            )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+                    />
+                </div>
+            )}
             <div className="relative xl:w-118 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
@@ -392,7 +472,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="flex items-center mb-3">
                 <SearchBar
                     onSearch={setSearchQuery}
@@ -403,7 +483,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     setSelectedFilters={setSelectedFilters}
                 />
             </div>
+            )}
 
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
             <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="rounded-xl">
@@ -441,7 +523,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         )}
                         {!loading && !error && filteredStudents.map((s) => {
                             const isEditing = editingCi === s.ci_document;
-                            return (
+                            return (   
                                 <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                     <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
                                     <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
@@ -508,8 +590,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                     <td className="px-6 py-4 text-sm text-center">
                                         <button
                                             type="button"
-                                            onClick={() => openCommentModal(s)}
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                            disabled={phaseStatus === "Terminada"}
+                                            onClick={() => { if (phaseStatus === "Terminada") return; openCommentModal(s); }}
+                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
                                             title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                         >
                                             <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
@@ -519,10 +602,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             );
                         })}
                     </TableBody>
-
                 </Table>
 
             </div>
+            )}
 
             {alertOpen && (
                 <div

@@ -3,7 +3,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { ChevronDownIcon, TrophyGold, TrophySilver, TrophyBronze, Award } from "../../icons";
 
-export type ClassificationLabel = "Oro" | "Plata" | "Bronce" | "Mención de Honor";
+export type ClassificationLabel = "Oro" | "Plata" | "Bronce" | "Mención honorífica";
 
 type MedalSelectorProps = {
     value: string | null; // siempre string o null (desde API/UI)
@@ -15,15 +15,15 @@ const options: { id: ClassificationLabel; Icon: React.FC<React.SVGProps<SVGSVGEl
     { id: "Oro", Icon: TrophyGold },
     { id: "Plata", Icon: TrophySilver },
     { id: "Bronce", Icon: TrophyBronze },
-    { id: "Mención de Honor", Icon: Award },
+    { id: "Mención honorífica", Icon: Award },
 ];
 
 export default function MedalSelector({ value, onChange, disabled }: MedalSelectorProps) {
     const [open, setOpen] = useState(false);
 
     const normalized: ClassificationLabel | null = useMemo(() => {
-        if (value === "Oro" || value === "Plata" || value === "Bronce" || value === "Mención de Honor") return value;
-        return null; // null/undefined/otro -> Sin medalla
+        if (value === "Oro" || value === "Plata" || value === "Bronce" || value === "Mención honorífica") return value;
+        return null;
     }, [value]);
 
     const current = useMemo(() => options.find((o) => o.id === normalized) ?? options[3], [normalized]);
@@ -33,8 +33,10 @@ export default function MedalSelector({ value, onChange, disabled }: MedalSelect
             <button
                 type="button"
                 disabled={disabled}
-                className={`w-full inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:hover:bg-white/5`}
+                className={`dropdown-toggle w-full inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-transparent dark:hover:bg-white/5`}
                 onClick={() => setOpen((v) => !v)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
             >
 
                 <current.Icon className={`h-5 w-5 ${normalized === null ? "opacity-40" : ""}`} />

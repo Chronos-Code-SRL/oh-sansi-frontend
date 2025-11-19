@@ -19,7 +19,7 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
     // Función para manejar el clic en el botón
     const handleButtonClick = () => {
         setSelectedOlympiad({ id, name, status });
-        navigate(`/OlimpiadaAreas/${id}`);
+        navigate(`/registration`);
     };
 
 
