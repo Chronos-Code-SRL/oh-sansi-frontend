@@ -40,7 +40,6 @@ export default function EditScoreCuts() {
       <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-        <ComponentCard title="Seleccionar nivel">
           <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}
@@ -48,10 +47,8 @@ export default function EditScoreCuts() {
             areaName={decodedAreaName}
             onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
-        </ComponentCard>
 
         {selectedLevel && (
-          <ComponentCard title={`Gestión Clasificación - ${decodedAreaName}`}>
             <ScoreInput
               olympiadId={olympiadId}
               areaId={Number(areaId) || 0}
@@ -59,7 +56,6 @@ export default function EditScoreCuts() {
               phaseId={Number(phaseId)}
               onChangeScoreCut={setScoreCut}
             />
-          </ComponentCard>
         )}
       </div>
 

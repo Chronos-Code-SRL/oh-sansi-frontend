@@ -106,7 +106,6 @@ export default function ScoreInput({
 
   return (
   <>
-    <div className="w-full flex justify-center">
         <ComponentCard
           title="Nota de Clasificación"
           className="max-w-3xl w-full mx-auto rounded-2xl p-4 shadow-lg"
@@ -126,12 +125,15 @@ export default function ScoreInput({
                     <InputField
                       id="minScore"
                       type="number"
-                      value={minScore}
+                      min={"1"}
+                      value={minScore === 0 ? "" : minScore}
                       onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (value < 0) return;
                         setMinScore(Number(e.target.value));
                         setEditingMin(true);
                       }}
-                      placeholder="Ej. 60"
+                      placeholder="Ej. 51"
                       className="flex-1"
                     />
 
@@ -180,12 +182,15 @@ export default function ScoreInput({
                     <InputField
                       id="maxScore"
                       type="number"
-                      value={maxScore}
+                      min={"1"}
+                      value={maxScore === 0 ? "" : maxScore}
                       onChange={(e) => {
+                        const value = Number(e.target.value);
+                        if (value < 0) return;
                         setMaxScore(Number(e.target.value));
                         setEditingMax(true);
                       }}
-                      placeholder="Ej. 100"
+                      placeholder="Ej: 100"
                       className="flex-1"
                     />
 
@@ -225,7 +230,6 @@ export default function ScoreInput({
             {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
           </div>
         </ComponentCard>
-      </div>
 
       <Modal
         isOpen={successModal}
