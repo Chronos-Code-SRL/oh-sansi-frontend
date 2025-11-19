@@ -5,6 +5,11 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import Badge from "../ui/badge/Badge";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { FilterDropdown } from "../filter/FilterDropdown";
+import ScrollToTopButton from "../ui/button/ScrollToTopButton";
+import FloatingDownloadButton from "../filter/FloatingDownloadButton";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+import { autoTable } from "jspdf-autotable";
 
 interface Props {
   idOlympiad: number;
@@ -60,11 +65,10 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
             item.classification_place ??
             item.classificationPlace ??
             null,
-
           // extras
           level_name: item.level_name ?? item.levelName ?? item.level ?? "",
           area_name: item.area_name ?? item.areaName ?? item.area ?? "",
-        }));
+        })).filter(item => item.classification_place !== null);
 
         // 3) Orden de medallas
         const medalOrder: Record<string, number> = {
@@ -96,8 +100,9 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
         setLoading(false);
       }
     }
-
+    
     loadData();
+    
   }, [idOlympiad, idArea]);
 
 
@@ -131,9 +136,90 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
     return byNivel && byDep;
   });
-
+  
   if (loading) return <p>Cargando datos…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
+
+
+//  DESCARGAR PDF
+const handleDownloadPDF = () => {
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  doc.setFontSize(14);
+  doc.text("Reporte de Ganadores", 14, 15);
+
+  const tableData = filteredRows.map((c) => [
+    c.first_name,
+    c.last_name,
+    c.school_name,
+    c.department,
+    c.level_name,
+    c.area_name,
+    c.classification_place ?? "—"
+  ]);
+
+  autoTable(doc, {
+    startY: 20,
+    head: [[
+      "Nombre", "Apellido", "Unidad Educativa", "Departamento",
+      "Nivel", "Área", "Lugar"
+    ]],
+    body: tableData,
+    styles: { halign: "center", valign: "middle" },
+    headStyles: { fillColor: [23, 86, 166] }
+  });
+
+  doc.save("reporte_ganadores.pdf");
+};
+
+  // DESCARGAR CSV
+  const handleDownloadCSV = () => {
+    const headers = [
+      "Nombre","Apellido","Unidad Educativa","Departamento",
+      "Nivel","Área","Lugar"
+    ];
+
+    const rowsCSV = filteredRows.map((c) => [
+      c.first_name,
+      c.last_name,
+      c.school_name,
+      c.department,
+      c.level_name,
+      c.area_name,
+      c.classification_place ?? ""
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rowsCSV].map((e) => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = "reporte_ganadores.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // DESCARGAR EXCEL
+  const handleDownloadExcel = () => {
+    const data = filteredRows.map((c) => ({
+      Nombre: c.first_name,
+      Apellido: c.last_name,
+      UnidadEducativa: c.school_name,
+      Departamento: c.department,
+      Nivel: c.level_name,
+      Área: c.area_name,
+      Lugar: c.classification_place ?? ""
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Ganadores");
+    XLSX.writeFile(wb, "reporte_ganadores.xlsx");
+  };
+
 
   return (
     <div className="mx-auto w-full space-y-4">
@@ -189,6 +275,7 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
             <TableRow>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Nombre</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Apellido</th>
+              <th className="px-5 py-4 text-sm font-semibold text-foreground">Unida Educativa</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Departamento</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Nivel</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Área</th>
@@ -208,6 +295,7 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
                 <TableRow key={i} className="hover:bg-gray-50 border-b border-border last:border-0">
                   <td className="px-5 py-4 text-sm">{c.first_name}</td>
                   <td className="px-5 py-4 text-sm">{c.last_name}</td>
+                  <td className="px-5 py-4 text-sm">{c.school_name}</td>
                   <td className="px-5 py-4 text-sm">{c.department}</td>
                   <td className="px-5 py-4 text-sm">{c.level_name}</td>
                   <td className="px-5 py-4 text-sm">{c.area_name}</td>
@@ -222,6 +310,15 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           </TableBody>
         </Table>
       </div>
+      <FloatingDownloadButton
+        hasData={filteredRows.length > 0}
+        onPDF={handleDownloadPDF}
+        onCSV={handleDownloadCSV}
+        onExcel={handleDownloadExcel}
+      />
+
+      <ScrollToTopButton />
+
     </div>
   );
 }
