@@ -135,6 +135,18 @@ export default function MedalsPage() {
     }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
     console.log("Deberiamos imprimir los estudiantes", students);
 
+    const normalize = (text: string) =>
+        text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const filteredStudents = students.filter((s) => {
+        const q = normalize(searchQuery);
+        const matchesSearch =
+            normalize(s.first_name).includes(q) ||
+            normalize(s.last_name).includes(q) ||
+            s.ci_document.toString().includes(q);
+             return matchesSearch ;
+    });
+
     async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
         const student = students.find(s => s.evaluation_id === evaluationId);
         const fullName = student ? `${student.first_name} ${student.last_name}` : `evaluación ${evaluationId}`;
@@ -281,7 +293,7 @@ export default function MedalsPage() {
                                 <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                             </TableRow>
                         )}
-                        {!loading && !error && students.map((s) => (
+                        {!loading && !error && filteredStudents.map((s) => (
                             <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
                                 {[
                                     <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
