@@ -6,6 +6,11 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import Badge from "../ui/badge/Badge";
 import { FilterDropdown } from "../filter/FilterDropdown";
 import { FilterDropdownNota } from "../filter/FilterDropDownNota";
+import ScrollToTopButton from "../ui/button/ScrollToTopButton";
+import FloatingDownloadButton from "../filter/FloatingDownloadButton";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+import { autoTable } from "jspdf-autotable";
 
 interface Props {
   idPhase: number;
@@ -22,12 +27,10 @@ export default function ClassifiedByLevelSimple({
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // 🟧 Filtros
+  //  Filtros
   const [filterNivel, setFilterNivel] = useState<string[]>([]);
   const [filterEstado, setFilterEstado] = useState<string[]>([]);
-
-  // 🟨 Filtro de notas
+  // Filtro de notas
   const [notaInicial, setNotaInicial] = useState(0);
   const [notaFinal, setNotaFinal] = useState(100);
 
@@ -115,6 +118,87 @@ export default function ClassifiedByLevelSimple({
 
     return byNivel && byEstado && byNota;
   });
+
+  // Descargar en PDF
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(14);
+    doc.text("Reporte de Concursantes por Nivel", 14, 15);
+
+    const tableData = filteredRows.map((c) => [
+      c.first_name,
+      c.last_name,
+      c.ci_document,
+      c.levelName,
+      c.classification_status
+        ? c.classification_status.replace("_", " ")
+        : "—",
+      c.score ?? "—",
+    ]);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [[
+        "Nombre", "Apellido", "CI", "Nivel", "Estado", "Nota"
+      ]],
+      body: tableData,
+      styles: { halign: "center", valign: "middle" },
+      headStyles: { halign: "center", fillColor: [23, 86, 166] },
+    });
+
+    doc.save("reporte_concursantes_nivel.pdf");
+  };
+
+
+  // Descargar en CSV
+  const handleDownloadCSV = () => {
+    const headers = ["Nombre","Apellido","CI","Nivel","Estado","Nota"];
+
+    const rowsCSV = filteredRows.map((c) => [
+      c.first_name,
+      c.last_name,
+      c.ci_document,
+      c.levelName,
+      c.classification_status
+        ? c.classification_status.replace("_", " ")
+        : "",
+      c.score ?? "",
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rowsCSV].map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = "reporte_concursantes_nivel.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
+  // Descargar en Excel (XLSX)
+  const handleDownloadExcel = () => {
+    const data = filteredRows.map((c) => ({
+      Nombre: c.first_name,
+      Apellido: c.last_name,
+      CI: c.ci_document,
+      Nivel: c.levelName,
+      Estado: c.classification_status
+        ? c.classification_status.replace("_", " ")
+        : "",
+      Nota: c.score ?? "",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Concursantes");
+    XLSX.writeFile(wb, "reporte_concursantes_nivel.xlsx");
+  };
+
 
   return (
     <div className="mx-auto w-full space-y-4">
@@ -219,6 +303,13 @@ export default function ClassifiedByLevelSimple({
           </TableBody>
         </Table>
       </div>
+      <FloatingDownloadButton
+        hasData={filteredRows.length > 0}
+        onPDF={handleDownloadPDF}
+        onCSV={handleDownloadCSV}
+        onExcel={handleDownloadExcel}
+      />
+      <ScrollToTopButton />
     </div>
   );
 }
