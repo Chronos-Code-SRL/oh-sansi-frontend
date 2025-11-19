@@ -112,14 +112,14 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ListIcon />,
-    name: "Lista de Competidores Clasificados",
+    name: "Lista de Clasificados",
     path: "/lista-competidores-clasificados",
     subItems: [],
     permission: UPermission.RANKED_CONTESTANTS_LIST,
   },
   {
     icon: <ListIcon />,
-    name: "Lista de Competidores Premiados",
+    name: "Lista de Premiados",
     path: "/lista-competidores-premiados",
     subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
@@ -334,7 +334,7 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
-      if (item.name === "Lista de Competidores Clasificados") {
+      if (item.name === "Lista de Clasificados") {
         if (userAreas.length > 0) {
           const areasWithPhases = userAreas.map((area) => {
             const olympiadId = area.path.split("/")[2];
@@ -363,7 +363,7 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
 
-      if (item.name === "Lista de Competidores Premiados") {
+      if (item.name === "Lista de Premiados") {
         if (userAreas.length > 0) {
           const areasOnly = userAreas.map((area) => {
             const olympiadId = area.path.split("/")[2];

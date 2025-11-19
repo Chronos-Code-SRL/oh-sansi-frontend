@@ -66,10 +66,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedFilters, setSelectedFilters] = useState({
-        estado: [] as string[],
-        grado: [] as string[],
-    });
+    // const [selectedFilters, setSelectedFilters] = useState({
+    //     estado: [] as string[],
+    //     grado: [] as string[],
+    // });
 
     // const [stats, setStats] = useState({
     //     total: 0,
@@ -84,7 +84,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     }, [selectedLevelId, idPhase]);
 
     // Helper para mapear boolean -> etiqueta usada por el filtro
-    const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
+    // const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
     const getEvaluationId = (s: Contestant): number | string => {
         // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
@@ -125,7 +125,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setError(null);
             return;
         }
-        const levelId = selectedLevelId; // ahora TypeScript sabe que es number
+        const levelId = selectedLevelId; 
 
         let alive = true;
         setLoading(true);
