@@ -1,5 +1,5 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -67,28 +67,8 @@ export const getAwardWinningCompetitors = async (
     return res.data.contestants; // ✔️ ahora sí devuelves un array
 };
 
-
-
-
-
-// //Conteo de concursantes por estado de clasificación
-// export const getContestantStats = async (
-//     olympiadId: number,
-//     areaId: number,
-//     phaseId: number,
-//     levelId: number
-// ): Promise<ContestantStats> => {
-//     const res = await ohSansiApi.get<ContestantStats>(
-//         `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
-//     );
-//     return res.data;
-// };
-
 //For medals
-export const getContestantMedals = async (
-    olympiadId: number,
-    areaId: number,
-    levelId: number,
+export const getContestantMedals = async (olympiadId: number,areaId: number,levelId: number,
 ): Promise<ContestantMedal[]> => {
     const res = await ohSansiApi.get<ContestantMedal[]>(
         `/contestants/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
@@ -104,3 +84,19 @@ export async function updateMedal(
     const { data } = await ohSansiApi.patch(`/evaluations/${id}/classification`, payload);
     return data as { message: string; status: number };
 }
+
+export const awardMedals = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number,
+    payload: AwardMedalsPayload
+): Promise<AwardMedalsResponse> => {
+    const res = await ohSansiApi.post<AwardMedalsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`,
+        payload
+    );
+    return res.data;
+};
+
+//For new Medal Stats
+

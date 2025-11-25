@@ -6,9 +6,8 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantMedals, updateMedal } from "../../api/services/contestantService";
+import { getContestantMedals, updateMedal, awardMedals } from "../../api/services/contestantService";
 import { ContestantMedal } from "../../types/Contestant";
-import MedalSelector from "./MedalSelector";
 import type { ClassificationLabel } from "./MedalSelector";
 import Alert from "../ui/alert/Alert";
 
@@ -32,6 +31,14 @@ export default function MedalsPage() {
 
     const [students, setStudents] = useState<ContestantMedal[]>([]);
     const [savingRow, setSavingRow] = useState<number | null>(null);
+    
+    // Medal form states
+    const [goldCount, setGoldCount] = useState("");
+    const [silverCount, setSilverCount] = useState("");
+    const [bronzeCount, setBronzeCount] = useState("");
+    const [honorableMentionCount, setHonorableMentionCount] = useState("");
+    const [isSubmittingMedals, setIsSubmittingMedals] = useState(false);
+    
     // Alert states
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState("");
@@ -208,6 +215,48 @@ export default function MedalsPage() {
         }, 4000);
     }
 
+    async function handleGenerateMedals() {
+        const idOlympiad = selectedOlympiad?.id ?? 0;
+        const idArea = selectedAreaId ?? 0;
+        const levelId = selectedLevelId ?? 0;
+
+        if (idOlympiad === 0 || idArea === 0 || levelId === 0) {
+            showAlert("Campos incompletos", "Debe seleccionar una olimpiada, área y nivel.", "warning");
+            return;
+        }
+
+        if (!goldCount && !silverCount && !bronzeCount && !honorableMentionCount) {
+            showAlert("Campos vacíos", "Debe ingresar al menos una cantidad de medallas.", "warning");
+            return;
+        }
+
+        setIsSubmittingMedals(true);
+        try {
+            const response = await awardMedals(idOlympiad, idArea, levelId, {
+                gold: goldCount || "0",
+                silver: silverCount || "0",
+                bronze: bronzeCount || "0",
+                honorable_mention: honorableMentionCount || "0",
+            });
+            
+            showAlert("Medallero generado", response.message, "success");
+            
+            // Recargar la tabla de estudiantes
+            const data = await getContestantMedals(idOlympiad, idArea, levelId);
+            setStudents(sortStudentsByMedal(data));
+            
+            // Limpiar el formulario
+            setGoldCount("");
+            setSilverCount("");
+            setBronzeCount("");
+            setHonorableMentionCount("");
+        } catch (error) {
+            showAlert("Error", "No se pudo generar el medallero. Intente nuevamente.", "error");
+        } finally {
+            setIsSubmittingMedals(false);
+        }
+    }
+
     useEffect(() => {
         return () => {
             if (autoHideTimerRef.current !== null) {
@@ -227,6 +276,94 @@ export default function MedalsPage() {
                     />
                 </div>
             )}
+
+            {/* Gestión de Medallas Form */}
+            <div className="mb-6 p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Gestión de Medallas</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {/* Oro */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <span className="inline-flex items-center gap-2">
+                                <span className="text-yellow-500">🏆</span>
+                                Medallas de Oro
+                            </span>
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={goldCount}
+                            onChange={(e) => setGoldCount(e.target.value)}
+                            placeholder="0"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        />
+                    </div>
+
+                    {/* Plata */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <span className="inline-flex items-center gap-2">
+                                <span className="text-gray-400">🥈</span>
+                                Medallas de Plata
+                            </span>
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={silverCount}
+                            onChange={(e) => setSilverCount(e.target.value)}
+                            placeholder="0"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        />
+                    </div>
+
+                    {/* Bronce */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <span className="inline-flex items-center gap-2">
+                                <span className="text-orange-600">🥉</span>
+                                Medallas de Bronce
+                            </span>
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={bronzeCount}
+                            onChange={(e) => setBronzeCount(e.target.value)}
+                            placeholder="0"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        />
+                    </div>
+
+                    {/* Mención Honorífica */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <span className="inline-flex items-center gap-2">
+                                <span className="text-purple-500">🎖️</span>
+                                Mención Honorífica
+                            </span>
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={honorableMentionCount}
+                            onChange={(e) => setHonorableMentionCount(e.target.value)}
+                            placeholder="0"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        />
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleGenerateMedals}
+                    disabled={isSubmittingMedals || !selectedAreaId || !selectedLevelId}
+                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                    {isSubmittingMedals ? "Generando..." : "Generar Medallero"}
+                </button>
+            </div>
+
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1 min-w-0">
                     <Select
@@ -267,7 +404,7 @@ export default function MedalsPage() {
                 />
             </div>
 
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
                 <div className="max-w-full overflow-x-auto"></div>
                 <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
                     <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
@@ -302,13 +439,7 @@ export default function MedalsPage() {
                                     <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
                                     <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
                                     <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
-                                    <td key="medal" className="px-6 py-4 text-sm text-center">
-                                        <MedalSelector
-                                            value={s.classification_place as string | null}
-                                            disabled={savingRow === s.evaluation_id}
-                                            onChange={(newPlace) => handleMedalChange(s.evaluation_id, newPlace)}
-                                        />
-                                    </td>,
+                                    <td key="medal" className="px-6 py-4 text-sm text-center">{s.classification_place as string | null}</td>,
                                 ]}
                             </TableRow>
                         ))}
