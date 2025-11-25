@@ -67,23 +67,6 @@ export const getAwardWinningCompetitors = async (
     return res.data.contestants; // ✔️ ahora sí devuelves un array
 };
 
-
-
-
-
-// //Conteo de concursantes por estado de clasificación
-// export const getContestantStats = async (
-//     olympiadId: number,
-//     areaId: number,
-//     phaseId: number,
-//     levelId: number
-// ): Promise<ContestantStats> => {
-//     const res = await ohSansiApi.get<ContestantStats>(
-//         `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
-//     );
-//     return res.data;
-// };
-
 //For medals
 export const getContestantMedals = async (
     olympiadId: number,
@@ -104,3 +87,32 @@ export async function updateMedal(
     const { data } = await ohSansiApi.patch(`/evaluations/${id}/classification`, payload);
     return data as { message: string; status: number };
 }
+
+// Interface para los datos del medallero
+export interface MedalCounts {
+    gold: number;
+    silver: number;
+    bronze: number;
+    honorable_mention: number;
+}
+
+// Interface para los parámetros de la petición
+export interface GenerateMedalParams {
+    olympiadId: number;
+    areaId: number;
+    levelId: number;
+    medalCounts: {
+        gold: number;
+        silver: number;
+        bronze: number;
+        honorable_mention: number;
+    };
+}
+
+export const getContestantStats = async (olympiadId: number, areaId: number, levelId: number, medalCounts: MedalCounts
+): Promise<ContestantMedal[]> => {
+    const res = await ohSansiApi.get<ContestantMedal[]>(
+        `/contestants/awarded/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+    return res.data;
+};

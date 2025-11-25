@@ -11,6 +11,8 @@ import { ContestantMedal } from "../../types/Contestant";
 import MedalSelector from "./MedalSelector";
 import type { ClassificationLabel } from "./MedalSelector";
 import Alert from "../ui/alert/Alert";
+import MedalInputs from "./MedalInputs";
+// import { medalService } from "../../api/services/medalServices";
 
 export default function MedalsPage() {
 
@@ -144,7 +146,7 @@ export default function MedalsPage() {
             normalize(s.first_name).includes(q) ||
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
-             return matchesSearch ;
+        return matchesSearch;
     });
 
     async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
@@ -216,6 +218,63 @@ export default function MedalsPage() {
             }
         };
     }, []);
+
+    // // Función para generar el medallero con las cantidades ingresadas
+    // async function handleGenerateMedals(counts: { gold: number; silver: number; bronze: number; honorable: number }) {
+    //     const idOlympiad = selectedOlympiad?.id ?? 0;
+    //     const idArea = selectedAreaId ?? 0;
+    //     const levelId = selectedLevelId ?? 0;
+
+    //     // Validar que tengamos todos los datos necesarios
+    //     if (!idOlympiad || !idArea || !levelId) {
+    //         showAlert("Error", "Debe seleccionar una olimpiada, área y nivel", "error");
+    //         return;
+    //     }
+
+    //     // Validar que al menos haya una medalla para asignar
+    //     const totalMedals = counts.gold + counts.silver + counts.bronze + counts.honorable;
+    //     if (totalMedals === 0) {
+    //         showAlert("Error", "Debe ingresar al menos una medalla para generar el medallero", "warning");
+    //         return;
+    //     }
+
+    //     try {
+    //         setLoading(true);
+    //         showAlert("Procesando", "Generando medallero...", "info");
+
+    //         // Llamar al servicio para generar el medallero
+    //         const response = await medalService.generateMedals(
+    //             idOlympiad,
+    //             idArea,
+    //             levelId,
+    //             {
+    //                 gold: counts.gold,
+    //                 silver: counts.silver,
+    //                 bronze: counts.bronze,
+    //                 honorable_mention: counts.honorable
+    //             }
+    //         );
+
+    //         console.log("Medallero generado exitosamente:", response);
+
+    //         // Recargar la lista de estudiantes para reflejar los cambios
+    //         const data = await getContestantMedals(idOlympiad, idArea, levelId);
+    //         setStudents(sortStudentsByMedal(data));
+
+    //         showAlert(
+    //             "Medallero generado",
+    //             `Se asignaron ${response.winners?.length || totalMedals} medallas exitosamente`,
+    //             "success"
+    //         );
+    //     } catch (error: any) {
+    //         console.error("Error generando medallero:", error);
+    //         const errorMessage = error.response?.data?.message || "No se pudo generar el medallero. Intente nuevamente.";
+    //         showAlert("Error", errorMessage, "error");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }
+
     return (
         <>
             {alertOpen && (
@@ -260,6 +319,12 @@ export default function MedalsPage() {
                     />
                 </div>
             </div>
+
+            {/* Inputs para ingresar cantidades de medallas
+            {selectedAreaId && selectedLevelId && (
+                <MedalInputs onGenerate={handleGenerateMedals} loading={loading} />
+            )} */}
+
             <div className="flex items-center mb-3">
                 <SearchBar
                     onSearch={setSearchQuery}
