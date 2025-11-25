@@ -37,6 +37,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
 
+
     // ---- Modal Avalar ----
     const [openApproveModal, setOpenApproveModal] = useState(false);
     const [savingApprove, setSavingApprove] = useState(false);
@@ -46,11 +47,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
-
-    // Edición de nota
-    const [editingCi, setEditingCi] = useState<string | null>(null);
-    const [draftNote, setDraftNote] = useState<number | "">("");
-    const [saving, setSaving] = useState(false);
 
     // Estado para el Alert
     const [alertOpen, setAlertOpen] = useState(false);
@@ -66,25 +62,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
-    // const [selectedFilters, setSelectedFilters] = useState({
-    //     estado: [] as string[],
-    //     grado: [] as string[],
-    // });
-
-    // const [stats, setStats] = useState({
-    //     total: 0,
-    //     classified: 0,
-    //     no_classified: 0,
-    //     disqualified: 0
-    // });
 
     // Reset aval (endorsed) al cambiar de nivel o fase
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
 
-    // Helper para mapear boolean -> etiqueta usada por el filtro
-    // const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
     const getEvaluationId = (s: Contestant): number | string => {
         // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
@@ -93,6 +76,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
+        
     }
     function closeCommentModal(): void {
         if (commentSaving === true) return;
@@ -204,9 +188,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     }
 
                     setStudents((prev) =>
-                        prev.map((st) => {
-                            // Evitar que el polling pise la fila que se está editando
-                            if (editingCi === st.ci_document) return st;
+                        prev.map((st) => {   
                             const evalId = (st as any).evaluation_id as number | undefined;
                             // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
@@ -365,47 +347,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }, 3000);
     }
 
-    // Guardar nota parcial
-    async function saveNote(s: Contestant): Promise<void> {
-        if (saving) return;
-        if (phaseStatus === "Terminada") {
-            showAlert("No editable", "La fase está terminada. No se permiten cambios.");
-            return;
-        }
-        if (draftNote === "" || isNaN(Number(draftNote))) return;
-        const nota = Math.max(0, Math.min(100, Number(draftNote)));
-
-        try {
-            setSaving(true);
-            const id = getEvaluationId(s);
-            await updatePartialEvaluation(id, { score: nota });
-            // Actualiza estado local (opcional: marcar status=true)
-            setStudents((prev) =>
-                prev.map((st) =>
-                    st.contestant_id === s.contestant_id
-                        ? { ...st, score: nota, status: true }
-                        : st,
-                ),
-            );
-            setEditingCi(null);
-            setDraftNote("");
-
-            // // Refrescar estadísticas si hay nivel seleccionado
-            // if (selectedLevelId != null) {
-            //     try {
-            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-            //         setStats(st);
-            //     } catch {
-            //         // ignorar
-            //     }
-            // }
-        } catch (e) {
-            setError("No se pudo guardar la nota.");
-        } finally {
-            setSaving(false);
-        }
-    }
-
     // Avalar fase para el nivel seleccionado
     async function handleApproveSave(): Promise<void> {
         if (!selectedLevelId) return;
@@ -534,10 +475,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         onSearch={setSearchQuery}
                         placeholder="Buscar por nombre, apellido o CI..."
                     />
-                    {/* <Filter
-                        selectedFilters={selectedFilters}
-                        setSelectedFilters={setSelectedFilters}
-                    /> */}
+
                 </div>
                 <Button
                     type="button"
@@ -588,7 +526,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             </tr>
                         )}
                         {!loading && !error && filteredStudents.map((s) => {
-                            const isEditing = editingCi === s.ci_document;
                             return (
                                 <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                     <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
@@ -606,72 +543,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {(s.classification_status === "descalificado" || s.classification_status === null) && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
-                                        {/* {( s.classification_status === null) && (
-                                            <Badge color="light">-</Badge>
-                                        )} */}
 
                                     </td>
 
-                                    <td
-                                        className={`px-6 py-4 text-sm items-center justify-center ${isEditing ? "" : "cursor-text"}`}
-                                        onClick={() => {
-                                            if (endorsed || phaseStatus === "Terminada") return; // Bloquear edición si avalado o fase terminada
-                                            if (!isEditing) {
-                                                // Permitir editar incluso si está Evaluado
-                                                setEditingCi(s.ci_document);
-                                                if (typeof s.score === "number") setDraftNote(s.score);
-                                                else setDraftNote("");
-                                            }
-                                        }}
-                                    >
-                                        {isEditing ? (
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={draftNote}
-                                                    autoFocus
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") void saveNote(s);
-                                                    }}
-                                                    onChange={(e) => {
-                                                        const v = e.target.value;
-                                                        setDraftNote(v === "" ? "" : Number(v));
-                                                    }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => void saveNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Aceptar"
-                                                >
-                                                    <CheckLineIcon className="size-5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true}
-                                                    onClick={() => {
-                                                        setEditingCi(null);
-                                                        setDraftNote("");
-                                                    }}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Rechazar"
-                                                >
-                                                    <CloseLineIcon className="size-5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 justify-center">
-                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
-                                            </div>
-                                        )}
-                                     
-                                            
-                                    </td>
+                                     <td className="px-6 py-4 text-sm text-center">
+                                            {typeof s.score === "number" ? s.score : "—"}
+                                        </td>
                                     <td className="px-6 py-4 text-sm text-center">
                                         <button
                                             type="button"
@@ -712,7 +589,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 student={commentStudent}
                 draft={commentDraft}
                 saving={commentSaving}
-                onChangeDraft={setCommentDraft}
+                onChangeDraft={()=> void setCommentDraft(commentDraft)}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
             />

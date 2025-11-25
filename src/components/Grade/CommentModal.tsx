@@ -11,6 +11,7 @@ interface CommentModalProps {
     onChangeDraft: (value: string) => void;
     onSave: () => void;
     onClose: () => void;
+    readOnly?: boolean;
 }
 
 export default function CommentModal({
@@ -21,6 +22,7 @@ export default function CommentModal({
     onChangeDraft,
     onSave,
     onClose,
+    readOnly = false,
 }: CommentModalProps) {
 
     useEffect(() => {
@@ -73,14 +75,15 @@ export default function CommentModal({
                 <div>
                     <textarea
                         value={draft}
-                        onChange={(e) => onChangeDraft(e.target.value)}
-                        placeholder="Escribir retroalimentación para el estudiante..."
-                        className="block h-48 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10"
+                        onChange={(e) => { if (!readOnly) onChangeDraft(e.target.value); }}
+                        readOnly={readOnly}
+                        placeholder={readOnly ? "Modo solo lectura" : "Escribir retroalimentación para el estudiante..."}
+                        className={`block h-48 w-full resize-none rounded-lg border px-3 py-2 text-sm ${readOnly ? 'bg-gray-100 border-gray-200' : 'border-gray-300 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10'}`}
                     />
                     <div className="mt-2 text-right text-xs text-gray-500">{draft.length} caracteres</div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-end gap-2">
+                    <div className="mt-5 flex items:center justify-end gap-2">
                     <button
                         type="button"
                         onClick={onClose}
@@ -89,14 +92,16 @@ export default function CommentModal({
                     >
                         Cancelar
                     </button>
-                    <button
-                        type="button"
-                        onClick={onSave}
-                        disabled={saving}
-                        className="inline-flex items-center justify-center rounded-md bg-brand-600 px-3 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
-                    >
-                        Guardar
-                    </button>
+                    {!readOnly && (
+                        <button
+                            type="button"
+                            onClick={onSave}
+                            disabled={saving}
+                            className="inline-flex items-center justify-center rounded-md bg-brand-600 px-3 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
+                        >
+                            Guardar
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

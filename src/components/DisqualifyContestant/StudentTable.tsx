@@ -44,7 +44,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
 
-
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
