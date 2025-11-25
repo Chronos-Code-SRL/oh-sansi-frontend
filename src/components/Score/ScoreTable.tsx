@@ -90,7 +90,6 @@ export default function ScoreTable({
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Clasificación</th>
           </TableRow>
@@ -113,18 +112,6 @@ export default function ScoreTable({
               <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
               <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-
-              <td className="px-6 py-4 text-sm text-center">
-                <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
-                    s.status
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-rose-100 text-rose-700"
-                  }`}
-                >
-                  {s.status ? "Evaluado" : "No Evaluado"}
-                </span>
-              </td>
 
               <td className="px-6 py-4 text-sm text-center">
                 {typeof s.score === "number" ? s.score : "—"}
