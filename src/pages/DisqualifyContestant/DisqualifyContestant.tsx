@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
-import StudentTable from "../../components/DisqualifyContestant/StudentTable";
+import StudentTable from "../../components/disqualifyContestant/StudentTable";
 
 
 export default function ApprovePhase() {

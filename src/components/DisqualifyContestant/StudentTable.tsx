@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, MoreDotIcon } from "../../icons";
+import {  MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
+import {  getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
@@ -39,11 +39,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
 
-    // Edición de nota
-    const [editingCi, setEditingCi] = useState<string | null>(null);
-    const [draftNote, setDraftNote] = useState<number | "">("");
-    const [saving, setSaving] = useState(false);
-
     // Estado para el Alert
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
@@ -58,7 +53,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
-   
+
     const getEvaluationId = (s: Contestant): number | string => {
         return (s as any).evaluation_id ?? s.contestant_id;
     };
@@ -101,7 +96,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setError(null);
             return;
         }
-        const levelId = selectedLevelId; 
+        const levelId = selectedLevelId;
 
         let alive = true;
         setLoading(true);
@@ -181,8 +176,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
                     setStudents((prev) =>
                         prev.map((st) => {
-                            // Evitar que el polling pise la fila que se está editando
-                            if (editingCi === st.ci_document) return st;
+
                             const evalId = (st as any).evaluation_id as number | undefined;
                             // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
@@ -260,8 +254,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
 
-        
-        return matchesSearch ;
+
+        return matchesSearch;
     });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
@@ -289,7 +283,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         : st,
                 ),
             );
-            
+
             closeCommentModal();
         } catch {
             showAlert("Error", "No se pudo guardar el comentario ni estado. Intenta nuevamente.");
@@ -313,47 +307,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setAlertOpen(false);
             autoHideTimerRef.current = null;
         }, 3000);
-    }
-
-    // Guardar nota parcial
-    async function saveNote(s: Contestant): Promise<void> {
-        if (saving) return;
-        if (phaseStatus === "Terminada") {
-            showAlert("No editable", "La fase está terminada. No se permiten cambios.");
-            return;
-        }
-        if (draftNote === "" || isNaN(Number(draftNote))) return;
-        const nota = Math.max(0, Math.min(100, Number(draftNote)));
-
-        try {
-            setSaving(true);
-            const id = getEvaluationId(s);
-            await updatePartialEvaluation(id, { score: nota });
-            // Actualiza estado local (opcional: marcar status=true)
-            setStudents((prev) =>
-                prev.map((st) =>
-                    st.contestant_id === s.contestant_id
-                        ? { ...st, score: nota, status: true }
-                        : st,
-                ),
-            );
-            setEditingCi(null);
-            setDraftNote("");
-
-            // // Refrescar estadísticas si hay nivel seleccionado
-            // if (selectedLevelId != null) {
-            //     try {
-            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-            //         setStats(st);
-            //     } catch {
-            //         // ignorar
-            //     }
-            // }
-        } catch (e) {
-            setError("No se pudo guardar la nota.");
-        } finally {
-            setSaving(false);
-        }
     }
 
     useEffect(() => {
@@ -380,46 +333,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     />
                 </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Competidores */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Total competidores
-                    </p>
-                    <p className="text-3xl font-bold mt-2">{students.length}</p>
-                </div>
-
-                {/* Clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-green-600">
-                        {students.filter(s => s.classification_status === "clasificado").length}
-                    </p>
-                </div>
-
-                {/* No clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        No clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-red-600">
-                        {students.filter(s => s.classification_status === "no_clasificado").length}
-                    </p>
-                </div>
-
-                {/* Desclasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Desclasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {students.filter(s => s.classification_status === "descalificado"|| s.classification_status === null ).length}
-                    </p>
-                </div>
-
-            </div>
 
             <div className="relative xl:w-90 mb-4">
                 <Select
@@ -442,158 +355,97 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="flex items-center mb-3">
-                <div className="flex items-center flex-grow">
-                    <SearchBar
-                        onSearch={setSearchQuery}
-                        placeholder="Buscar por nombre, apellido o CI..."
-                    />
-                    {/* <Filter
+                <div className="flex items-center mb-3">
+                    <div className="flex items-center flex-grow">
+                        <SearchBar
+                            onSearch={setSearchQuery}
+                            placeholder="Buscar por nombre, apellido o CI..."
+                        />
+                        {/* <Filter
                         selectedFilters={selectedFilters}
                         setSelectedFilters={setSelectedFilters}
                     /> */}
+                    </div>
                 </div>
-            </div>
-        )}
+            )}
 
             {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acción</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading === true && (
+                <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div className="max-w-full overflow-x-auto"></div>
+                    <Table className="rounded-xl">
+                        <TableHeader className="bg-gray-100 ">
                             <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acción</th>
                             </TableRow>
-                        )}
-                        {error !== null && loading === false && (
-                            <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {selectedLevelId === null && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Por favor, seleccione un nivel para ver los estudiantes.
-                                </td>
-                            </tr>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => {
-                            const isEditing = editingCi === s.ci_document;
-                            return (
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        {s.classification_status === "clasificado" && (
-                                            <Badge color="success">Clasificado</Badge>
-                                        )}
-                                        {s.classification_status === "no_clasificado" && (
-                                            <Badge color="error">No clasificado</Badge>
-                                        )}
-                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
-                                            <Badge color="warning">Desclasificado</Badge>
-                                        )}
-                                        {/* {( s.classification_status === null) && (
-                                            <Badge color="light">-</Badge>
-                                        )} */}
-
-                                    </td>
-
-                                    <td
-                                        className={`px-6 py-4 text-sm items-center justify-center ${isEditing ? "" : "cursor-text"}`}
-                                        onClick={() => {
-                                            if ( phaseStatus === "Terminada") return; // Bloquear edición si avalado o fase terminada
-                                            if (!isEditing) {
-                                                // Permitir editar incluso si está Evaluado
-                                                setEditingCi(s.ci_document);
-                                                if (typeof s.score === "number") setDraftNote(s.score);
-                                                else setDraftNote("");
-                                            }
-                                        }}
-                                    >
-                                        {isEditing ? (
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={draftNote}
-                                                    autoFocus
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") void saveNote(s);
-                                                    }}
-                                                    onChange={(e) => {
-                                                        const v = e.target.value;
-                                                        setDraftNote(v === "" ? "" : Number(v));
-                                                    }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => void saveNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Aceptar"
-                                                >
-                                                    <CheckLineIcon className="size-5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true}
-                                                    onClick={() => {
-                                                        setEditingCi(null);
-                                                        setDraftNote("");
-                                                    }}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Rechazar"
-                                                >
-                                                    <CloseLineIcon className="size-5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 justify-center">
-                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
-                                            </div>
-                                        )}
-                                     
-                                            
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        <button
-                                            type="button"
-                                            disabled={  phaseStatus === "Terminada"}
-                                            onClick={() => { if ( phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${ phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
-                                            title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
-                                        >
-                                            <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
-                                        </button>
-                                    </td>
+                        </TableHeader>
+                        <TableBody>
+                            {loading === true && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
+                            )}
+                            {error !== null && loading === false && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                </TableRow>
+                            )}
+                            {selectedLevelId === null && (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Por favor, seleccione un nivel para ver los estudiantes.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && !error && filteredStudents.map((s) => {
 
-            </div>
+                                return (
+                                    <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                                        <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {s.classification_status === "clasificado" && (
+                                                <Badge color="success">Clasificado</Badge>
+                                            )}
+                                            {s.classification_status === "no_clasificado" && (
+                                                <Badge color="error">No clasificado</Badge>
+                                            )}
+                                            {(s.classification_status === "descalificado" || s.classification_status === null) && (
+                                                <Badge color="warning">Desclasificado</Badge>
+                                            )}                                   
+                                        </td>
+
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {typeof s.score === "number" ? s.score : "—"}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            <button
+                                                type="button"
+                                                disabled={phaseStatus === "Terminada"}
+                                                onClick={() => { if (phaseStatus === "Terminada") return; openCommentModal(s); }}
+                                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
+                                                title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                            >
+                                                <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                            </button>
+                                        </td>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+
+                </div>
             )}
             {alertOpen && (
                 <div
@@ -620,7 +472,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
             />
-            
+
         </>
     )
 }
