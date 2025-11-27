@@ -11,7 +11,7 @@ interface MedalManagementFormProps {
         bronze: string;
         honorable_mention: string;
     }) => Promise<void>;
-    onShowAlert: (title: string, message: string, variant: "success" | "error" | "warning" | "info") => void;
+    onShowAlert: (title: string, message: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 export default function MedalManagementForm({

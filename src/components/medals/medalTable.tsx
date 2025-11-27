@@ -147,7 +147,7 @@ export default function MedalsPage() {
         return matchesSearch;
     });
 
-    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info") {
+    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info" = "success"): void {
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -200,23 +200,6 @@ export default function MedalsPage() {
     }, []);
     return (
         <>
-            {alertOpen && (
-                <div className="pointer-events-auto" role="alert" aria-live="polite">
-                    <Alert
-                        variant={alertVariant}
-                        title={alertTitle}
-                        message={alertMessage}
-                    />
-                </div>
-            )}
-
-            {/* Gestión de Medallas Form */}
-            <MedalManagementForm
-                selectedAreaId={selectedAreaId}
-                selectedLevelId={selectedLevelId}
-                onGenerateMedals={handleGenerateMedals}
-                onShowAlert={showAlert}
-            />
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1 min-w-0">
@@ -228,9 +211,16 @@ export default function MedalsPage() {
                         }))}
                         value={selectedAreaId == null ? "" : String(selectedAreaId)}
                         onChange={(value: string) => {
-                            if (!value) { setSelectedAreaId(null); return; }
+                            if (!value) {
+                                setSelectedAreaId(null);
+                                setSelectedLevelId(null);
+                                return;
+                            }
                             const num = Number(value);
-                            if (!Number.isNaN(num)) setSelectedAreaId(num);
+                            if (!Number.isNaN(num)) {
+                                setSelectedAreaId(num);
+                                setSelectedLevelId(null);
+                            }
                         }}
                     />
                 </div>
@@ -248,60 +238,88 @@ export default function MedalsPage() {
                             const num = Number(value);
                             if (!Number.isNaN(num)) setSelectedLevelId(num);
                         }}
+                        disabled={selectedAreaId === null}
                     />
                 </div>
             </div>
-            <div className="flex items-center mb-3">
-                <SearchBar
-                    onSearch={setSearchQuery}
-                    placeholder="Buscar por nombre, apellido o CI..."
-                />
-            </div>
 
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
-                    <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Unidad Educativa</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Area</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Pocisión</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading && (
-                            <TableRow>
-                                {/* Header tiene 7 columnas -> usa colSpan={7} */}
-                                <td colSpan={7} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
-                            </TableRow>
-                        )}
-                        {error && !loading && (
-                            <TableRow>
-                                <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => (
-                            <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
-                                {[
-                                    <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
-                                    <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
-                                    <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
-                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
-                                    <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
-                                    <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
-                                    <td key="medal" className="px-6 py-4 text-sm text-center">{s.classification_place as string | null}</td>,
-                                ]}
-                            </TableRow>
-                        ))}
-                    </TableBody>
+            {selectedAreaId !== null && selectedLevelId !== null && (
+                <>
+                    {/* Gestión de Medallas Form */}
+                    <MedalManagementForm
+                        selectedAreaId={selectedAreaId}
+                        selectedLevelId={selectedLevelId}
+                        onGenerateMedals={handleGenerateMedals}
+                        onShowAlert={showAlert}
+                    />
+                    <div className="flex items-center mb-3">
+                        <SearchBar
+                            onSearch={setSearchQuery}
+                            placeholder="Buscar por nombre, apellido o CI..."
+                        />
+                    </div>
 
-                </Table>
+                    <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+                        <div className="max-w-full overflow-x-auto"></div>
+                        <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
+                            <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
+                                <TableRow>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Unidad Educativa</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Area</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Pocisión</th>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loading && (
+                                    <TableRow>
+                                        {/* Header tiene 7 columnas -> usa colSpan={7} */}
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
+                                    </TableRow>
+                                )}
+                                {error && !loading && (
+                                    <TableRow>
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                    </TableRow>
+                                )}
+                                {!loading && !error && filteredStudents.map((s) => (
+                                    <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
+                                        {[
+                                            <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
+                                            <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
+                                            <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
+                                            <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
+                                            <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
+                                            <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
+                                            <td key="medal" className="px-6 py-4 text-sm text-center">{s.classification_place as string | null}</td>,
+                                        ]}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
 
-            </div>
+                        </Table>
+
+                    </div>
+                </>
+            )}
+
+            {alertOpen && (
+                <div
+                    className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
+                    role="presentation"
+                >
+                    <div className="pointer-events-auto" role="alert" aria-live="polite">
+                        <Alert
+                            variant={alertVariant}
+                            title={alertTitle}
+                            message={alertMessage}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     )
 }
