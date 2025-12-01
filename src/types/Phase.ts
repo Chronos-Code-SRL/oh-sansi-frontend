@@ -1,4 +1,4 @@
-export interface Phase{
+export interface Phase {
     id: number;
     name: string;
     order: number;
@@ -18,5 +18,10 @@ export interface PhaseResponse {
     area_id: number;
     level_id: number;
     phase_status: PhaseStatus;
+    status: number;
+}
+
+export interface LastPhaseStatusResponse {
+    message: string;
     status: number;
 }

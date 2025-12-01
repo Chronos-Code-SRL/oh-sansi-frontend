@@ -1,5 +1,6 @@
 import { ohSansiApi } from "../ohSansiApi";
 import { AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import { LastPhaseStatusResponse } from "../../types/Phase";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -68,7 +69,7 @@ export const getAwardWinningCompetitors = async (
 };
 
 //For medals
-export const getContestantMedals = async (olympiadId: number,areaId: number,levelId: number,
+export const getContestantMedals = async (olympiadId: number, areaId: number, levelId: number,
 ): Promise<ContestantMedal[]> => {
     const res = await ohSansiApi.get<ContestantMedal[]>(
         `/contestants/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
@@ -85,6 +86,7 @@ export async function updateMedal(
     return data as { message: string; status: number };
 }
 
+// Post for Award Medals
 export const awardMedals = async (
     olympiadId: number,
     areaId: number,
@@ -98,5 +100,16 @@ export const awardMedals = async (
     return res.data;
 };
 
-//For new Medal Stats
 
+//For medal count status
+export const getLastPhaseStatus = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number
+): Promise<LastPhaseStatusResponse> => {
+    const res = await ohSansiApi.get<LastPhaseStatusResponse>(
+        `/phases/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/last-phase-status`
+    );
+
+    return res.data;
+};
