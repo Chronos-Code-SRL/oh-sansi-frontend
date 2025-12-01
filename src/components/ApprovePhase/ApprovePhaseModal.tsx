@@ -1,12 +1,11 @@
 import { createPortal } from "react-dom";
-import { Contestant } from "../../types/Contestant";
 import { useEffect } from "react";
 import { AlertHexaIcon } from "../../icons";
 import Button from "../ui/button/Button";
 
 interface ApprovePhaseModalProps {
     open: boolean;
-    student: Contestant | null;
+    phaseName: string;
     draft: string;
     saving: boolean;
     onChangeDraft: (value: string) => void;
@@ -16,8 +15,7 @@ interface ApprovePhaseModalProps {
 
 export default function ApprovePhaseModal({
     open,
-    student,
-    draft,
+    phaseName,
     saving,
     onChangeDraft,
     onSave,
@@ -62,7 +60,7 @@ export default function ApprovePhaseModal({
                         </div>
 
                             <p className="mt-1 text-sm text-gray-700">
-                                Se avalará este nivel.
+                                Se avalará la {phaseName} de este nivel.
                                 Esta acción indica que ya no se podrá modificar nada
                             </p>
                         
@@ -93,7 +91,7 @@ export default function ApprovePhaseModal({
                         onClick={onSave}
                         variant="primary"
                     >
-                        Confirmar Aval de la Fase de este nivel 
+                        Confirmar 
                     </Button>
                 </div>
 

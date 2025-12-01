@@ -26,7 +26,7 @@ export default function CommentModal({
 }: CommentModalProps) {
 
     useEffect(() => {
-        if (!open) return; 
+        if (!open) return;
         const prev = document.body.style.overflow;
         document.body.style.overflow = "hidden";
         const onKey = (e: KeyboardEvent) => {
@@ -35,7 +35,7 @@ export default function CommentModal({
         window.addEventListener("keydown", onKey);
         return () => {
             window.removeEventListener("keydown", onKey);
-            document.body.style.overflow = prev; 
+            document.body.style.overflow = prev;
         };
     }, [open, onClose]);
 
@@ -77,13 +77,21 @@ export default function CommentModal({
                         value={draft}
                         onChange={(e) => { if (!readOnly) onChangeDraft(e.target.value); }}
                         readOnly={readOnly}
+                        tabIndex={readOnly ? -1 : undefined}
+                        disabled={readOnly}
                         placeholder={readOnly ? "Modo solo lectura" : "Escribir retroalimentación para el estudiante..."}
-                        className={`block h-48 w-full resize-none rounded-lg border px-3 py-2 text-sm ${readOnly ? 'bg-gray-100 border-gray-200' : 'border-gray-300 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10'}`}
+                        className={`block h-48 w-full resize-none rounded-lg border px-3 py-2 text-sm 
+                            ${readOnly
+                                ? 'bg-gray-100 border-gray-200 pointer-events-none'
+                                : 'border-gray-300 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10'
+                            }`}
                     />
+
+
                     <div className="mt-2 text-right text-xs text-gray-500">{draft.length} caracteres</div>
                 </div>
 
-                    <div className="mt-5 flex items:center justify-end gap-2">
+                <div className="mt-5 flex items:center justify-end gap-2">
                     <button
                         type="button"
                         onClick={onClose}

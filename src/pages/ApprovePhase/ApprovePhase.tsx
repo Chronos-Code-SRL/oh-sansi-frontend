@@ -29,6 +29,7 @@ export default function ApprovePhase() {
                     idPhase={Number(phaseId)}
                     idOlympiad={Number(idOlympiad)}
                     idArea={Number(areaId)}
+                    phaseName={decodedPhaseName}
                 />
             </ComponentCard>
         </>

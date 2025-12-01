@@ -9,7 +9,6 @@ import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
-// import Filter from "../Grade/Filter";
 import Button from "../ui/button/Button";
 // import Alert from "../ui/alert/Alert";
 import Alert from "../ui/alert/Alert";
@@ -23,9 +22,10 @@ interface Props {
     idPhase: number;
     idOlympiad: number;
     idArea: number;
+    phaseName: string;
 }
 
-export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
+export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }: Props) {
     const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
@@ -544,7 +544,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
                                         { s.classification_status === null && (
-                                            <Badge color="warning">-</Badge>
+                                            <Badge color="neutral">-</Badge>
                                         )}
                                     </td>
 
@@ -595,12 +595,13 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onChangeDraft={()=> void setCommentDraft(commentDraft)}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
+                readOnly={true} 
             />
             <ApprovePhaseModal
                 open={openApproveModal}
-                student={null}
-                draft={approveDraft}
+                phaseName={phaseName}
                 saving={savingApprove}
+                draft={approveDraft}
                 onChangeDraft={setApproveDraft}
                 onSave={() => void handleApproveSave()}
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
