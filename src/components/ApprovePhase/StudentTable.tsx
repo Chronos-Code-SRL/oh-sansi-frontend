@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, MoreDotIcon } from "../../icons";
+import { CheckLineIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
+import { getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
@@ -442,7 +442,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         Desclasificados
                     </p>
                     <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {students.filter(s => s.classification_status === "descalificado"|| s.classification_status === null ).length}
+                        {students.filter(s => s.classification_status === "descalificado" ).length}
                     </p>
                 </div>
 
@@ -540,14 +540,17 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         {s.classification_status === "no_clasificado" && (
                                             <Badge color="error">No clasificado</Badge>
                                         )}
-                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
+                                        {s.classification_status === "descalificado"  && (
                                             <Badge color="warning">Desclasificado</Badge>
                                         )}
-
+                                        { s.classification_status === null && (
+                                            <Badge color="warning">-</Badge>
+                                        )}
                                     </td>
 
                                      <td className="px-6 py-4 text-sm text-center">
-                                            {typeof s.score === "number" ? s.score : "—"}
+                                            {typeof s.score === "number" ? s.score : 
+                                            <Badge color="neutral">-</Badge>}
                                         </td>
                                     <td className="px-6 py-4 text-sm text-center">
                                         <button
