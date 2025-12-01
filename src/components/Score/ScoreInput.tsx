@@ -32,7 +32,22 @@ export default function ScoreInput({
   const [_saveType, setSaveType] = useState<"umbral" | "maxima" | null>(null);
   const [editingMin, setEditingMin] = useState(false);
   const [editingMax, setEditingMax] = useState(false);
+  const [canEditMaxScore, setCanEditMaxScore] = useState(true);
 
+const checkIfHasQualified = async () => {
+    try {
+      const res = await scoreCutsService.checkQualified(
+        olympiadId,
+        phaseId,
+        areaId,
+        levelId
+      );
+
+      setCanEditMaxScore(res.status === 200);
+    } catch (error) {
+      console.error("Error verificando competidores:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchScores = async () => {
@@ -64,6 +79,7 @@ export default function ScoreInput({
     };
 
     fetchScores();
+    checkIfHasQualified();
   }, [olympiadId, areaId, levelId, phaseId]);
 
   const handleUpdateWithType = (type: "umbral" | "maxima") => {
@@ -194,7 +210,7 @@ export default function ScoreInput({
                       className="flex-1"
                     />
 
-                    {editingMax && (
+                    {editingMax && canEditMaxScore&& (
                       <>
                         <button
                           type="button"
@@ -222,9 +238,13 @@ export default function ScoreInput({
                       </>
                     )}
                   </div>
+                  {!canEditMaxScore && (
+                    <p className="text-xs text-red-500 mt-1">
+                    Ya existen competidores calificados. No puedes editar la nota máxima.
+                    </p>
+                  )}
                 </div>
               </div>
-
             </div>
 
             {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
