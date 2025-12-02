@@ -21,13 +21,18 @@ export default function AreaSelectDinamic({
 
     const [selectedValues, setSelectedValues] = useState<string[]>([]);
     const [areas, setAreas] = useState<Area[]>([]);
+    const [availableAreas, setAvailableAreas] = useState<Area[]>([]);
     const [loading, setLoading] = useState(true);
 
     const [msKey, setMsKey] = useState(0);
 
     useEffect(() => {
-        setSelectedValues(initialSelected);
-        setMsKey(prev => prev + 1); 
+        if (initialSelected.length === 0) {
+            setSelectedValues([]);
+        } else {
+            setSelectedValues(initialSelected);
+        }
+        setMsKey(prev => prev + 1);
     }, [initialSelected, olympiadId]);
 
     useEffect(() => {
@@ -35,6 +40,10 @@ export default function AreaSelectDinamic({
             try {
                 const response = await getAreaByOlympiadId(olympiadId);
                 setAreas(response);
+                const disponibles = response.filter(
+                    (area: Area) => !initialSelected.includes(String(area.id))
+                );
+                setAvailableAreas(disponibles);
             } catch (error) {
                 console.error("Error al obtener áreas:", error);
             } finally {
@@ -42,9 +51,10 @@ export default function AreaSelectDinamic({
             }
         };
         fetchAreas();
-    }, [olympiadId]);
+    }, [olympiadId, initialSelected]);
 
-    const multiOptions = areas.map(area => ({
+
+    const multiOptions = availableAreas.map(area => ({
         value: String(area.id),
         text: area.name,
         selected: selectedValues.includes(String(area.id))
@@ -54,18 +64,40 @@ export default function AreaSelectDinamic({
 
     return (
         <div className="space-y-2">
+
+            {initialSelected.length > 0 && (
+                <div>
+                    <p className="text-sm font-medium mb-1">Áreas registradas:</p>
+
+                    <div className="flex flex-wrap gap-2">
+                        {initialSelected.map(id => {
+                            const area = areas.find(a => String(a.id) === id);
+
+                            return (
+                                <span
+                                    key={id}
+                                    className="px-3 py-1 bg-gray-200 rounded-full text-sm"
+                                >
+                                    {area?.name ?? "Área registrada"}
+                                </span>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             <MultiSelect
-                key={msKey}  
-                label="Seleccionar Área(s)"
+                key={msKey}
+                label="Añadir nuevas Área(s):"
                 options={multiOptions}
-                defaultSelected={initialSelected}
+                defaultSelected={[]}
                 onChange={(values) => {
                     setSelectedValues(values);
 
                     const output =
                         valueType === "name"
                             ? values.map(v =>
-                                  areas.find(a => String(a.id) === v)?.name || v
+                                  availableAreas.find(a => String(a.id) === v)?.name || v
                               )
                             : values;
 
