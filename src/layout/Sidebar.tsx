@@ -133,7 +133,7 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
-  
+
 ];
 const othersItems: NavItem[] = [];
 
@@ -141,8 +141,14 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const user = getUser();
-  const isAdmin = getRoleName(user) === "Admin";
-  const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
+  const roleNames = getRoleName(user);
+  const isAdmin = roleNames[0] === "Admin";
+  const userPerms = user
+  ? [...new Set(
+      user.roles_id.flatMap(role => rolePermissions[role.id] || [])
+    )]
+  : [];
+
   const { selectedOlympiad } = useOlympiad();
   const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);

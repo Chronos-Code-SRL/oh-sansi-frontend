@@ -5,8 +5,13 @@ export interface User{
   first_name:string;
   last_name:string;
   email:string;
-  roles_id:number;
+  roles_id:Role[];
 }
+
+export interface Role {
+  id: number;
+  name: string;
+} 
 
 export interface LoginResponse {
   token: string;
