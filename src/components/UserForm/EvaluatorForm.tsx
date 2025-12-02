@@ -25,6 +25,7 @@ export default function EvaluatorForm() {
   const [areas_id, setAreas] = useState<string[]>([]);
   const [roles_id] = useState("3"); 
   const [userAreasIds, setUserAreasIds] = useState<string[]>([]);
+  const [_existingRoles, setExistingRoles] = useState<number[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
@@ -85,88 +86,101 @@ export default function EvaluatorForm() {
 
     setIsSearching(true);
 
-    try {
-      //Buscar como Evaluador
-      try {
-        const resEvaluator = await userSearch.searchUser(Number(olympiadId), ci, 3);
-        const user = resEvaluator.data.user;
-        const userAreas = resEvaluator.data.areas || [];
+    let foundEvaluator = false;
+    let foundResponsible = false;
 
-        setUserExists(true);
+    try {
+      //Busca como Evaluador
+      try {
+        const resEval = await userSearch.searchUser(Number(olympiadId), ci, 3);
+        const user = resEval.data.user;
+        const userAreas = resEval.data.areas || [];
+
+        foundEvaluator = true;
+        setExistingRoles(prev => Array.from(new Set([...prev, 3])));
         setIsEvaluator(true);
         setIsResponsible(false);
+        setUserExists(true);
 
         setfirst_name(user.first_name);
         setlast_name(user.last_name);
         setEmail(user.email);
         setphone_number(user.phone_number);
         setgenre(user.genre);
+        setUserAreasIds(userAreas.map((a: any) => String(a.id)));
+        setAreas(userAreas.map((a: any) => String(a.id)));
+
+        setShowFormSections(true);
 
         if (userAreas.length > 0) {
-          setUserAreasIds(userAreas.map((a: any) => String(a.id)));
-          setAreas(userAreas.map((a: any) => a.id));
           setSearchAlert({
             type: "success",
             title: "Usuario encontrado",
-            message: "El usuario está registrado como Evaluador en esta olimpiada. Puede editar las áreas.",
+            message: "Este usuario está registrado como Evaluador. Puede editar las áreas.",
           });
-          setShowFormSections(true);
-          return;
+        } else {
+          setSearchAlert({
+            type: "info",
+            title: "Registrado como Evaluador",
+            message:
+              "Este usuario es Evaluador, pero no está registrado en esta olimpiada. Seleccione áreas.",
+          });
         }
 
-        setUserAreasIds([]);
-        setAreas([]);
-        setSearchAlert({
-          type: "info",
-          title: "No registrado en esta olimpiada",
-          message: "Este usuario es Evaluador, pero NO está registrado en esta olimpiada. Seleccione las áreas para registrarlo.",
-        });
-        setShowFormSections(true);
-        return;
+      } catch (_) {}
 
-      } catch (_) {
-      }
-
-      //Buscar como Responsable (NO permitir)
+      //Busca como Responsable
       try {
-        await userSearch.searchUser(Number(olympiadId), ci, 2);
+        const resResponsible = await userSearch.searchUser(Number(olympiadId), ci, 2);
+        const user = resResponsible.data.user;
 
+        foundResponsible = true;
+        setExistingRoles(prev => Array.from(new Set([...prev, 2])));
         setIsResponsible(true);
         setUserExists(true);
+
+        if (!foundEvaluator) {
+          setfirst_name(user.first_name);
+          setlast_name(user.last_name);
+          setEmail(user.email);
+          setphone_number(user.phone_number);
+          setgenre(user.genre);
+
+          setSearchAlert({
+            type: "info",
+            title: "Rol adicional disponible",
+            message:
+              "Este usuario ya es Responsable Académico. También puede registrarse como Evaluador.",
+          });
+        }
+
+        setShowFormSections(true);
+
+      } catch (_) {}
+
+      // Nuevo usuario
+      if (!foundEvaluator && !foundResponsible) {
+        setUserExists(false);
         setIsEvaluator(false);
+        setIsResponsible(false);
+        setExistingRoles([]);
+
+        setfirst_name("");
+        setlast_name("");
+        setEmail("");
+        setphone_number("");
+        setgenre("");
+        setUserAreasIds([]);
+        setAreas([]);
+
+        setShowFormSections(true);
 
         setSearchAlert({
-          type: "error",
-          title: "Cambio de Rol no permitido",
-          message: "Este usuario es Responsable Académico. No puede registrarse como Evaluador.",
+          type: "warning",
+          title: "Nuevo usuario",
+          message: "Este usuario no existe en el sistema. Puede registrarlo.",
         });
-
-        setShowFormSections(false);
-        return;
-
-      } catch (_) {
       }
-
-      //Nuevo usuario
-      setUserExists(false);
-      setIsEvaluator(false);
-      setIsResponsible(false);
-
-      setfirst_name("");
-      setlast_name("");
-      setEmail("");
-      setphone_number("");
-      setgenre("");
-      setUserAreasIds([]);
-      setAreas([]);
-
-      setShowFormSections(true);
-
-      setSearchAlert({
-        type: "warning",
-        title: "Nuevo usuario",
-        message: "El usuario no existe en el sistema. Puede registrarlo como Evaluador.",
-      });
 
     } finally {
       setIsSearching(false);
@@ -491,7 +505,7 @@ export default function EvaluatorForm() {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
             ¡Registro exitoso!
           </h2>
-          <Label>El Responsable Académico ha sido registrado exitosamente.</Label>
+          <Label>El Evaluador ha sido registrado exitosamente.</Label>
           <Button
             size="md"
             variant="primary"
