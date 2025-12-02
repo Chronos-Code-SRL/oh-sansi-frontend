@@ -3,7 +3,7 @@ import Badge from "../ui/badge/Badge";
 import { CheckLineIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
+import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
@@ -76,7 +76,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
-        
+
     }
     function closeCommentModal(): void {
         if (commentSaving === true) return;
@@ -109,7 +109,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             setError(null);
             return;
         }
-        const levelId = selectedLevelId; 
+        const levelId = selectedLevelId;
 
         let alive = true;
         setLoading(true);
@@ -188,7 +188,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     }
 
                     setStudents((prev) =>
-                        prev.map((st) => {   
+                        prev.map((st) => {
                             const evalId = (st as any).evaluation_id as number | undefined;
                             // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
@@ -285,7 +285,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         //     selectedFilters.grado.includes(s.grade_name);
 
         // return matchesSearch && matchesEstado && matchesGrado;
-        return matchesSearch ;
+        return matchesSearch;
     });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
@@ -394,60 +394,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
     return (
         <>
-            {phaseStatus === "Terminada" && (
-                <div className="mb-4">
-                    <BoxFinishedPhase />
-                </div>
-            )}
-            {phaseStatus === "Sin empezar" && (
-                <div className="mb-4">
-                    <BoxFaseLevel
-                        title={"Fase no iniciada"}
-                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
-                    />
-                </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Competidores */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Total competidores
-                    </p>
-                    <p className="text-3xl font-bold mt-2">{students.length}</p>
-                </div>
-
-                {/* Clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-green-600">
-                        {students.filter(s => s.classification_status === "clasificado").length}
-                    </p>
-                </div>
-
-                {/* No clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        No clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-red-600">
-                        {students.filter(s => s.classification_status === "no_clasificado").length}
-                    </p>
-                </div>
-
-                {/* Desclasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Desclasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {students.filter(s => s.classification_status === "descalificado" ).length}
-                    </p>
-                </div>
-
-            </div>
-
             <div className="relative xl:w-90 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
@@ -468,108 +414,165 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="flex items-center mb-3">
-                <div className="flex items-center flex-grow">
-                    <SearchBar
-                        onSearch={setSearchQuery}
-                        placeholder="Buscar por nombre, apellido o CI..."
+            {phaseStatus === "Terminada" && (
+                <div className="mb-4">
+                    <BoxFinishedPhase />
+                </div>
+            )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
                     />
+                </div>
+            )}
+
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {/* Total Competidores */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Total competidores
+                        </p>
+                        <p className="text-3xl font-bold mt-2">{students.length}</p>
+                    </div>
+
+                    {/* Clasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Clasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-green-600">
+                            {students.filter(s => s.classification_status === "clasificado").length}
+                        </p>
+                    </div>
+
+                    {/* No clasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            No clasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-red-600">
+                            {students.filter(s => s.classification_status === "no_clasificado").length}
+                        </p>
+                    </div>
+
+                    {/* Desclasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Desclasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-yellow-600">
+                            {students.filter(s => s.classification_status === "descalificado").length}
+                        </p>
+                    </div>
 
                 </div>
-                <Button
-                    type="button"
-                    size="sm"
-                    disabled={selectedLevelId == null || savingApprove || endorsed || phaseStatus === "Terminada"}
-                    onClick={() => setOpenApproveModal(true)}
-                    startIcon={<CheckLineIcon className="w-5 h-5" />}
-                >
-                    Avalar Fase
-                </Button>
+            )}
 
-            </div>
-        )}
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+                <div className="flex items-center mb-3">
+                    <div className="flex items-center flex-grow">
+                        <SearchBar
+                            onSearch={setSearchQuery}
+                            placeholder="Buscar por nombre, apellido o CI..."
+                        />
+
+                    </div>
+                    <Button
+                        type="button"
+                        size="sm"
+                        disabled={selectedLevelId == null || savingApprove || endorsed || phaseStatus === "Terminada"}
+                        onClick={() => setOpenApproveModal(true)}
+                        startIcon={<CheckLineIcon className="w-5 h-5" />}
+                    >
+                        Avalar Fase
+                    </Button>
+
+                </div>
+            )}
 
             {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acciones</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading === true && (
+                <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div className="max-w-full overflow-x-auto"></div>
+                    <Table className="rounded-xl">
+                        <TableHeader className="bg-gray-100 ">
                             <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acciones</th>
                             </TableRow>
-                        )}
-                        {error !== null && loading === false && (
-                            <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {selectedLevelId === null && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Por favor, seleccione un nivel para ver los estudiantes.
-                                </td>
-                            </tr>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => {
-                            return (
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        {s.classification_status === "clasificado" && (
-                                            <Badge color="success">Clasificado</Badge>
-                                        )}
-                                        {s.classification_status === "no_clasificado" && (
-                                            <Badge color="error">No clasificado</Badge>
-                                        )}
-                                        {s.classification_status === "descalificado"  && (
-                                            <Badge color="warning">Desclasificado</Badge>
-                                        )}
-                                        { s.classification_status === null && (
-                                            <Badge color="neutral">-</Badge>
-                                        )}
-                                    </td>
-
-                                     <td className="px-6 py-4 text-sm text-center">
-                                            {typeof s.score === "number" ? s.score : 
-                                            <Badge color="neutral">-</Badge>}
-                                        </td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        <button
-                                            type="button"
-                                            disabled={endorsed || phaseStatus === "Terminada"}
-                                            onClick={() => { if (endorsed || phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${endorsed || phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
-                                            title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
-                                        >
-                                            <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
-                                        </button>
-                                    </td>
+                        </TableHeader>
+                        <TableBody>
+                            {loading === true && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
+                            )}
+                            {error !== null && loading === false && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                </TableRow>
+                            )}
+                            {selectedLevelId === null && (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Por favor, seleccione un nivel para ver los estudiantes.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && !error && filteredStudents.map((s) => {
+                                return (
+                                    <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                                        <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {s.classification_status === "clasificado" && (
+                                                <Badge color="success">Clasificado</Badge>
+                                            )}
+                                            {s.classification_status === "no_clasificado" && (
+                                                <Badge color="error">No clasificado</Badge>
+                                            )}
+                                            {s.classification_status === "descalificado" && (
+                                                <Badge color="warning">Desclasificado</Badge>
+                                            )}
+                                            {s.classification_status === null && (
+                                                <Badge color="neutral">-</Badge>
+                                            )}
+                                        </td>
 
-            </div>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {typeof s.score === "number" ? s.score :
+                                                <Badge color="neutral">-</Badge>}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            <button
+                                                type="button"
+                                                disabled={endorsed || phaseStatus === "Terminada"}
+                                                onClick={() => { if (endorsed || phaseStatus === "Terminada") return; openCommentModal(s); }}
+                                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${endorsed || phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
+                                                title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                            >
+                                                <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                            </button>
+                                        </td>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+
+                </div>
             )}
             {alertOpen && (
                 <div
@@ -592,10 +595,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 student={commentStudent}
                 draft={commentDraft}
                 saving={commentSaving}
-                onChangeDraft={()=> void setCommentDraft(commentDraft)}
+                onChangeDraft={() => void setCommentDraft(commentDraft)}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
-                readOnly={true} 
+                readOnly={true}
             />
             <ApprovePhaseModal
                 open={openApproveModal}
