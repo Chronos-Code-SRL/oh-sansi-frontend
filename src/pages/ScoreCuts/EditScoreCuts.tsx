@@ -6,6 +6,9 @@ import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import SelectLevel from "../../components/Score/SelectLevel";
 import ScoreInput from "../../components/Score/ScoreInput";
 import ScoreTable from "../../components/Score/ScoreTable";
+import BoxFinishedPhase from "../../components/common/BoxFinishedPhase";
+import { BoxFaseLevel } from "../../components/common/BoxPhasesLevel";
+import { getPhaseStatus } from "../../api/services/phaseService";
 
 export default function EditScoreCuts() {
   const { idOlympiad, areaName, areaId, phaseName, phaseId } = useParams<{
@@ -25,10 +28,35 @@ export default function EditScoreCuts() {
   const [scoreCut, setScoreCut] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
+   const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
+
   useEffect(() => {
     setSelectedLevel(null);
     setScoreCut(null);
   }, [areaId, phaseId]);
+
+ // Obtener el estado de la fase para el nivel seleccionado y bloquear edición si está terminada
+  useEffect(() => {
+          let alive = true;
+          async function loadPhaseStatus() {
+              if (selectedLevel == null) {
+                  if (alive) setPhaseStatus(null);
+                  return;
+              }
+              try {
+                  const res = await getPhaseStatus(olympiadId, Number(areaId) , selectedLevel, Number(phaseId) );
+                  if (!alive) return;
+                  const status = res?.phase_status?.status ?? null;
+                  setPhaseStatus(status as any);
+              } catch (err) {
+                  console.warn("[ScoreTable] getPhaseStatus error", err);
+                  if (alive) setPhaseStatus(null);
+              }
+          }
+          void loadPhaseStatus();
+          return () => { alive = false; };
+      }, [selectedLevel, phaseId, olympiadId, areaId]);
+  
 
   return (
     <>
@@ -39,6 +67,12 @@ export default function EditScoreCuts() {
 
       <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
+      {phaseStatus === "Terminada" && (
+        <div className="mb-4">
+          <BoxFinishedPhase />
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
           <SelectLevel
             olympiadId={olympiadId}
@@ -54,6 +88,7 @@ export default function EditScoreCuts() {
               areaId={Number(areaId) || 0}
               levelId={selectedLevel}
               phaseId={Number(phaseId)}
+              phaseStatus={phaseStatus}
               onChangeScoreCut={setScoreCut}
             />
         )}

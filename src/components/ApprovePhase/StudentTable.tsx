@@ -414,6 +414,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
+            
             {phaseStatus === "Terminada" && (
                 <div className="mb-4">
                     <BoxFinishedPhase />
