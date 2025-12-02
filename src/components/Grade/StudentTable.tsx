@@ -64,6 +64,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
+    const phaseStatusPollingRef = useRef<number | null>(null);
 
     // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
     const getEvaluationId = (s: Contestant): number | string => {
@@ -163,31 +164,54 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    // Obtener estado de fase para el nivel seleccionado
+    // Obtener estado de fase para el nivel seleccionado con polling en tiempo real
     useEffect(() => {
         let alive = true;
+        
         async function loadPhaseStatus() {
             if (selectedLevelId == null) {
                 if (alive) setPhaseStatus(null);
                 return;
             }
-            // setPhaseLoading(true);
-            // setPhaseError(null);
             try {
                 const res = await getPhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
                 if (!alive) return;
                 const status = res?.phase_status?.status ?? null;
                 setPhaseStatus(status as any);
+                console.debug("[phaseStatus] updated:", status);
             } catch (err) {
                 console.warn("[StudentTable] getPhaseStatus error", err);
-                // if (alive) setPhaseError("No se pudo obtener el estado de la fase.");
                 if (alive) setPhaseStatus(null);
-            } finally {
-                // if (alive) setPhaseLoading(false);
             }
         }
+        
+        // Cargar estado inicial
         void loadPhaseStatus();
-        return () => { alive = false; };
+        
+        // Iniciar polling cada 5 segundos (ajustable según necesidad)
+        if (selectedLevelId != null) {
+            phaseStatusPollingRef.current = window.setInterval(() => {
+                void loadPhaseStatus();
+            }, 5000);
+            console.log("[phaseStatus] polling started (5000ms)");
+        }
+        
+        // Actualizar cuando la ventana recupera el foco
+        const onFocus = () => { if (selectedLevelId != null) void loadPhaseStatus(); };
+        const onVis = () => { if (!document.hidden && selectedLevelId != null) void loadPhaseStatus(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVis);
+        
+        return () => { 
+            alive = false;
+            if (phaseStatusPollingRef.current) {
+                window.clearInterval(phaseStatusPollingRef.current);
+                phaseStatusPollingRef.current = null;
+                console.log("[phaseStatus] polling stopped");
+            }
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVis);
+        };
     }, [selectedLevelId, idPhase, idOlympiad, idArea]);
 
     // Polling para actualizaciones en tiempo real
