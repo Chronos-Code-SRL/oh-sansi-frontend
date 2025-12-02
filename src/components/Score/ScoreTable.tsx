@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { getContestantByPhaseOlympiadAreaLevel } from "../../api/services/contestantService";
 import { Contestant } from "../../types/Contestant";
+import Badge from "../ui/badge/Badge";
 
 interface ScoreTableProps {
   olympiadId: number;
@@ -23,7 +24,7 @@ export default function ScoreTable({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!levelId || !phaseId) return; 
+    if (!levelId || !phaseId) return;
     let alive = true;
 
     async function loadContestants() {
@@ -90,6 +91,7 @@ export default function ScoreTable({
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+            {/* <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th> */}
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
             <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Clasificación</th>
           </TableRow>
@@ -99,13 +101,12 @@ export default function ScoreTable({
           {processedStudents.map((s) => (
             <TableRow
               key={s.contestant_id}
-              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${
-                s.isClassified
-                  ? "bg-emerald-50 dark:bg-emerald-950/20"
-                  : typeof s.score === "number"
-                  ? "bg-rose-50 dark:bg-rose-950/20"
-                  : "bg-gray-50 dark:bg-gray-900/30"
-              }`}
+              className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${s.isClassified
+                // ? "bg-emerald-50 dark:bg-emerald-950/20"
+                // : typeof s.score === "number"
+                // ? "bg-rose-50 dark:bg-rose-950/20"
+                // : "bg-gray-50 dark:bg-gray-900/30"
+                }`}
             >
               <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
@@ -113,11 +114,24 @@ export default function ScoreTable({
               <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
               <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
 
-              <td className="px-6 py-4 text-sm text-center">
-                {typeof s.score === "number" ? s.score : "—"}
-              </td>
+              {/* <td className="px-6 py-4 text-sm text-center">
+                <span
+                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
+                    s.status
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-rose-100 text-rose-700"
+                  }`}
+                >
+                  {s.status ? "Evaluado" : "No Evaluado"}
+                </span>
+              </td> */}
 
               <td className="px-6 py-4 text-sm text-center">
+                {typeof s.score === "number" ? s.score :
+                  <Badge color="neutral">-</Badge>}
+              </td>
+
+              {/* <td className="px-6 py-4 text-sm text-center">
                 {typeof s.score === "number" ? (
                   s.isClassified ? (
                     <span className="inline-flex rounded-full px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium">
@@ -131,7 +145,23 @@ export default function ScoreTable({
                 ) : (
                   <span className="text-gray-500 italic">Sin nota</span>
                 )}
+              </td> */}
+
+              <td className="px-6 py-4 text-sm text-center">
+                {s.classification_status === "clasificado" && (
+                  <Badge color="success">Clasificado</Badge>
+                )}
+                {s.classification_status === "no_clasificado" && (
+                  <Badge color="error">No clasificado</Badge>
+                )}
+                {s.classification_status === "descalificado" && (
+                  <Badge color="warning">Desclasificado</Badge>
+                )}
+                {s.classification_status === null && (
+                  <Badge color="neutral">-</Badge>
+                )}
               </td>
+
             </TableRow>
           ))}
         </TableBody>
