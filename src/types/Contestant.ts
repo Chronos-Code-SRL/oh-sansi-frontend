@@ -99,6 +99,17 @@ export interface ContestantMedal {
     classification_place: string | null;
 }
 
+export interface AwardMedalsPayload {
+    gold: string;
+    silver: string;
+    bronze: string;
+    honorable_mention: string;
+}
+
+export interface AwardMedalsResponse {
+    message: string;
+}
+
 //For update medals
 // export interface UpdateMedalPayload {
 //     classification_place?: number | null;

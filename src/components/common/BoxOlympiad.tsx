@@ -16,8 +16,12 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
     const navigate = useNavigate(); // Hook para manejar la navegación
     const { setSelectedOlympiad } = useOlympiad();
 
+    // Verificar si la olimpiada está en planificación
+    const isInPlanning = status === "En planificación";
+
     // Función para manejar el clic en el botón
     const handleButtonClick = () => {
+        if (isInPlanning) return; // No permitir acceso si está en planificación
         setSelectedOlympiad({ id, name, status });
         navigate(`/registration`);
     };
@@ -36,7 +40,13 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                     {/* Aca tenemos que consumir de la Api el nombre de la olimpiada */}
                     {name}
                 </h3>
-                <Badge color={status === "Activa" ? "success" : "error"}>
+                <Badge
+                    color={
+                        status === "Activa" ? "success" :
+                            status === "En planificación" ? "error" :
+                                "warning"
+                    }
+                >
                     {status}
                 </Badge>  {/*Aca tengo que consumir de la Api si esta activo o inactivo */}
             </div>
@@ -64,11 +74,13 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                 </div>
             </div>
             <div className="mt-auto">
-                <Button size="sm"
+                <Button
+                    size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleButtonClick}
+                    disabled={isInPlanning}
                 >
-                    Acceder a olimpiada
+                    {isInPlanning ? "En planificación" : "Acceder a olimpiada"}
                 </Button>
             </div>
 

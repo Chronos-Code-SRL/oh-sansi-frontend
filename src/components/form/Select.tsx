@@ -10,6 +10,7 @@ interface SelectProps {
   placeholder?: string;
   value?: string;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -17,10 +18,14 @@ const Select: React.FC<SelectProps> = ({
   placeholder = "Seleccione una opción",
   value,
   onChange,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleDropdown = () => setIsOpen((prev) => !prev);
+  const toggleDropdown = () => {
+    if (disabled) return;
+    setIsOpen((prev) => !prev);
+  };
 
   const selectedLabel = options.find((o) => o.value === value)?.label;
 
@@ -29,7 +34,9 @@ const Select: React.FC<SelectProps> = ({
       {/* input visual */}
       <div
         onClick={toggleDropdown}
-        className="mb-2 flex h-11 w-full cursor-pointer items-center justify-between rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+        className={`mb-2 flex h-11 w-full items-center justify-between rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 ${
+          disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+        }`}
       >
         <span className={selectedLabel ? "" : "text-gray-400 dark:text-gray-500"}>
           {selectedLabel || placeholder}

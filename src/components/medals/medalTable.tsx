@@ -6,11 +6,10 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantMedals, updateMedal } from "../../api/services/contestantService";
+import { getContestantMedals, awardMedals, getLastPhaseStatus } from "../../api/services/contestantService";
 import { ContestantMedal } from "../../types/Contestant";
-import MedalSelector from "./MedalSelector";
-import type { ClassificationLabel } from "./MedalSelector";
 import Alert from "../ui/alert/Alert";
+import MedalManagementForm from "./MedalManagementForm";
 
 export default function MedalsPage() {
 
@@ -32,6 +31,11 @@ export default function MedalsPage() {
 
     const [students, setStudents] = useState<ContestantMedal[]>([]);
     const [savingRow, setSavingRow] = useState<number | null>(null);
+
+    // Estados para validación de última fase
+    const [isLastPhaseEndorsed, setIsLastPhaseEndorsed] = useState<boolean>(false);
+    const [phaseStatusChecked, setPhaseStatusChecked] = useState<boolean>(false);
+
     // Alert states
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState("");
@@ -99,7 +103,8 @@ export default function MedalsPage() {
         return () => clearTimeout(t);
     }, []);
 
-    // Cargar concursantes cuando hay área, nivel y olimpiada
+    // Cargar concursantes cuando hay área, nivel y olimpiada, Primero valida con getLastPhaseStatus, 
+    // LUEGO carga estudiantes
     useEffect(() => {
         let alive = true;
 
@@ -109,20 +114,51 @@ export default function MedalsPage() {
             const levelId = selectedLevelId ?? 0;
 
             if (idOlympiad === 0 || idArea === 0 || levelId === 0) {
-                if (alive) setStudents([]);
+                if (alive) {
+                    setStudents([]);
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(false);
+                }
                 return;
             }
-
             try {
                 setLoading(true);
                 setError(null);
+                setPhaseStatusChecked(false);
+                setIsLastPhaseEndorsed(false);
 
+                // PASO 1: Validar el estado de la última fase
+                const phaseStatusResponse = await getLastPhaseStatus(idOlympiad, idArea, levelId);
+
+                if (!alive) return;
+
+                // Si llega aquí, la respuesta fue exitosa (200)
+                setIsLastPhaseEndorsed(true);
+                setPhaseStatusChecked(true);
+
+                // PASO 2: Cargar los estudiantes
                 const data = await getContestantMedals(idOlympiad, idArea, levelId);
-                setStudents(sortStudentsByMedal(data));
-            } catch (e) {
-                if (alive) {
+                if (alive) setStudents(data);
+
+            } catch (error: any) {
+                if (!alive) return;
+                if (error?.response?.status === 403) {
+                    // 403: La última fase no está avalada
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(true);
                     setStudents([]);
-                    setError("No se pudieron cargar los competidores.");
+                }
+                else {
+                    // Otro tipo de error (red, servidor, etc.)
+                    console.error("Error al validar fase:", error);
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(true);
+                    setStudents([]);
+                    showAlert(
+                        "Error de validación",
+                        "No se pudo verificar el estado de la última fase.",
+                        "error"
+                    );
                 }
             } finally {
                 if (alive) setLoading(false);
@@ -133,7 +169,6 @@ export default function MedalsPage() {
             alive = false;
         };
     }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
-    console.log("Deberiamos imprimir los estudiantes", students);
 
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -144,56 +179,10 @@ export default function MedalsPage() {
             normalize(s.first_name).includes(q) ||
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
-             return matchesSearch ;
+        return matchesSearch;
     });
 
-    async function handleMedalChange(evaluationId: number, newPlace: ClassificationLabel | null) {
-        const student = students.find(s => s.evaluation_id === evaluationId);
-        const fullName = student ? `${student.first_name} ${student.last_name}` : `evaluación ${evaluationId}`;
-        setSavingRow(evaluationId);
-        setStudents(prev => sortStudentsByMedal(prev.map(st => st.evaluation_id === evaluationId ? { ...st, classification_place: newPlace } : st)));
-        try {
-            await updateMedal(evaluationId, { classification_place: newPlace });
-            const placeText = newPlace ?? "Sin asignar";
-            showAlert("Medallero actualizado", `La posición es: ${placeText} para ${fullName}`, "success");
-        } catch (err) {
-            showAlert("Error al guardar", "No se pudo guardar la posición.", "error");
-            try {
-                const current = students.find(s => s.evaluation_id === evaluationId);
-                if (!current) return;
-                const idOlympiad = selectedOlympiad?.id ?? 0;
-                const idArea = selectedAreaId ?? 0;
-                const levelId = selectedLevelId ?? 0;
-                if (idOlympiad && idArea && levelId) {
-                    const data = await getContestantMedals(idOlympiad, idArea, levelId);
-                    setStudents(sortStudentsByMedal(data));
-                }
-            } catch {
-            }
-        } finally {
-            setSavingRow(null);
-        }
-    }
-
-    function sortStudentsByMedal(list: ContestantMedal[]): ContestantMedal[] {
-        const medalOrder: Record<string, number> = {
-            "Oro": 1,
-            "Plata": 2,
-            "Bronce": 3,
-            "Mención honorífica": 4,
-            "Mención de Honor": 4,
-        };
-        return [...list].sort((a, b) => {
-            const mA = medalOrder[a.classification_place ?? ""] ?? 99;
-            const mB = medalOrder[b.classification_place ?? ""] ?? 99;
-            if (mA !== mB) return mA - mB;
-            const sA = typeof a.score === "number" ? a.score : -Infinity;
-            const sB = typeof b.score === "number" ? b.score : -Infinity;
-            return sB - sA;
-        });
-    }
-
-    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info") {
+    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info" = "success"): void {
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -208,6 +197,34 @@ export default function MedalsPage() {
         }, 4000);
     }
 
+    async function handleGenerateMedals(medals: {
+        gold: string;
+        silver: string;
+        bronze: string;
+        honorable_mention: string;
+    }) {
+        const idOlympiad = selectedOlympiad?.id ?? 0;
+        const idArea = selectedAreaId ?? 0;
+        const levelId = selectedLevelId ?? 0;
+
+        if (idOlympiad === 0 || idArea === 0 || levelId === 0) {
+            showAlert("Campos incompletos", "Debe seleccionar una olimpiada, área y nivel.", "warning");
+            return;
+        }
+
+        try {
+            const response = await awardMedals(idOlympiad, idArea, levelId, medals);
+
+            showAlert("Medallero generado", response.message, "success");
+
+            // Recargar la tabla de estudiantes
+            const data = await getContestantMedals(idOlympiad, idArea, levelId);
+            setStudents(data);
+        } catch (error) {
+            showAlert("Error", "No se pudo generar el medallero. Intente nuevamente.", "error");
+        }
+    }
+
     useEffect(() => {
         return () => {
             if (autoHideTimerRef.current !== null) {
@@ -218,15 +235,7 @@ export default function MedalsPage() {
     }, []);
     return (
         <>
-            {alertOpen && (
-                <div className="pointer-events-auto" role="alert" aria-live="polite">
-                    <Alert
-                        variant={alertVariant}
-                        title={alertTitle}
-                        message={alertMessage}
-                    />
-                </div>
-            )}
+
             <div className="mb-4 flex flex-col gap-3 sm:flex-row">
                 <div className="flex-1 min-w-0">
                     <Select
@@ -237,9 +246,16 @@ export default function MedalsPage() {
                         }))}
                         value={selectedAreaId == null ? "" : String(selectedAreaId)}
                         onChange={(value: string) => {
-                            if (!value) { setSelectedAreaId(null); return; }
+                            if (!value) {
+                                setSelectedAreaId(null);
+                                setSelectedLevelId(null);
+                                return;
+                            }
                             const num = Number(value);
-                            if (!Number.isNaN(num)) setSelectedAreaId(num);
+                            if (!Number.isNaN(num)) {
+                                setSelectedAreaId(num);
+                                setSelectedLevelId(null);
+                            }
                         }}
                     />
                 </div>
@@ -257,66 +273,99 @@ export default function MedalsPage() {
                             const num = Number(value);
                             if (!Number.isNaN(num)) setSelectedLevelId(num);
                         }}
+                        disabled={selectedAreaId === null}
                     />
                 </div>
             </div>
-            <div className="flex items-center mb-3">
-                <SearchBar
-                    onSearch={setSearchQuery}
-                    placeholder="Buscar por nombre, apellido o CI..."
-                />
-            </div>
 
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
-                    <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Unidad Educativa</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Area</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Pocisión</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading && (
-                            <TableRow>
-                                {/* Header tiene 7 columnas -> usa colSpan={7} */}
-                                <td colSpan={7} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
-                            </TableRow>
-                        )}
-                        {error && !loading && (
-                            <TableRow>
-                                <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => (
-                            <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
-                                {[
-                                    <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
-                                    <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
-                                    <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
-                                    <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
-                                    <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
-                                    <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
-                                    <td key="medal" className="px-6 py-4 text-sm text-center">
-                                        <MedalSelector
-                                            value={s.classification_place as string | null}
-                                            disabled={savingRow === s.evaluation_id}
-                                            onChange={(newPlace) => handleMedalChange(s.evaluation_id, newPlace)}
-                                        />
-                                    </td>,
-                                ]}
-                            </TableRow>
-                        ))}
-                    </TableBody>
+            {/* Mensaje cuando la fase no está avalada */}
+            {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && !isLastPhaseEndorsed && (
+                <div className="mt-6">
+                    <Alert
+                        variant="warning"
+                        title="Fase no avalada"
+                        message={`La última fase de ${areas.find(a => a.id === selectedAreaId)?.name || 'esta área'} - ${levels.find(l => l.id === selectedLevelId)?.name || 'este nivel'} aún no ha sido avalada. No se pueden generar medallas hasta que se avale la fase.`}
+                    />
+                </div>
+            )}
 
-                </Table>
+            {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && isLastPhaseEndorsed && (
+                <>
+                    {/* Gestión de Medallas Form */}
+                    <MedalManagementForm
+                        selectedAreaId={selectedAreaId}
+                        selectedLevelId={selectedLevelId}
+                        onGenerateMedals={handleGenerateMedals}
+                        onShowAlert={showAlert}
+                    />
+                    <div className="flex items-center mb-3">
+                        <SearchBar
+                            onSearch={setSearchQuery}
+                            placeholder="Buscar por nombre, apellido o CI..."
+                        />
+                    </div>
 
-            </div>
+                    <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+                        <div className="max-w-full overflow-x-auto"></div>
+                        <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
+                            <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
+                                <TableRow>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Unidad Educativa</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Area</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Pocisión</th>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {loading && (
+                                    <TableRow>
+                                        {/* Header tiene 7 columnas -> usa colSpan={7} */}
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
+                                    </TableRow>
+                                )}
+                                {error && !loading && (
+                                    <TableRow>
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                    </TableRow>
+                                )}
+                                {!loading && !error && filteredStudents.map((s) => (
+                                    <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
+                                        {[
+                                            <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
+                                            <td key="ln" className="px-6 py-4 text-sm text-center">{s.last_name}</td>,
+                                            <td key="sch" className="px-6 py-4 text-sm text-center">{s.school_name}</td>,
+                                            <td key="area" className="px-6 py-4 text-sm text-center">{s.level_name ?? "—"}</td>,
+                                            <td key="lvl" className="px-6 py-4 text-sm text-center">{s.level_name}</td>,
+                                            <td key="score" className="px-6 py-4 text-sm text-center">{typeof s.score === "number" ? s.score : "—"}</td>,
+                                            <td key="medal" className="px-6 py-4 text-sm text-center">{s.classification_place as string | null}</td>,
+                                        ]}
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+
+                        </Table>
+
+                    </div>
+                </>
+            )}
+
+            {alertOpen && (
+                <div
+                    className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
+                    role="presentation"
+                >
+                    <div className="pointer-events-auto" role="alert" aria-live="polite">
+                        <Alert
+                            variant={alertVariant}
+                            title={alertTitle}
+                            message={alertMessage}
+                        />
+                    </div>
+                </div>
+            )}
         </>
     )
 }
