@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
@@ -143,11 +143,10 @@ const AppSidebar: React.FC = () => {
   const user = getUser();
   const roleNames = getRoleName(user);
   const isAdmin = roleNames[0] === "Admin";
-  const userPerms = user
-  ? [...new Set(
-      user.roles_id.flatMap(role => rolePermissions[role.id] || [])
-    )]
-  : [];
+  const userPerms = useMemo(() => {
+    if (!user || !Array.isArray(user.roles_id)) return [] as UPermission[];
+    return [...new Set(user.roles_id.flatMap((role: any) => rolePermissions[role.id] || []))];
+  }, [user?.roles_id?.map((r: any) => r.id).join(",")]);
 
   const { selectedOlympiad } = useOlympiad();
   const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
