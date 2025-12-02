@@ -6,7 +6,7 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantMedals, awardMedals } from "../../api/services/contestantService";
+import { getContestantMedals, awardMedals, getLastPhaseStatus } from "../../api/services/contestantService";
 import { ContestantMedal } from "../../types/Contestant";
 import Alert from "../ui/alert/Alert";
 import MedalManagementForm from "./MedalManagementForm";
@@ -31,6 +31,10 @@ export default function MedalsPage() {
 
     const [students, setStudents] = useState<ContestantMedal[]>([]);
     const [savingRow, setSavingRow] = useState<number | null>(null);
+
+    // Estados para validación de última fase
+    const [isLastPhaseEndorsed, setIsLastPhaseEndorsed] = useState<boolean>(false);
+    const [phaseStatusChecked, setPhaseStatusChecked] = useState<boolean>(false);
 
     // Alert states
     const [alertOpen, setAlertOpen] = useState(false);
@@ -99,7 +103,8 @@ export default function MedalsPage() {
         return () => clearTimeout(t);
     }, []);
 
-    // Cargar concursantes cuando hay área, nivel y olimpiada
+    // Cargar concursantes cuando hay área, nivel y olimpiada, Primero valida con getLastPhaseStatus, 
+    // LUEGO carga estudiantes
     useEffect(() => {
         let alive = true;
 
@@ -109,21 +114,51 @@ export default function MedalsPage() {
             const levelId = selectedLevelId ?? 0;
 
             if (idOlympiad === 0 || idArea === 0 || levelId === 0) {
-                if (alive) setStudents([]);
+                if (alive) {
+                    setStudents([]);
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(false);
+                }
                 return;
             }
-
             try {
                 setLoading(true);
                 setError(null);
+                setPhaseStatusChecked(false);
+                setIsLastPhaseEndorsed(false);
 
+                // PASO 1: Validar el estado de la última fase
+                const phaseStatusResponse = await getLastPhaseStatus(idOlympiad, idArea, levelId);
+
+                if (!alive) return;
+
+                // Si llega aquí, la respuesta fue exitosa (200)
+                setIsLastPhaseEndorsed(true);
+                setPhaseStatusChecked(true);
+
+                // PASO 2: Cargar los estudiantes
                 const data = await getContestantMedals(idOlympiad, idArea, levelId);
-                // setStudents(sortStudentsByMedal(data));
-                setStudents(data);
-            } catch (e) {
-                if (alive) {
+                if (alive) setStudents(data);
+
+            } catch (error: any) {
+                if (!alive) return;
+                if (error?.response?.status === 403) {
+                    // 403: La última fase no está avalada
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(true);
                     setStudents([]);
-                    setError("No se pudieron cargar los competidores.");
+                }
+                else {
+                    // Otro tipo de error (red, servidor, etc.)
+                    console.error("Error al validar fase:", error);
+                    setIsLastPhaseEndorsed(false);
+                    setPhaseStatusChecked(true);
+                    setStudents([]);
+                    showAlert(
+                        "Error de validación",
+                        "No se pudo verificar el estado de la última fase.",
+                        "error"
+                    );
                 }
             } finally {
                 if (alive) setLoading(false);
@@ -243,7 +278,18 @@ export default function MedalsPage() {
                 </div>
             </div>
 
-            {selectedAreaId !== null && selectedLevelId !== null && (
+            {/* Mensaje cuando la fase no está avalada */}
+            {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && !isLastPhaseEndorsed && (
+                <div className="mt-6">
+                    <Alert
+                        variant="warning"
+                        title="Fase no avalada"
+                        message={`La última fase de ${areas.find(a => a.id === selectedAreaId)?.name || 'esta área'} - ${levels.find(l => l.id === selectedLevelId)?.name || 'este nivel'} aún no ha sido avalada. No se pueden generar medallas hasta que se avale la fase.`}
+                    />
+                </div>
+            )}
+
+            {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && isLastPhaseEndorsed && (
                 <>
                     {/* Gestión de Medallas Form */}
                     <MedalManagementForm

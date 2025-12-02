@@ -33,7 +33,7 @@ export default function MedalManagementForm({
         }
 
         if (!goldCount && !silverCount && !bronzeCount && !honorableMentionCount) {
-            onShowAlert("Campos vacíos", "Debe ingresar al menos una cantidad de medallas.", "warning");
+            onShowAlert("Campos vacíos", "Si quiere que nadie tenga medallas, escriba todos los campos en 0. ", "warning");
             return;
         }
 
