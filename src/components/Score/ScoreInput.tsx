@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
@@ -6,6 +6,7 @@ import Button from "../../components/ui/button/Button";
 import { Modal } from "../../components/ui/modal";
 import { scoreCutsService } from "../../api/services/ScoreCutsService";
 import { CheckLineIcon, CloseLineIcon } from "../../icons";
+import Alert from "../../components/ui/alert/Alert";
 
 interface ScoreInputProps {
   olympiadId: number;
@@ -33,26 +34,73 @@ export default function ScoreInput({
   const [editingMin, setEditingMin] = useState(false);
   const [editingMax, setEditingMax] = useState(false);
   const [canEditMaxScore, setCanEditMaxScore] = useState(true);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState<string>("");
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertVariant, setAlertVariant] = useState<"success" | "error">("error");
+  const autoHideTimerRef = useRef<number | null>(null);
 
-const checkIfHasQualified = async () => {
-    try {
-      await scoreCutsService.checkQualified(
-        olympiadId,
-        phaseId,
-        areaId,
-        levelId
-      );
-
-      setCanEditMaxScore(true);
-    } catch (error: any) {
-      console.error("Error verificando competidores:", error);
-      if (error?.response?.status === 403) {
-      setCanEditMaxScore(false);
+  function showAlert(
+    title: string,
+    message: string,
+    variant: "success" | "error" = "error"
+  ) {
+    if (autoHideTimerRef.current !== null) {
+      window.clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
     }
+
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVariant(variant);
+    setAlertOpen(true);
+
+    autoHideTimerRef.current = window.setTimeout(() => {
+      setAlertOpen(false);
+      autoHideTimerRef.current = null;
+    }, 4000);
+  }
+
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: "umbral" | "maxima") => {
+    if (e.key === "Enter") {
+      if (type === "maxima" && !canEditMaxScore) {
+        showAlert(
+          "Edición bloqueada",
+          "Ya existen competidores calificados. No puedes editar la nota máxima.",
+          "error"
+        );
+        return;
+      }
+
+      if (type === "umbral") setEditingMin(false);
+      if (type === "maxima") setEditingMax(false);
+
+      handleUpdateWithType(type);
     }
   };
 
-  useEffect(() => {
+
+  const checkIfHasQualified = async () => {
+      try {
+        await scoreCutsService.checkQualified(
+          olympiadId,
+          phaseId,
+          areaId,
+          levelId
+        );
+
+        setCanEditMaxScore(true);
+      } catch (error: any) {
+        console.error("Error verificando competidores:", error);
+        if (error?.response?.status === 403) {
+        setCanEditMaxScore(false);
+      }
+      }
+    };
+
+  
+    useEffect(() => {
     const fetchScores = async () => {
       if (!levelId || !phaseId) return;
 
@@ -85,11 +133,13 @@ const checkIfHasQualified = async () => {
     checkIfHasQualified();
   }, [olympiadId, areaId, levelId, phaseId]);
 
+  
   const handleUpdateWithType = (type: "umbral" | "maxima") => {
     setSaveType(type);
     setTimeout(() => handleUpdate(type), 0);
   };
 
+  
   const handleUpdate = async (type: "umbral" | "maxima") => {
     setLoading(true);
     setError("");
@@ -108,7 +158,11 @@ const checkIfHasQualified = async () => {
 
       if (type === "maxima") {
         if (!canEditMaxScore) {
-          setError("No puedes editar la nota máxima porque ya existen competidores calificados.");
+          showAlert(
+            "Edición bloqueada",
+            "Ya existen competidores calificados. No puedes editar la nota máxima.",
+            "error"
+          );
           return;
         }
         payload.max_score = maxScore;
@@ -145,48 +199,51 @@ const checkIfHasQualified = async () => {
                   <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
 
                   <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
-                    <InputField
-                      id="minScore"
-                      type="number"
-                      min={"1"}
-                      value={minScore === 0 ? "" : minScore}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
-                        if (value < 0) return;
-                        setMinScore(Number(e.target.value));
-                        setEditingMin(true);
-                      }}
-                      placeholder="Ej. 51"
-                      className="flex-1"
-                    />
-
-                    {editingMin && (
+                    <div
+                      onKeyDown={(e) => handleKeyDown(e as any, "umbral")}
+                    >
+                      <InputField
+                        id="minScore"
+                        type="number"
+                        min={"1"}
+                        value={minScore === 0 ? "" : minScore}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+                          if (value < 0) return;
+                          setMinScore(Number(e.target.value));
+                          setEditingMin(true);
+                        }}
+                        placeholder="Ej. 51"
+                        className="w-28 text-center"
+                      />
+                    </div>
                       <>
                         <button
                           type="button"
-                          disabled={loading}
+                          disabled={loading || !editingMin}
                           onClick={() => {
                             setEditingMin(false);    
                             handleUpdateWithType("umbral");
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                            ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
                         >
                           <CheckLineIcon className="usersize-4" />
                         </button>
 
                         <button
                           type="button"
-                          disabled={loading}
+                          disabled={loading || !editingMin}
                           onClick={() => {
                             setMinScore(currentMinScore);
                             setEditingMin(false);
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                            ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
                         >
                           <CloseLineIcon className="size-4" />
                         </button>
                       </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -202,32 +259,48 @@ const checkIfHasQualified = async () => {
                   <Label htmlFor="maxScore">Nueva nota máxima</Label>
 
                   <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
-                    <InputField
-                      id="maxScore"
-                      type="number"
-                      min={"1"}
-                      value={maxScore === 0 ? "" : maxScore}
-                      onChange={(e) => {
-                        const value = Number(e.target.value);
-                        if (value < 0) return;
-                        setMaxScore(Number(e.target.value));
-                        setEditingMax(true);
+                    <div
+                      onClick={() => {
+                        if (!canEditMaxScore) {
+                          showAlert(
+                            "Edición bloqueada",
+                            "Ya existen competidores calificados. No puedes editar la nota máxima.",
+                            "error"
+                          );
+                        }
                       }}
-                      placeholder="Ej: 100"
-                      className="flex-1"
-                    />
-
-                    {editingMax && canEditMaxScore&& (
+                      onKeyDown={(e) => handleKeyDown(e as any, "maxima")}
+                    >
+                      <InputField
+                        id="maxScore"
+                        type="number"
+                        min={"1"}
+                        value={maxScore === 0 ? "" : maxScore}
+                        onChange={(e) => {
+                          if (!canEditMaxScore) return;
+                          const value = Number(e.target.value);
+                          if (value < 0) return;
+                          setMaxScore(value);
+                          setEditingMax(true);
+                        }}
+                        placeholder="Ej: 100"
+                        disabled={!canEditMaxScore}
+                        className={`w-28 text-center ${
+                          !canEditMaxScore ? "opacity-60 cursor-not-allowed pointer-events-none" : ""
+                        }`}
+                      />
+                    </div>
                       <>
                         <button
                           type="button"
-                          disabled={loading}
+                          disabled={!canEditMaxScore || loading || !editingMax}
                           onClick={() => {
                             setEditingMax(false); 
                             handleUpdateWithType("maxima");
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
-                        >
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                              ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                          >
                           <CheckLineIcon className="usersize-4" />
                         </button>
 
@@ -238,18 +311,13 @@ const checkIfHasQualified = async () => {
                             setMaxScore(currentMaxScore);
                             setEditingMax(false);
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                            ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
                         >
                           <CloseLineIcon className="usersize-4" />
                         </button>
                       </>
-                    )}
                   </div>
-                  {!canEditMaxScore && (
-                    <p className="text-xs text-red-500 mt-1">
-                    Ya existen competidores calificados. No puedes editar la nota máxima.
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
@@ -280,6 +348,17 @@ const checkIfHasQualified = async () => {
           </Button>
         </div>
       </Modal>
+
+      {alertOpen && (
+        <div
+          className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
+          role="presentation"
+        >
+          <div className="pointer-events-auto" role="alert" aria-live="polite">
+            <Alert variant={alertVariant} title={alertTitle} message={alertMessage} />
+          </div>
+        </div>
+      )}
     </>
   );
 }
