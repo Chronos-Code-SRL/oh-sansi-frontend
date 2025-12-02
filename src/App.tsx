@@ -22,6 +22,7 @@ import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
 import MedalsPage from "./pages/Medals/MedalsPage";
 import RankedContestantsList from "./pages/Lists/RankedContestatsList";
 import AwardedList from "./pages/Lists/AwardedList";
+import DisqualifyContestant from "./pages/DisqualifyContestant/DisqualifyContestant";
 
 export default function App() {
   return (
@@ -72,6 +73,8 @@ export default function App() {
             {/*Filters on list */}
             <Route path="/filtros-de-lista/:olympiadId" element={<FilterElements />} />
 
+            {/*Disqualify Contestant */}
+            <Route path="/descalificar-competidor/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<DisqualifyContestant />} />
 
             {/*Approve Phase */}
             <Route path="/aprobar-fase/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<ApprovePhase />} />

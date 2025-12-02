@@ -606,8 +606,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
             </div>
             )}
-
-            {alertOpen && (
+{alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
                     role="presentation"

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal, TrashBinIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -40,11 +40,13 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.AWARDED_CONTESTANTS_LIST,
     UPermission.MEDAL_PAGE,
+    UPermission.DISQUALIFY_COMPETITOR,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.RANKED_CONTESTANTS_LIST,
+    UPermission.DISQUALIFY_COMPETITOR,
   ],
 };
 
@@ -76,6 +78,13 @@ const navItems: NavItem[] = [
     name: "Registrar Competidores",
     path: "/registration",
     permission: UPermission.REGISTER_COMPETITOR
+  },
+  {
+    icon: <TrashBinIcon />,
+    name: "Descalificar Competidor",
+    path: "/descalificar-competidor",
+    subItems: [],
+    permission: UPermission.DISQUALIFY_COMPETITOR,
   },
   {
     icon: <ListIcon />,
@@ -124,6 +133,7 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
+
 ];
 const othersItems: NavItem[] = [];
 
@@ -131,8 +141,13 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const user = getUser();
-  const isAdmin = getRoleName(user) === "Admin";
-  const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
+  const roleNames = getRoleName(user);
+  const isAdmin = roleNames[0] === "Admin";
+  const userPerms = useMemo(() => {
+    if (!user || !Array.isArray(user.roles_id)) return [] as UPermission[];
+    return [...new Set(user.roles_id.flatMap((role: any) => rolePermissions[role.id] || []))];
+  }, [user?.roles_id?.map((r: any) => r.id).join(",")]);
+
   const { selectedOlympiad } = useOlympiad();
   const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
   const [menuItems, setMenuItems] = useState(navItems);
@@ -304,7 +319,34 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
+      if (item.name === "Descalificar Competidor") {
+        if (userAreas.length > 0) {
+          const areasWithPhases = userAreas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
 
+            const areaSubItems = phases.length
+              ? phases.map((phase) => ({
+                name: phase.name,
+                path: `/descalificar-competidor/${olympiadId}/${encodeURIComponent(
+                  area.name
+                )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+              }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/descalificar-competidor/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
+      }
 
       if (item.name === "Avalar Fase") {
         if (userAreas.length > 0) {
