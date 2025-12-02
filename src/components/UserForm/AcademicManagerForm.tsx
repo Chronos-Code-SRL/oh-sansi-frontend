@@ -160,7 +160,7 @@ export default function AcademicManagerForm() {
             setSearchAlert({
               type: "success",
               title: "Registrado como Evaluador",
-              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI desea cambiar a Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
+              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI quiere tener el rol de Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
             });
 
             return;
