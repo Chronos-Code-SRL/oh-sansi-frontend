@@ -24,6 +24,7 @@ export default function EvaluatorForm() {
   const [genre, setgenre] = useState("");
   const [areas_id, setAreas] = useState<string[]>([]);
   const [roles_id] = useState("3"); 
+  const [userAreasIds, setUserAreasIds] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [searchErrors, setSearchErrors] = useState<Record<string, string>>({});
@@ -102,6 +103,7 @@ export default function EvaluatorForm() {
         setgenre(user.genre);
 
         if (userAreas.length > 0) {
+          setUserAreasIds(userAreas.map((a: any) => String(a.id)));
           setAreas(userAreas.map((a: any) => a.id));
           setSearchAlert({
             type: "success",
@@ -112,6 +114,7 @@ export default function EvaluatorForm() {
           return;
         }
 
+        setUserAreasIds([]);
         setAreas([]);
         setSearchAlert({
           type: "info",
@@ -154,6 +157,7 @@ export default function EvaluatorForm() {
       setEmail("");
       setphone_number("");
       setgenre("");
+      setUserAreasIds([]);
       setAreas([]);
 
       setShowFormSections(true);
@@ -222,6 +226,7 @@ export default function EvaluatorForm() {
     setphone_number("");
     setEmail("");
     setgenre("");
+    setUserAreasIds([]);
     setAreas([]);
     setErrors({});
     setSearchErrors({});
@@ -444,14 +449,17 @@ export default function EvaluatorForm() {
 
                 <div>
                     <AreaSelectDinamic
-                    olympiadId={Number(olympiadId)} 
+                    olympiadId={Number(olympiadId)}
                     key={multiSelectKey}
-                    initialSelected={areas_id.map(String)}
+                    initialSelected={userAreasIds}
                     onChange={(values) => {
-                      setAreas(values);
+                      const nuevas = values;
+                      const anteriores = userAreasIds;
+                      const combinadas = Array.from(new Set([...anteriores, ...nuevas]));
+                      setAreas(combinadas);
                       setErrors(prev => {
                         const draft = { ...prev };
-                        if (values.length > 0) delete draft.areas;
+                        if (combinadas.length > 0) delete draft.areas;
                         return draft;
                       });
                     }}
