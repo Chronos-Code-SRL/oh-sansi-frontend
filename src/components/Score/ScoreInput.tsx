@@ -36,16 +36,19 @@ export default function ScoreInput({
 
 const checkIfHasQualified = async () => {
     try {
-      const res = await scoreCutsService.checkQualified(
+      await scoreCutsService.checkQualified(
         olympiadId,
         phaseId,
         areaId,
         levelId
       );
 
-      setCanEditMaxScore(res.status === 200);
-    } catch (error) {
+      setCanEditMaxScore(true);
+    } catch (error: any) {
       console.error("Error verificando competidores:", error);
+      if (error?.response?.status === 403) {
+      setCanEditMaxScore(false);
+    }
     }
   };
 
@@ -104,6 +107,10 @@ const checkIfHasQualified = async () => {
       }
 
       if (type === "maxima") {
+        if (!canEditMaxScore) {
+          setError("No puedes editar la nota máxima porque ya existen competidores calificados.");
+          return;
+        }
         payload.max_score = maxScore;
         await scoreCutsService.updateMaxScore(olympiadId, areaId, payload);
         setCurrentMaxScore(maxScore);
