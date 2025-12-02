@@ -65,6 +65,17 @@ export const scoreCutsService = {
     );
     return response.data;
   },
+
+  checkQualified: async (olympiadId: number, phaseId: number, areaId: number, levelId: number) => {
+    try {
+      const url = `/olympiads/${olympiadId}/phases/${phaseId}/areas/${areaId}/levels/${levelId}/competitors`;
+      const response = await ohSansiApi.get(url);
+      return response.data;
+    } catch (error) {
+      console.error("Error verificando competidores calificados:", error);
+      throw error;
+    }
+  },
 };
 
 export const getScoresByOlympiadAreaPhaseLevel = async (OlympiadId: number, areaId: number, phaseId: number, levelId: number): Promise<Score> => {
