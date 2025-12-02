@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import {  MoreDotIcon } from "../../icons";
+import { MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import {  getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
+import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
@@ -419,9 +419,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                             {s.classification_status === "no_clasificado" && (
                                                 <Badge color="error">No clasificado</Badge>
                                             )}
-                                            {(s.classification_status === "descalificado" || s.classification_status === null) && (
+                                            {s.classification_status === "descalificado" && (
                                                 <Badge color="warning">Desclasificado</Badge>
-                                            )}                                   
+                                            )}
+                                            {s.classification_status === null && (
+                                                <Badge color="neutral">-</Badge>
+                                            )}
                                         </td>
 
                                         <td className="px-6 py-4 text-sm text-center">
