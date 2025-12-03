@@ -5,10 +5,10 @@ import {getRoleName, getUser } from "../../api/services/authService";
 export const SelectOlympiad = () => {
 
   const user = getUser();
-  const roleName = getRoleName(user);
-
+  const roleNames = getRoleName(user);
+  const isAdmin = roleNames[0] === "Admin";
   // Si es Admin (por nombre de rol), redirige al dashboard con sidebar y evita renderizar esta página
-  if (roleName === "Admin") {
+  if (isAdmin) {
     return <Navigate to="/" replace />;
   }
 

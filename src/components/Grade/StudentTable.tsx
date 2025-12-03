@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, CommentIcon, LockIcon, InfoIcon } from "../../icons";
+import { CheckLineIcon, CloseLineIcon, CommentIcon } from "../../icons";
 import Alert from "../ui/alert/Alert";
 import CommentModal from "./CommentModal";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
@@ -64,6 +64,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
+    const phaseStatusPollingRef = useRef<number | null>(null);
 
     // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
     const getEvaluationId = (s: Contestant): number | string => {
@@ -163,31 +164,54 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    // Obtener estado de fase para el nivel seleccionado
+    // Obtener estado de fase para el nivel seleccionado con polling en tiempo real
     useEffect(() => {
         let alive = true;
+
         async function loadPhaseStatus() {
             if (selectedLevelId == null) {
                 if (alive) setPhaseStatus(null);
                 return;
             }
-            // setPhaseLoading(true);
-            // setPhaseError(null);
             try {
                 const res = await getPhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
                 if (!alive) return;
                 const status = res?.phase_status?.status ?? null;
                 setPhaseStatus(status as any);
+                console.debug("[phaseStatus] updated:", status);
             } catch (err) {
                 console.warn("[StudentTable] getPhaseStatus error", err);
-                // if (alive) setPhaseError("No se pudo obtener el estado de la fase.");
                 if (alive) setPhaseStatus(null);
-            } finally {
-                // if (alive) setPhaseLoading(false);
             }
         }
+
+        // Cargar estado inicial
         void loadPhaseStatus();
-        return () => { alive = false; };
+
+        // Iniciar polling cada 5 segundos (ajustable según necesidad)
+        if (selectedLevelId != null) {
+            phaseStatusPollingRef.current = window.setInterval(() => {
+                void loadPhaseStatus();
+            }, 5000);
+            console.log("[phaseStatus] polling started (5000ms)");
+        }
+
+        // Actualizar cuando la ventana recupera el foco
+        const onFocus = () => { if (selectedLevelId != null) void loadPhaseStatus(); };
+        const onVis = () => { if (!document.hidden && selectedLevelId != null) void loadPhaseStatus(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVis);
+
+        return () => {
+            alive = false;
+            if (phaseStatusPollingRef.current) {
+                window.clearInterval(phaseStatusPollingRef.current);
+                phaseStatusPollingRef.current = null;
+                console.log("[phaseStatus] polling stopped");
+            }
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVis);
+        };
     }, [selectedLevelId, idPhase, idOlympiad, idArea]);
 
     // Polling para actualizaciones en tiempo real
@@ -436,7 +460,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         }
     };
 
- 
+
     return (
         <>
             {phaseStatus === "Terminada" && (
@@ -473,140 +497,140 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="flex items-center mb-3">
-                <SearchBar
-                    onSearch={setSearchQuery}
-                    placeholder="Buscar por nombre, apellido o CI..."
-                />
-                <Filter
-                    selectedFilters={selectedFilters}
-                    setSelectedFilters={setSelectedFilters}
-                />
-            </div>
+                <div className="flex items-center mb-3">
+                    <SearchBar
+                        onSearch={setSearchQuery}
+                        placeholder="Buscar por nombre, apellido o CI..."
+                    />
+                    <Filter
+                        selectedFilters={selectedFilters}
+                        setSelectedFilters={setSelectedFilters}
+                    />
+                </div>
             )}
 
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Descripción</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading === true && (
+                <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div className="max-w-full overflow-x-auto"></div>
+                    <Table className="rounded-xl">
+                        <TableHeader className="bg-gray-100 ">
                             <TableRow>
-                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Descripción</th>
                             </TableRow>
-                        )}
-                        {error !== null && loading === false && (
-                            <TableRow>
-                                {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {selectedLevelId === null && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Por favor, seleccione un nivel para ver los estudiantes.
-                                </td>
-                            </tr>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => {
-                            const isEditing = editingCi === s.ci_document;
-                            return (   
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        <Badge color={s.status === true ? "success" : "error"}>
-                                            {s.status ? "Evaluado" : "No Evaluado"}
-                                        </Badge>
-                                    </td>
-
-                                    {/* Nota */}
-                                    <td className={`px-6 py-4 text-sm items-center justify-center ${isEditing === false && s.status !== true ? "cursor-text" : ""}`}
-                                        onClick={() => {
-                                            if (isEditing === false) {
-                                                startEdit(s);
-                                            }
-                                        }}
-                                    >
-                                        {isEditing === true ? (
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={currentMaxScore?.max_score ?? 100}
-                                                    step={1}
-                                                    value={draftNote}
-                                                    autoFocus
-                                                    onKeyDown={onKeyDown}
-                                                    onChange={(e) => {
-                                                        const v = e.target.value;
-                                                        setDraftNote(v === "" ? "" : Number(v));
-                                                    }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => saveNote(s)} //Aca en el end point patch
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Aceptar"
-                                                >
-                                                    <CheckLineIcon className="size-5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true}
-                                                    onClick={() => rejectNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Rechazar"
-                                                >
-                                                    <CloseLineIcon className="size-5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 justify-center">
-                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
-                                                {/* Solo permitir edición cuando no está evaluado */}
-                                            </div>
-                                        )}
-                                    </td>
-
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        <button
-                                            type="button"
-                                            disabled={phaseStatus === "Terminada"}
-                                            onClick={() => { if (phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
-                                            title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
-                                        >
-                                            <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
-                                        </button>
-                                    </td>
+                        </TableHeader>
+                        <TableBody>
+                            {loading === true && (
+                                <TableRow>
+                                    {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-foreground">Cargando...</TableCell> */}
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
+                            )}
+                            {error !== null && loading === false && (
+                                <TableRow>
+                                    {/* <TableCell colSpan={8} className="px-6 py-4 text-sm text-red-600">{error}</TableCell> */}
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                </TableRow>
+                            )}
+                            {selectedLevelId === null && (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Por favor, seleccione un nivel para ver los estudiantes.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && !error && filteredStudents.map((s) => {
+                                const isEditing = editingCi === s.ci_document;
+                                return (
+                                    <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                                        <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            <Badge color={s.status === true ? "success" : "error"}>
+                                                {s.status ? "Evaluado" : "No Evaluado"}
+                                            </Badge>
+                                        </td>
 
-            </div>
+                                        {/* Nota */}
+                                        <td className={`px-6 py-4 text-sm items-center justify-center ${isEditing === false && s.status !== true ? "cursor-text" : ""}`}
+                                            onClick={() => {
+                                                if (isEditing === false) {
+                                                    startEdit(s);
+                                                }
+                                            }}
+                                        >
+                                            {isEditing === true ? (
+                                                <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        max={currentMaxScore?.max_score ?? 100}
+                                                        step={1}
+                                                        value={draftNote}
+                                                        autoFocus
+                                                        onKeyDown={onKeyDown}
+                                                        onChange={(e) => {
+                                                            const v = e.target.value;
+                                                            setDraftNote(v === "" ? "" : Number(v));
+                                                        }}
+                                                        className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
+                                                        onClick={() => saveNote(s)} //Aca en el end point patch
+                                                        className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
+                                                        title="Aceptar"
+                                                    >
+                                                        <CheckLineIcon className="size-5" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={saving === true}
+                                                        onClick={() => rejectNote(s)}
+                                                        className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
+                                                        title="Rechazar"
+                                                    >
+                                                        <CloseLineIcon className="size-5" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-3 justify-center">
+                                                    <span>{typeof s.score === "number" ? s.score : "—"}</span>
+                                                    {/* Solo permitir edición cuando no está evaluado */}
+                                                </div>
+                                            )}
+                                        </td>
+
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            <button
+                                                type="button"
+                                                disabled={phaseStatus === "Terminada"}
+                                                onClick={() => { if (phaseStatus === "Terminada") return; openCommentModal(s); }}
+                                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
+                                                title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                            >
+                                                <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                            </button>
+                                        </td>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+
+                </div>
             )}
-{alertOpen && (
+            {alertOpen && (
                 <div
                     className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
                     role="presentation"

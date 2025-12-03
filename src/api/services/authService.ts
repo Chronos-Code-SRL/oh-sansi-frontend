@@ -10,7 +10,6 @@ const USER_AREAS_URL = "/user/areas";
 // Login
 export const login = async (email: string, password: string): Promise<LoginResponse> => {
   const res = await ohSansiApi.post<LoginResponse>(LOGIN, { email, password });
-
   localStorage.setItem(TOKEN_KEY, res.data.token);
   localStorage.setItem(USER_KEY, JSON.stringify(res.data.user));
 
@@ -49,25 +48,23 @@ export const getUser = (): User | null => {
   return user ? JSON.parse(user) : null;
 };
 
-export const getRoleName = (user: User | null): string  => {
-  if (!user) return "Desconocido";
-  switch (user.roles_id) {
-    case 1:
-      return "Admin";
-    case 2:
-      return "Responsable Académico";
-    case 3:
-      return "Evaluador";
-    default:
-      return "Desconocido";
-  }
+export const getRoleName = (user: User | null): string => {
+  if (!user) return "";
+
+  return user.roles_id
+    .map(role => formatRoleName(role.name))
+    .join(" / ");
 };
+
+
 
 // Verificar rol
 export const getRole = (requiredRoleId: number): boolean => {
   const user = getUser();
-  return user?.roles_id === requiredRoleId;
+  if (!user) return false;
+  return user.roles_id.some(role => role.id === requiredRoleId);
 };
+
 
 export const getUserAreas = async (idOlympiad: number): Promise<UserAreasResponse> => {
   const token = getToken();
@@ -81,4 +78,11 @@ export const getUserAreas = async (idOlympiad: number): Promise<UserAreasRespons
     areas: res.data.data,
     status: res.data.status,
   };
+};
+
+const formatRoleName = (name: string): string => {
+  return name
+    .split("_")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };

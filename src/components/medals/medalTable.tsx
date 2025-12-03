@@ -221,7 +221,7 @@ export default function MedalsPage() {
             const data = await getContestantMedals(idOlympiad, idArea, levelId);
             setStudents(data);
         } catch (error) {
-            showAlert("Error", "No se pudo generar el medallero. Intente nuevamente.", "error");
+            showAlert("Cantidad de medallas no válida", "La cantidad de medallas indicada supera el número total de estudiantes. Ajuste el valor y vuelva a intentarlo.", "error");
         }
     }
 
@@ -331,7 +331,14 @@ export default function MedalsPage() {
                                         <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
                                     </TableRow>
                                 )}
-                                {!loading && !error && filteredStudents.map((s) => (
+                                {!loading && !error && filteredStudents.length === 0 && (
+                                    <TableRow>
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-red-500">
+                                            No existen estudiantes para el nivel seleccionado.
+                                        </td>
+                                    </TableRow>
+                                )}
+                                {!loading && !error && filteredStudents.length > 0 && filteredStudents.map((s) => (
                                     <TableRow key={s.evaluation_id} className="border-b border-border last:border-0">
                                         {[
                                             <td key="fn" className="px-6 py-4 text-sm text-center">{s.first_name}</td>,
