@@ -221,7 +221,7 @@ export default function MedalsPage() {
             const data = await getContestantMedals(idOlympiad, idArea, levelId);
             setStudents(data);
         } catch (error) {
-            showAlert("Error", "No se pudo generar el medallero. Intente nuevamente.", "error");
+            showAlert("Cantidad de medallas no válida", "La cantidad de medallas indicada supera el número total de estudiantes. Ajuste el valor y vuelva a intentarlo.", "error");
         }
     }
 
@@ -283,7 +283,7 @@ export default function MedalsPage() {
                 <div className="mt-6">
                     <Alert
                         variant="warning"
-                        title="Fase no avalada"
+                        title="FASE NO AVALADA"
                         message={`La última fase de ${areas.find(a => a.id === selectedAreaId)?.name || 'esta área'} - ${levels.find(l => l.id === selectedLevelId)?.name || 'este nivel'} aún no ha sido avalada. No se pueden generar medallas hasta que se avale la fase.`}
                     />
                 </div>

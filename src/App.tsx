@@ -23,6 +23,7 @@ import MedalsPage from "./pages/Medals/MedalsPage";
 import RankedContestantsList from "./pages/Lists/RankedContestatsList";
 import AwardedList from "./pages/Lists/AwardedList";
 import DisqualifyContestant from "./pages/DisqualifyContestant/DisqualifyContestant";
+import AuditPage from "./pages/Lists/AuditPage";
 
 export default function App() {
   return (
@@ -33,7 +34,6 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route
             element={
-              // <AppLayout />
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
@@ -69,6 +69,9 @@ export default function App() {
             />
             {/* Medallas */}
             <Route path="/medallero" element={<MedalsPage />} />
+
+            {/* Historial de cambios */}
+            <Route path="/historial-cambios" element={<AuditPage />} />
 
             {/*Filters on list */}
             <Route path="/filtros-de-lista/:olympiadId" element={<FilterElements />} />

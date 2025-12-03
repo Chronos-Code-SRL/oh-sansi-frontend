@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, MoreDotIcon } from "../../icons";
+import { CheckLineIcon, CommentIcon, MoreDotIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
@@ -508,7 +508,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                                 <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
                                 <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
                                 <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acciones</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Descripción</th>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -559,13 +559,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                                         <td className="px-6 py-4 text-sm text-center">
                                             <button
                                                 type="button"
-                                                disabled={endorsed || phaseStatus === "Terminada"}
-                                                onClick={() => { if (endorsed || phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${endorsed || phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
+                                                onClick={() => openCommentModal(s)}
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg 
+                                                border border-gray-200 bg-gray-50 text-gray-700 
+                                                hover:bg-gray-100"
                                                 title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                             >
-                                                <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                                <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
                                             </button>
+
                                         </td>
                                     </TableRow>
                                 );
