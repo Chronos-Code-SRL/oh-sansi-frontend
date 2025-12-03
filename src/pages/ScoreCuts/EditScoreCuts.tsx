@@ -8,6 +8,7 @@ import ScoreInput from "../../components/Score/ScoreInput";
 import ScoreTable from "../../components/Score/ScoreTable";
 import BoxFinishedPhase from "../../components/common/BoxFinishedPhase";
 import { getPhaseStatus } from "../../api/services/phaseService";
+import { BoxFaseLevel } from "../../components/common/BoxFaseLevel";
 
 export default function EditScoreCuts() {
   const { idOlympiad, areaName, areaId, phaseName, phaseId } = useParams<{
@@ -66,11 +67,20 @@ export default function EditScoreCuts() {
 
       <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
-      {phaseStatus === "Terminada" && (
+      {selectedLevel && phaseStatus === "Terminada" && (
         <div className="mb-4">
           <BoxFinishedPhase />
         </div>
       )}
+
+      {selectedLevel && phaseStatus === "Sin empezar" && (
+        <div className="mb-4">
+          <BoxFaseLevel
+              title={"Fase no iniciada"}
+              message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+            />
+          </div>
+            )}      
       
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
           <SelectLevel
@@ -81,7 +91,7 @@ export default function EditScoreCuts() {
             onSelectLevel={(levelId) => setSelectedLevel(levelId)}
           />
 
-        {selectedLevel && (
+        {selectedLevel && phaseStatus !== "Sin empezar" && (
             <ScoreInput
               olympiadId={olympiadId}
               areaId={Number(areaId) || 0}
@@ -93,7 +103,7 @@ export default function EditScoreCuts() {
         )}
       </div>
 
-      {selectedLevel && (
+      {selectedLevel && phaseStatus !== "Sin empezar" && (
         <div className="mt-6">
           <ComponentCard title={`Competidores de ${decodedAreaName}`}>
             <ScoreTable

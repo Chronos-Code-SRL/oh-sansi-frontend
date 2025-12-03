@@ -82,36 +82,8 @@ export default function SelectLevel({
             value={selectedLevel}
             onChange={handleSelectChange}
           />
-
-          {selectedLabel && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              Nivel seleccionado: <strong>{selectedLabel}</strong>
-            </p>
-          )}
         </div>
       </ComponentCard>
-
-      <Modal
-        isOpen={confirmModal}
-        onClose={() => setConfirmModal(false)}
-        className="max-w-md mx-auto shadow-lg"
-      >
-        <div className="p-6 text-center">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-            Nivel seleccionado correctamente
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Has seleccionado el nivel: <strong>{selectedLabel}</strong>
-          </p>
-          <Button
-            className="w-full mt-4"
-            variant="primary"
-            onClick={() => setConfirmModal(false)}
-          >
-            Aceptar
-          </Button>
-        </div>
-      </Modal>
     </>
   );
 }
