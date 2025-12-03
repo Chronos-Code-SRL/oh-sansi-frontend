@@ -27,6 +27,7 @@ export default function AcademicManagerForm() {
   const [multiSelectKey, setMultiSelectKey] = useState(0);
   const [profesion, setProfesion] = useState("");
   const [showFormSections, setShowFormSections] = useState(false);
+  const [userAreasIds, setUserAreasIds] = useState<string[]>([]);
 
   const [olympiadId, setOlympiadId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -104,6 +105,7 @@ export default function AcademicManagerForm() {
 
       //Responsable registrado en la olimpiada selccionada
       if (userAreas.length > 0) {
+        setUserAreasIds(userAreas.map((a: any) => String(a.id)));
         setAreas(userAreas.map((a: any) => a.id));
         setShowFormSections(true);
 
@@ -117,6 +119,7 @@ export default function AcademicManagerForm() {
       }
 
       //Responsable no rsgistrado en la olimpiada seleccionada
+      setUserAreasIds([]);
       setAreas([]);
       setShowFormSections(true);
 
@@ -157,12 +160,13 @@ export default function AcademicManagerForm() {
             setSearchAlert({
               type: "success",
               title: "Registrado como Evaluador",
-              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI desea cambiar a Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
+              message: "Este usuario ya está registrado como Evaluador en esta olimpiada. SI quiere tener el rol de Responsable Académico ingrese el dato de Profesión y selecione las Áreas.",
             });
 
             return;
           }
 
+          setUserAreasIds([]);
           setAreas([]);
           setShowFormSections(true);
 
@@ -188,6 +192,7 @@ export default function AcademicManagerForm() {
             setphone_number("");
             setgenre("");
             setProfesion("");
+            setUserAreasIds([]);
             setAreas([]);
 
             setShowFormSections(true);
@@ -284,6 +289,7 @@ export default function AcademicManagerForm() {
     setEmail("");
     setProfesion("");
     setgenre("");
+    setUserAreasIds([]);
     setAreas([]);
     setErrors({});
     setSearchErrors({});
@@ -390,7 +396,7 @@ export default function AcademicManagerForm() {
         
         <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
           <div>
-            <Label>Seleccionar Olimpiada</Label>
+            <Label>Seleccionar Olimpiada:</Label>
               <Select
                 options={olympiadOptions}
                 value={olympiadId}
@@ -404,7 +410,7 @@ export default function AcademicManagerForm() {
           </div>
 
           <div>
-            <Label>Carnet de Identidad</Label>
+            <Label>Carnet de Identidad:</Label>
             <InputField
               id="ci"
               type="text"
@@ -451,7 +457,7 @@ export default function AcademicManagerForm() {
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
-                  <Label htmlFor="first_name">Nombre(s)</Label>
+                  <Label htmlFor="first_name">Nombre(s):</Label>
                   <InputField
                     id="first_name"
                     type="text"
@@ -465,7 +471,7 @@ export default function AcademicManagerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="last_name">Apellido(s)</Label>
+                  <Label htmlFor="last_name">Apellido(s):</Label>
                   <InputField
                     id="last_name"
                     type="text"
@@ -479,7 +485,7 @@ export default function AcademicManagerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="phone_number">Teléfono</Label>
+                  <Label htmlFor="phone_number">Teléfono:</Label>
                   <InputField
                     id="phone_number"
                     type="text"
@@ -493,7 +499,7 @@ export default function AcademicManagerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Label htmlFor="email">Correo electrónico:</Label>
                   <InputField
                     id="email"
                     type="email"
@@ -507,7 +513,7 @@ export default function AcademicManagerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="profesion">Profesión</Label>
+                  <Label htmlFor="profesion">Profesión:</Label>
                   <InputField
                     id="profesion"
                     type="text"
@@ -528,7 +534,7 @@ export default function AcademicManagerForm() {
               <div className="grid grid-cols-1 gap-6">
 
                 <div>
-                  <Label>Género</Label>
+                  <Label>Género:</Label>
                   <div className="flex gap-4"
                     onFocus={() => {
                       if (!genre) {
@@ -564,12 +570,15 @@ export default function AcademicManagerForm() {
                     <AreaSelectDinamic
                     olympiadId={Number(olympiadId)}
                     key={multiSelectKey}
-                    initialSelected={areas_id.map(String)}
+                    initialSelected={userAreasIds}
                     onChange={(values) => {
-                      setAreas(values);
+                      const nuevas = values;
+                      const anteriores = userAreasIds;
+                      const combinadas = Array.from(new Set([...anteriores, ...nuevas]));
+                      setAreas(combinadas);
                       setErrors(prev => {
                         const draft = { ...prev };
-                        if (values.length > 0) delete draft.areas;
+                        if (combinadas.length > 0) delete draft.areas;
                         return draft;
                       });
                     }}
