@@ -381,7 +381,7 @@ export default function ScoreInput({
             ¡Cambios guardados correctamente!
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            Los valores fueron actualizados exitosamente.
+            Actualizado exitosamente.
           </p>
 
           <Button
