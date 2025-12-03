@@ -5,8 +5,8 @@ export default function BoxFinishedPhase() {
         <>
             <Alert
                 variant="success"
-                title="FASE FINALIZADA"
-                message="Esta fase ha sido finalizada y ya no se permiten más modificaciones."
+                title="FASE TERMINADA"
+                message="Esta fase ha sido terminada y ya no se permiten más modificaciones."
                 showLink={false}
             />
         </>

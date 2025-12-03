@@ -167,7 +167,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     // Obtener estado de fase para el nivel seleccionado con polling en tiempo real
     useEffect(() => {
         let alive = true;
-
         async function loadPhaseStatus() {
             if (selectedLevelId == null) {
                 if (alive) setPhaseStatus(null);
@@ -195,7 +194,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             }, 5000);
             console.log("[phaseStatus] polling started (5000ms)");
         }
-
         // Actualizar cuando la ventana recupera el foco
         const onFocus = () => { if (selectedLevelId != null) void loadPhaseStatus(); };
         const onVis = () => { if (!document.hidden && selectedLevelId != null) void loadPhaseStatus(); };
