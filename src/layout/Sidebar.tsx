@@ -80,13 +80,13 @@ const navItems: NavItem[] = [
     path: "/registration",
     permission: UPermission.REGISTER_COMPETITOR
   },
-  {
-    icon: <TrashBinIcon />,
-    name: "Descalificar Competidor",
-    path: "/descalificar-competidor",
-    subItems: [],
-    permission: UPermission.DISQUALIFY_COMPETITOR,
-  },
+  //  {
+  //     icon: <TrashBinIcon />,
+  //     name: "Descalificar Competidor",
+  //     path: "/descalificar-competidor",
+  //     subItems: [],
+  //     permission: UPermission.DISQUALIFY_COMPETITOR,
+  //   },
   {
     icon: <ListIcon />,
     name: "Calificar Competidores",
@@ -140,7 +140,7 @@ const navItems: NavItem[] = [
     path: "/historial-cambios",
     permission: UPermission.AUDIT_LISTS,
   },
-  
+
 ];
 const othersItems: NavItem[] = [];
 
