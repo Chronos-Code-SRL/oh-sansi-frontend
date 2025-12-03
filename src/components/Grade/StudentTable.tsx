@@ -471,7 +471,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             {phaseStatus === "Sin empezar" && (
                 <div className="mb-4">
                     <BoxFaseLevel
-                        title={"Fase no iniciada"}
+                        title={"FASE NO INICIADA"}
                         message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
                     />
                 </div>
