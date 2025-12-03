@@ -221,7 +221,7 @@ export default function MedalsPage() {
             const data = await getContestantMedals(idOlympiad, idArea, levelId);
             setStudents(data);
         } catch (error) {
-            showAlert("Error", "No se pudo generar el medallero. Intente nuevamente.", "error");
+            showAlert("Cantidad de medallas no válida", "La cantidad de medallas indicada supera el número total de estudiantes. Ajuste el valor y vuelva a intentarlo.", "error");
         }
     }
 
