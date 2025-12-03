@@ -66,7 +66,7 @@ export default function SignInForm() {
       // console.log(getToken())
       navigate("/seleccionar-olimpiada", { replace: true });
     } catch {
-      setError("Credenciales incorrectas o error en el servidor");
+      setError("Credenciales incorrectas");
     } finally {
       setLoading(false);
     }

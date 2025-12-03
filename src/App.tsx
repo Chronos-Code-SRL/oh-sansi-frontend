@@ -34,7 +34,6 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route
             element={
-              // <AppLayout />
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
