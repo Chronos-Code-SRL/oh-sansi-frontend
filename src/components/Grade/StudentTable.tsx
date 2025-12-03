@@ -73,10 +73,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     };
 
     function openCommentModal(student: Contestant): void {
-        if (phaseStatus === "Terminada") {
-            showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
-            return;
-        }
+        // if (phaseStatus === "Terminada") {
+        //     showAlert("No editable", "La fase está terminada. No se permiten cambios.", "error");
+        //     return;
+        // }
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
@@ -614,9 +614,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         <td className="px-6 py-4 text-sm text-center">
                                             <button
                                                 type="button"
-                                                disabled={phaseStatus === "Terminada"}
-                                                onClick={() => { if (phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                                className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
+                                                // disabled={phaseStatus === "Terminada"}
+                                                onClick={() =>  openCommentModal(s) }
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg 
+                                                border border-gray-200 bg-gray-50 text-gray-700 
+                                                hover:bg-gray-100"
                                                 title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
                                             >
                                                 <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
@@ -654,6 +656,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onChangeDraft={setCommentDraft}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
+                readOnly={phaseStatus === "Terminada"}
             />
         </>
     )
