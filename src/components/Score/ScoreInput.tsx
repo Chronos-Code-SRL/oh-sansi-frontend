@@ -137,6 +137,12 @@ export default function ScoreInput({
   }, [olympiadId, areaId, levelId, phaseId]);
 
 
+  useEffect(() => {
+  const interval = setInterval(checkIfHasQualified, 3000);
+  return () => clearInterval(interval);
+}, [levelId, phaseId]);
+
+
   const handleUpdateWithType = (type: "umbral" | "maxima") => {
     setSaveType(type);
     setTimeout(() => handleUpdate(type), 0);
