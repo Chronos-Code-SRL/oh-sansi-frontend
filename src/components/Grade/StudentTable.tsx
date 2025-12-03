@@ -65,6 +65,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
     const phaseStatusPollingRef = useRef<number | null>(null);
+    const scorePollingRef = useRef<number | null>(null);
 
     // Helper: obtener el id de evaluación (ajusta si tu Contestant ya lo trae tipado)
     const getEvaluationId = (s: Contestant): number | string => {
@@ -144,8 +145,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setError(null);
         async function loadContestants() {
             try {
-                const scoreData = await getScoresByOlympiadAreaPhaseLevel(idOlympiad, idArea, idPhase, levelId);
-                setCurrentMaxScore(scoreData);
                 console.log(idPhase, idOlympiad, idArea, levelId);
                 const data = await getContestantByPhaseOlympiadAreaLevel(
                     idPhase,
@@ -163,6 +162,55 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         loadContestants();
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
+
+    // Polling en tiempo real para actualizar currentMaxScore
+    useEffect(() => {
+        if (selectedLevelId == null) {
+            setCurrentMaxScore(undefined);
+            return;
+        }
+
+        let alive = true;
+        const levelId = selectedLevelId;
+
+        async function loadScore() {
+            try {
+                const scoreData = await getScoresByOlympiadAreaPhaseLevel(idOlympiad, idArea, idPhase, levelId);
+                if (alive) {
+                    setCurrentMaxScore(scoreData);
+                    console.debug("[scorePolling] updated:", scoreData);
+                }
+            } catch (err) {
+                console.warn("[StudentTable] getScoresByOlympiadAreaPhaseLevel error", err);
+            }
+        }
+
+        // Cargar score inicial
+        void loadScore();
+
+        // Iniciar polling cada 3 segundos
+        scorePollingRef.current = window.setInterval(loadScore, 3000);
+        console.log("[scorePolling] polling started (3000ms)");
+
+        // Handler único para focus/visibility
+        const handleFocusOrVisibility = () => {
+            if (!document.hidden && alive) void loadScore();
+        };
+
+        window.addEventListener("focus", handleFocusOrVisibility);
+        document.addEventListener("visibilitychange", handleFocusOrVisibility);
+
+        return () => {
+            alive = false;
+            if (scorePollingRef.current) {
+                window.clearInterval(scorePollingRef.current);
+                scorePollingRef.current = null;
+                console.log("[scorePolling] polling stopped");
+            }
+            window.removeEventListener("focus", handleFocusOrVisibility);
+            document.removeEventListener("visibilitychange", handleFocusOrVisibility);
+        };
+    }, [selectedLevelId, idPhase, idOlympiad, idArea]);
 
     // Obtener estado de fase para el nivel seleccionado con polling en tiempo real
     useEffect(() => {
@@ -613,7 +661,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                             <button
                                                 type="button"
                                                 // disabled={phaseStatus === "Terminada"}
-                                                onClick={() =>  openCommentModal(s) }
+                                                onClick={() => openCommentModal(s)}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg 
                                                 border border-gray-200 bg-gray-50 text-gray-700 
                                                 hover:bg-gray-100"
