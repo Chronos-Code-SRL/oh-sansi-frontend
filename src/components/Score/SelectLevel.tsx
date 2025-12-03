@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
-import Button from "../../components/ui/button/Button";
-import { Modal } from "../../components/ui/modal";
 import { levelService } from "../../api/services/levelService";
 import { Level } from "../../types/Level";
 
@@ -29,8 +27,8 @@ export default function SelectLevel({
 }: SelectLevelProps) {
   const [levels, setLevels] = useState<LevelOption[]>([]);
   const [selectedLevel, setSelectedLevel] = useState<string>("");
-  const [selectedLabel, setSelectedLabel] = useState<string>("");
-  const [confirmModal, setConfirmModal] = useState(false);
+  const [_selectedLabel, setSelectedLabel] = useState<string>("");
+  const [_confirmModal, setConfirmModal] = useState(false);
 
   useEffect(() => {
     const fetchLevels = async () => {
@@ -73,7 +71,7 @@ export default function SelectLevel({
   return (
     <>
       <ComponentCard title={`Niveles del Área ${areaName ? `– ${areaName}` : ""}`}>
-        <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+        <div className="flex flex-col gap-4 w-full mx-auto">
           <Label htmlFor="level">Seleccione un nivel:</Label>
 
           <Select

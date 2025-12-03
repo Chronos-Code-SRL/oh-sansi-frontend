@@ -2,7 +2,6 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
-import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import SelectLevel from "../../components/Score/SelectLevel";
 import ScoreInput from "../../components/Score/ScoreInput";
 import ScoreTable from "../../components/Score/ScoreTable";
@@ -64,8 +63,6 @@ export default function EditScoreCuts() {
         title={title}
         description={`Editar umbral y nota máxima para el área ${decodedAreaName}, fase ${decodedPhaseName}.`}
       />
-
-      <TitleBreadCrumb pageTitle="Editar nota de clasificación" />
 
       {selectedLevel && phaseStatus === "Terminada" && (
         <div className="mb-4">

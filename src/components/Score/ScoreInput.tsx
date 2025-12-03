@@ -187,8 +187,7 @@ export default function ScoreInput({
   return (
     <>
       <ComponentCard
-        title="Nota de Clasificación"
-        className="max-w-3xl w-full mx-auto rounded-2xl p-4 shadow-lg"
+        title="Clasificación"
       >
         <div className="flex flex-col gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
