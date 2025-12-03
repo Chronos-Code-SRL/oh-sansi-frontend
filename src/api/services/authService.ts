@@ -48,10 +48,14 @@ export const getUser = (): User | null => {
   return user ? JSON.parse(user) : null;
 };
 
-export const getRoleName = (user: User | null): string[] => {
-  if (!user) return [];
-  return user.roles_id.map(role => role.name);
+export const getRoleName = (user: User | null): string => {
+  if (!user) return "";
+
+  return user.roles_id
+    .map(role => formatRoleName(role.name))
+    .join(" / ");
 };
+
 
 
 // Verificar rol
@@ -74,4 +78,11 @@ export const getUserAreas = async (idOlympiad: number): Promise<UserAreasRespons
     areas: res.data.data,
     status: res.data.status,
   };
+};
+
+const formatRoleName = (name: string): string => {
+  return name
+    .split("_")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
