@@ -88,7 +88,7 @@ export default function AreaSelectDinamic({
 
             <MultiSelect
                 key={msKey}
-                label="Añadir nuevas Área(s):"
+                label="Seleccionar Área(s):"
                 options={multiOptions}
                 defaultSelected={[]}
                 onChange={(values) => {
