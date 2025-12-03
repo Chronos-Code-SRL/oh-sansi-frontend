@@ -3,8 +3,6 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import Badge from "../ui/badge/Badge";
-import BoxFinishedPhase from "../common/BoxFinishedPhase";
-import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 
 interface ScoreTableProps {
   olympiadId: number;
@@ -166,10 +164,10 @@ export default function ScoreTable({
               <TableRow
                 key={s.contestant_id}
                 className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${s.isClassified
-                  // ? "bg-emerald-50 dark:bg-emerald-950/20"
-                  // : typeof s.score === "number"
-                  // ? "bg-rose-50 dark:bg-rose-950/20"
-                  // : "bg-gray-50 dark:bg-gray-900/30"
+                  ? "bg-emerald-50 dark:bg-emerald-950/20"
+                  : typeof s.score === "number"
+                  ? "bg-rose-50 dark:bg-rose-950/20"
+                  : "bg-gray-50 dark:bg-gray-900/30"
                   }`}
               >
                 <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>

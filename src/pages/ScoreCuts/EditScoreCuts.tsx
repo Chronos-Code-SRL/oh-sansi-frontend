@@ -7,7 +7,6 @@ import SelectLevel from "../../components/Score/SelectLevel";
 import ScoreInput from "../../components/Score/ScoreInput";
 import ScoreTable from "../../components/Score/ScoreTable";
 import BoxFinishedPhase from "../../components/common/BoxFinishedPhase";
-import { BoxFaseLevel } from "../../components/common/BoxPhasesLevel";
 import { getPhaseStatus } from "../../api/services/phaseService";
 
 export default function EditScoreCuts() {
