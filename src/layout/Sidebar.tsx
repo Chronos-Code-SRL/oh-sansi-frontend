@@ -30,6 +30,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
+    UPermission.AUDIT_LISTS,
   ],
   2: [ // Responsable Académico
     UPermission.REGISTER_EVALUATOR,
@@ -133,7 +134,13 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
-
+  {
+    icon: <ListIcon />,
+    name: "Historial de cambios",
+    path: "/historial-cambios",
+    permission: UPermission.AUDIT_LISTS,
+  },
+  
 ];
 const othersItems: NavItem[] = [];
 
