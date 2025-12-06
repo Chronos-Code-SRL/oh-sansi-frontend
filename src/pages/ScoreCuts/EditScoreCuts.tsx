@@ -79,7 +79,7 @@ export default function EditScoreCuts() {
           </div>
             )}      
       
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+      <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr_1fr] gap-6 mt-6">
           <SelectLevel
             olympiadId={olympiadId}
             areaId={Number(areaId) || 0}

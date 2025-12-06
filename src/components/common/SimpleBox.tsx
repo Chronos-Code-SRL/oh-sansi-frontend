@@ -123,9 +123,8 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
                     ))}
                 </div>
             </div>
-            <div className="mt-auto">
+            <div className="flex justify-end">
                 <Button size="sm"
-                    className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleButtonClick}
                 >
                     Configurar Áreas

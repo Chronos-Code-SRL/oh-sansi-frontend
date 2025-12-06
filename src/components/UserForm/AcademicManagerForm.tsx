@@ -106,7 +106,7 @@ export default function AcademicManagerForm() {
       //Responsable registrado en la olimpiada selccionada
       if (userAreas.length > 0) {
         setUserAreasIds(userAreas.map((a: any) => String(a.id)));
-        setAreas(userAreas.map((a: any) => a.id));
+        setAreas([]);
         setShowFormSections(true);
 
         setSearchAlert({
@@ -154,7 +154,8 @@ export default function AcademicManagerForm() {
 
           //Evaluador registrado la olimpiada seleccionada
           if (userAreas.length > 0) {
-            setAreas(userAreas.map((a: any) => a.id));
+            setUserAreasIds(userAreas.map((a: any) => String(a.id)));
+            setAreas([]);
             setShowFormSections(true);
 
             setSearchAlert({
@@ -422,11 +423,10 @@ export default function AcademicManagerForm() {
             />
           </div>
 
-          <div className="flex items-center mt-4">
+          <div className="flex justify-end items-center mt-4">
             <Button
               type="button"
               variant="primary"
-              className="w-full px-4"
               onClick={handleSearchUser}
             >
               {isSearching ? "Buscando..." : "Buscar información"}
@@ -572,13 +572,10 @@ export default function AcademicManagerForm() {
                     key={multiSelectKey}
                     initialSelected={userAreasIds}
                     onChange={(values) => {
-                      const nuevas = values;
-                      const anteriores = userAreasIds;
-                      const combinadas = Array.from(new Set([...anteriores, ...nuevas]));
-                      setAreas(combinadas);
+                      setAreas(values); 
                       setErrors(prev => {
                         const draft = { ...prev };
-                        if (combinadas.length > 0) delete draft.areas;
+                        if (values.length > 0) delete draft.areas;
                         return draft;
                       });
                     }}
@@ -587,8 +584,8 @@ export default function AcademicManagerForm() {
                   />
                 </div>
 
-                <div>
-                  <Button size="md" variant="primary" className="w-full" >
+                <div className="flex justify-end">
+                  <Button size="md" variant="primary" >
                     Registrar
                   </Button>
                 </div>
