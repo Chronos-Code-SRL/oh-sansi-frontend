@@ -201,7 +201,7 @@ export default function ScoreInput({
             <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
               <p className="text-gray-600 dark:text-gray-300 text-xs">Umbral actual</p>
               <p className="text-2xl font-bold mt-1 text-green-600 dark:text-blue-400">
-                {currentMinScore}
+                ≥ {currentMinScore}
               </p>
             </div>
 

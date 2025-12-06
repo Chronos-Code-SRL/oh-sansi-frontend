@@ -256,7 +256,7 @@ export default function ConfigureAreaModal({
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" variant="outline" >
+              <Button type="submit" variant="primary" >
                 + Agregar Nivel
               </Button>
             </div>

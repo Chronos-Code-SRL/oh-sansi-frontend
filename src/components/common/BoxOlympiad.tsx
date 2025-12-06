@@ -73,7 +73,7 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                     ))}
                 </div>
             </div>
-            <div className="mt-auto">
+            <div className="flex justify-end">
                 <Button
                     size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
