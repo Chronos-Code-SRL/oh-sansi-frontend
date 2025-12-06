@@ -139,13 +139,14 @@ export default function MedalManagementForm({
             >
                 {isSubmitting ? "Generando..." : "Generar Medallero"}
             </button> */}
-            <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !selectedAreaId || !selectedLevelId}
-                className="w-full py-3 px-4"
-            >
-                {isSubmitting ? "Generando..." : "Generar Medallero"}
-            </Button>
+            <div className="flex justify-end">
+                <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !selectedAreaId || !selectedLevelId}
+                >
+                    {isSubmitting ? "Generando..." : "Generar Medallero"}
+                </Button>
+            </div>
         </>
     );
 }
