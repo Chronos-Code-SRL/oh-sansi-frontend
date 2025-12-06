@@ -235,8 +235,8 @@ export default function AdminDefaultInputs() {
                             </div>
                         )}
 
-                        <div className="pt-3">
-                            <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
+                        <div className="flex justify-end">
+                            <Button disabled={isSubmitting} >
                                 {isSubmitting ? "Creando..." : "Crear olimpiada"}
                             </Button>
                         </div>
