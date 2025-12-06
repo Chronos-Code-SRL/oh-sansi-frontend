@@ -107,8 +107,8 @@ export default function EvaluatorForm() {
         setEmail(user.email);
         setphone_number(user.phone_number);
         setgenre(user.genre);
-        setUserAreasIds(userAreas.map((a: any) => String(a.id)));
-        setAreas(userAreas.map((a: any) => String(a.id)));
+        setUserAreasIds(userAreas.map((a: any) => String(a.id))); 
+        setAreas([]);
 
         setShowFormSections(true);
 
@@ -467,13 +467,10 @@ export default function EvaluatorForm() {
                     key={multiSelectKey}
                     initialSelected={userAreasIds}
                     onChange={(values) => {
-                      const nuevas = values;
-                      const anteriores = userAreasIds;
-                      const combinadas = Array.from(new Set([...anteriores, ...nuevas]));
-                      setAreas(combinadas);
+                      setAreas(values);
                       setErrors(prev => {
                         const draft = { ...prev };
-                        if (combinadas.length > 0) delete draft.areas;
+                        if (values.length > 0) delete draft.areas;
                         return draft;
                       });
                     }}
