@@ -192,183 +192,96 @@ export default function ScoreInput({
 
   return (
     <>
-      <ComponentCard
-        title="Clasificación"
-      >
+      <ComponentCard title="Umbral de Clasificación" className="h-full">
         <div className="flex flex-col gap-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="flex flex-col gap-4">
-              <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <p className="text-gray-600 dark:text-gray-300 text-xs">Umbral actual</p>
-                <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{currentMinScore}</p>
-              </div>
+          <div className="flex flex-col gap-4">
+            <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-300 text-xs">Umbral actual</p>
+              <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">
+                {currentMinScore}
+              </p>
+            </div>
 
-              <div>
-                <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
+            <div>
+              <Label htmlFor="minScore">Nuevo umbral de calificación</Label>
 
-                <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
-                  <div
-                    onClick={() => {
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
+                <div
+                  onClick={() => {
+                    if (isBlocked) {
+                      showAlert(
+                        "Fase bloqueada",
+                        "Esta fase ya está terminada. No se permiten modificaciones.",
+                        "error"
+                      );
+                    }
+                  }}
+                  onKeyDown={(e) => handleKeyDown(e as any, "umbral")}
+                  className="relative"
+                >
+                  {isBlocked && (
+                    <div
+                      className="absolute inset-0 z-10 cursor-not-allowed"
+                      onClick={() =>
+                        showAlert(
+                          "Fase bloqueada",
+                          "Esta fase ya está terminada. No se permiten modificaciones.",
+                          "error"
+                        )
+                      }
+                    />
+                  )}
+
+                  <InputField
+                    id="minScore"
+                    type="number"
+                    min={"1"}
+                    value={minScore === 0 ? "" : minScore}
+                    disabled={isBlocked}
+                    onChange={(e) => {
                       if (isBlocked) {
                         showAlert(
                           "Fase bloqueada",
                           "Esta fase ya está terminada. No se permiten modificaciones.",
                           "error"
                         );
+                        return;
                       }
+                      const value = Number(e.target.value);
+                      if (value < 0) return;
+                      setMinScore(value);
+                      setEditingMin(true);
                     }}
-                    onKeyDown={(e) => handleKeyDown(e as any, "umbral")}
-                    className="relative"
-                  >
-                    {isBlocked && (
-                      <div
-                        className="absolute inset-0 z-10 cursor-not-allowed"
-                        onClick={() =>
-                          showAlert(
-                            "Fase bloqueada",
-                            "Esta fase ya está terminada. No se permiten modificaciones.",
-                            "error"
-                          )
-                        }
-                      />
-                    )}
-                    <InputField
-                      id="minScore"
-                      type="number"
-                      min={"1"}
-                      value={minScore === 0 ? "" : minScore}
-                      disabled={isBlocked}
-                      onChange={(e) => {
-                        if (isBlocked) {
-                          showAlert(
-                            "Fase bloqueada",
-                            "Esta fase ya está terminada. No se permiten modificaciones.",
-                            "error"
-                          );
-                          return;
-                        }
-                        const value = Number(e.target.value);
-                        if (value < 0) return;
-                        setMinScore(Number(e.target.value));
-                        setEditingMin(true);
-                      }}
-                      placeholder="Ej. 51"
-                      className="w-28 text-center"
-                    />
-                  </div>
-                  <>
-                    <button
-                      type="button"
-                      disabled={loading || !editingMin}
-                      onClick={() => {
-                        setEditingMin(false);
-                        handleUpdateWithType("umbral");
-                      }}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
-                            ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                    >
-                      <CheckLineIcon className="usersize-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={loading || !editingMin}
-                      onClick={() => {
-                        setMinScore(currentMinScore);
-                        setEditingMin(false);
-                      }}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
-                            ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                    >
-                      <CloseLineIcon className="size-4" />
-                    </button>
-                  </>
+                    placeholder="Ej. 51"
+                    className="w-28 text-center"
+                  />
                 </div>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-4">
+                <button
+                  type="button"
+                  disabled={loading || !editingMin}
+                  onClick={() => {
+                    setEditingMin(false);
+                    handleUpdateWithType("umbral");
+                  }}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                      ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                >
+                  <CheckLineIcon className="usersize-4" />
+                </button>
 
-              <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-                <p className="text-gray-600 dark:text-gray-300 text-xs">Nota máxima actual</p>
-                <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">{currentMaxScore}</p>
-              </div>
-
-              <div>
-                <Label htmlFor="maxScore">Nueva nota máxima</Label>
-
-                <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
-                  <div
-                    onClick={() => {
-                      if (!canEditMaxScore) {
-                        showAlert(
-                          "Edición bloqueada",
-                          "Ya existen competidores calificados. No puedes editar la nota máxima.",
-                          "error"
-                        );
-                      }
-                    }}
-                    onKeyDown={(e) => handleKeyDown(e as any, "maxima")}
-                    className="relative"
-                  >
-                    {!canEditMaxScore && (
-                      <div
-                        className="absolute inset-0 z-10 cursor-not-allowed"
-                        onClick={() =>
-                          showAlert(
-                            "Edición bloqueada",
-                            "Ya existen competidores calificados. No puedes editar la nota máxima.",
-                            "error"
-                          )
-                        }
-                      />
-                    )}
-                    <InputField
-                      id="maxScore"
-                      type="number"
-                      min={"1"}
-                      value={maxScore === 0 ? "" : maxScore}
-                      disabled={isBlocked || !canEditMaxScore}
-                      onChange={(e) => {
-                        if (!canEditMaxScore) return;
-                        const value = Number(e.target.value);
-                        if (value < 0) return;
-                        setMaxScore(value);
-                        setEditingMax(true);
-                      }}
-                      placeholder="Ej: 100"
-                      className={`w-28 text-center ${!canEditMaxScore ? "opacity-60 cursor-not-allowed pointer-events-none" : ""
-                        }`}
-                    />
-                  </div>
-                  <>
-                    <button
-                      type="button"
-                      disabled={!canEditMaxScore || loading || !editingMax}
-                      onClick={() => {
-                        setEditingMax(false);
-                        handleUpdateWithType("maxima");
-                      }}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
-                              ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                    >
-                      <CheckLineIcon className="usersize-4" />
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => {
-                        setMaxScore(currentMaxScore);
-                        setEditingMax(false);
-                      }}
-                      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
-                            ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                    >
-                      <CloseLineIcon className="usersize-4" />
-                    </button>
-                  </>
-                </div>
+                <button
+                  type="button"
+                  disabled={loading || !editingMin}
+                  onClick={() => {
+                    setMinScore(currentMinScore);
+                    setEditingMin(false);
+                  }}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                      ${!editingMin ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                >
+                  <CloseLineIcon className="size-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -376,6 +289,98 @@ export default function ScoreInput({
           {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
         </div>
       </ComponentCard>
+
+      <ComponentCard title="Nota máxima de Calificación" className="h-full">
+        <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-4">
+            <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-300 text-xs">Nota máxima actual</p>
+              <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">
+                {currentMaxScore}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="maxScore">Nueva nota máxima</Label>
+
+              <div className="grid grid-cols-[1fr_auto_auto] gap-2 mt-1">
+                <div
+                  onClick={() => {
+                    if (!canEditMaxScore) {
+                      showAlert(
+                        "Edición bloqueada",
+                        "Ya existen competidores calificados. No puedes editar la nota máxima.",
+                        "error"
+                      );
+                    }
+                  }}
+                  onKeyDown={(e) => handleKeyDown(e as any, "maxima")}
+                  className="relative"
+                >
+                  {!canEditMaxScore && (
+                    <div
+                      className="absolute inset-0 z-10 cursor-not-allowed"
+                      onClick={() =>
+                        showAlert(
+                          "Edición bloqueada",
+                          "Ya existen competidores calificados. No puedes editar la nota máxima.",
+                          "error"
+                        )
+                      }
+                    />
+                  )}
+
+                  <InputField
+                    id="maxScore"
+                    type="number"
+                    min={"1"}
+                    value={maxScore === 0 ? "" : maxScore}
+                    disabled={isBlocked || !canEditMaxScore}
+                    onChange={(e) => {
+                      if (!canEditMaxScore) return;
+                      const value = Number(e.target.value);
+                      if (value < 0) return;
+                      setMaxScore(value);
+                      setEditingMax(true);
+                    }}
+                    placeholder="Ej: 100"
+                    className={`w-28 text-center ${!canEditMaxScore ? "opacity-60 cursor-not-allowed pointer-events-none" : ""}`}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  disabled={!canEditMaxScore || loading || !editingMax}
+                  onClick={() => {
+                    setEditingMax(false);
+                    handleUpdateWithType("maxima");
+                  }}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                        ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                >
+                  <CheckLineIcon className="usersize-4" />
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => {
+                    setMaxScore(currentMaxScore);
+                    setEditingMax(false);
+                  }}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700
+                        ${(!canEditMaxScore || !editingMax) ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+                >
+                  <CloseLineIcon className="usersize-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+        </div>
+      </ComponentCard>
+
 
       <Modal
         isOpen={successModal}
