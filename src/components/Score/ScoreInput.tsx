@@ -193,11 +193,14 @@ export default function ScoreInput({
   return (
     <>
       <ComponentCard title="Umbral de Clasificación" className="h-full">
+        <p className="text-sm text-gray-500 mb-2">
+          Puntaje mínimo requerido para "clasificar".
+        </p>
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
               <p className="text-gray-600 dark:text-gray-300 text-xs">Umbral actual</p>
-              <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">
+              <p className="text-2xl font-bold mt-1 text-green-600 dark:text-blue-400">
                 {currentMinScore}
               </p>
             </div>
@@ -291,11 +294,14 @@ export default function ScoreInput({
       </ComponentCard>
 
       <ComponentCard title="Nota máxima de Calificación" className="h-full">
+        <p className="text-sm text-gray-500 mb-2">
+          Puntaje máximo que puede "obtener un competidor".
+        </p>
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <div className="p-3 rounded-lg shadow-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700">
               <p className="text-gray-600 dark:text-gray-300 text-xs">Nota máxima actual</p>
-              <p className="text-2xl font-bold mt-1 text-blue-600 dark:text-blue-400">
+              <p className="text-2xl font-bold mt-1 text-black-600 dark:text-blue-400">
                 {currentMaxScore}
               </p>
             </div>
