@@ -423,11 +423,10 @@ export default function AcademicManagerForm() {
             />
           </div>
 
-          <div className="flex items-center mt-4">
+          <div className="flex justify-end items-center mt-4">
             <Button
               type="button"
               variant="primary"
-              className="w-full px-4"
               onClick={handleSearchUser}
             >
               {isSearching ? "Buscando..." : "Buscar información"}
@@ -585,8 +584,8 @@ export default function AcademicManagerForm() {
                   />
                 </div>
 
-                <div>
-                  <Button size="md" variant="primary" className="w-full" >
+                <div className="flex justify-end">
+                  <Button size="md" variant="primary" >
                     Registrar
                   </Button>
                 </div>
