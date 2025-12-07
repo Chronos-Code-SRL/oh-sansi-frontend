@@ -115,7 +115,7 @@ export interface AwardMedalsResponse {
 //     classification_place?: number | null;
 // }
 
-export interface numberOfMedalsByArea {
+export interface numberOfMedalsByLevel {
     number_gold: number;
     number_silver: number;
     number_bronze: number;
