@@ -121,3 +121,16 @@ export interface numberOfMedalsByLevel {
     number_bronze: number;
     number_honorable_mention: number;
 }
+
+export interface CertificateContestant {
+  name: string;
+  last_name: string;
+  school_name: string;
+  department: string;
+  area: string;
+  level: string;
+  score: number;
+  classification_place: number | null;
+  teacher: string;
+  area_responsible: string;
+}

@@ -24,6 +24,7 @@ import RankedContestantsList from "./pages/Lists/RankedContestatsList";
 import AwardedList from "./pages/Lists/AwardedList";
 import DisqualifyContestant from "./pages/DisqualifyContestant/DisqualifyContestant";
 import AuditPage from "./pages/Lists/AuditPage";
+import CertificatedList from "./pages/Lists/CertificatedList";
 
 export default function App() {
   return (
@@ -87,6 +88,9 @@ export default function App() {
 
             {/*Awarded List contestants */}
             <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} />
+
+            {/*Certificated List contestants */}
+            <Route path="/lista-competidores-certificados/:idOlympiad/:areaName/:areaId" element={<CertificatedList />} />
 
 
 
