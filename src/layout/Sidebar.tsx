@@ -151,7 +151,10 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
   const user = getUser();
   const roleNames = getRoleName(user);
-  const isAdmin = roleNames[0] === "Admin";
+  const isAdmin = user?.roles_id?.some(role => {
+    const roleName = role.name.toLowerCase();
+    return roleName === "administrador";
+  });
   const userPerms = useMemo(() => {
     if (!user || !Array.isArray(user.roles_id)) return [] as UPermission[];
     return [...new Set(user.roles_id.flatMap((role: any) => rolePermissions[role.id] || []))];
@@ -185,10 +188,11 @@ const AppSidebar: React.FC = () => {
       }
     };
 
-    if (selectedOlympiad?.id) {
+    // Solo obtener áreas si no es administrador y hay olimpiada seleccionada
+    if (selectedOlympiad?.id && !isAdmin) {
       fetchUserAreas(selectedOlympiad.id);
     }
-  }, [selectedOlympiad]);
+  }, [selectedOlympiad, isAdmin]);
 
   // obtener fases de la olimpiada
   useEffect(() => {

@@ -63,8 +63,13 @@ export default function SignInForm() {
     try {
       const data = await login(email, password);
       console.log("Sesión iniciada correctamente:", data);
-      // console.log(getToken())
-      navigate("/seleccionar-olimpiada", { replace: true });
+
+      // Verificar si es Admin y redirigir según el rol
+      const isAdmin = data.user.roles_id.some((role: any) => {
+        const roleName = role.name.toLowerCase();
+        return roleName === "administrador";
+      });
+      navigate(isAdmin ? "/Olimpiada" : "/seleccionar-olimpiada", { replace: true });
     } catch {
       setError("Credenciales incorrectas");
     } finally {
