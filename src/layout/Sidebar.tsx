@@ -41,7 +41,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.AWARDED_CONTESTANTS_LIST,
     UPermission.MEDAL_PAGE,
-    UPermission.DISQUALIFY_COMPETITOR,
+    // UPermission.DISQUALIFY_COMPETITOR,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -156,7 +156,8 @@ const AppSidebar: React.FC = () => {
   }, [user?.roles_id?.map((r: any) => r.id).join(",")]);
 
   const { selectedOlympiad } = useOlympiad();
-  const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
+  // Áreas agrupadas por rol_id (1 Admin, 2 Responsable Académico, 3 Evaluador)
+  const [roleAreas, setRoleAreas] = useState<Record<number, { id: number; name: string; path: string }[]>>({});
   const [menuItems, setMenuItems] = useState(navItems);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [openAreaId, setOpenAreaId] = useState<number | null>(null);
@@ -166,15 +167,17 @@ const AppSidebar: React.FC = () => {
       try {
         const res = await getUserAreas(olympiadId);
         console.log("Respuesta de getUserAreas:", res);
-        const formatted = res.areas.map((area) => ({
-          id: area.id,
-          name: area.name,
-          path: `/calificaciones/${olympiadId}/${encodeURIComponent(area.name)}/${area.id}`,
-
-        }));
-        console.log("Respuesta de getUserAreas:", res);
-
-        setUserAreas(formatted);
+        // El backend ahora retorna áreas por rol en res.data
+        const byRole: Record<number, { id: number; name: string; path: string }[]> = {};
+        (res.data || []).forEach((entry: any) => {
+          const list = (entry.areas || []).map((area: any) => ({
+            id: area.id,
+            name: area.name,
+            path: `/calificaciones/${olympiadId}/${encodeURIComponent(area.name)}/${area.id}`,
+          }));
+          byRole[entry.role_id] = list;
+        });
+        setRoleAreas(byRole);
       } catch (error) {
         console.error("Error obteniendo áreas del usuario:", error);
       }
@@ -203,12 +206,30 @@ const AppSidebar: React.FC = () => {
 
 
   useEffect(() => {
-    // Solo actualizamos si ya tenemos las áreas
-    if (userAreas.length > 0) {
+    // Helper: obtener áreas según permiso del ítem usando roleAreas
+    const getAreasForPermission = (permission?: UPermission) => {
+      if (!permission) return [] as { id: number; name: string; path: string }[];
+      // Encontrar roles que tengan este permiso según rolePermissions
+      const rolesForPermission = Object.entries(rolePermissions)
+        .filter(([_, perms]) => (perms as UPermission[]).includes(permission))
+        .map(([roleId]) => Number(roleId));
+      // Priorizar roles específicos (Responsable 2, Evaluador 3), evitar Admin
+      const orderedRoles = rolesForPermission.sort((a, b) => a - b).filter(r => r !== 1);
+      for (const rid of orderedRoles) {
+        if (roleAreas[rid]?.length) return roleAreas[rid];
+      }
+      // Si no hay coincidencia, devolver vacío
+      return [] as { id: number; name: string; path: string }[];
+    };
+
+    // Solo actualizamos si ya existen áreas por al menos un rol
+    const hasAnyArea = Object.values(roleAreas).some(arr => (arr?.length ?? 0) > 0);
+    if (hasAnyArea) {
       const updated = navItems.map((item) => {
         if (item.name === "Calificar Competidores") {
           // construir subitems por área que contengan las fases
-          const areasWithPhases = userAreas.map((area) => {
+          const areas = getAreasForPermission(item.permission);
+          const areasWithPhases = areas.map((area) => {
             const areaSubItems = phases.length
               ? phases.map((p) => {
                 console.log(p.name);
@@ -236,7 +257,7 @@ const AppSidebar: React.FC = () => {
     } else {
       setMenuItems(navItems);
     }
-  }, [userAreas, phases]);
+  }, [roleAreas, phases]);
 
   const toggleArea = (areaId: number) => {
     setOpenAreaId((prev) => (prev === areaId ? null : areaId));
@@ -274,10 +295,24 @@ const AppSidebar: React.FC = () => {
       .filter(Boolean) as NavItem[];
 
     // Agregar dinámicamente las áreas a los menús que las necesitan
+    // Helper aquí también para construir por-permiso
+    const getAreasForPermission = (permission?: UPermission) => {
+      if (!permission) return [] as { id: number; name: string; path: string }[];
+      const rolesForPermission = Object.entries(rolePermissions)
+        .filter(([_, perms]) => (perms as UPermission[]).includes(permission))
+        .map(([roleId]) => Number(roleId));
+      const orderedRoles = rolesForPermission.sort((a, b) => a - b).filter(r => r !== 1);
+      for (const rid of orderedRoles) {
+        if (roleAreas[rid]?.length) return roleAreas[rid];
+      }
+      return [] as { id: number; name: string; path: string }[];
+    };
+
     const updatedMenu = filteredMenu.map((item) => {
       if (item.name === "Calificar Competidores") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const areaSubItems = phases.length
               ? phases.map((p) => ({
                 name: p.name,
@@ -299,8 +334,9 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Editar Umbral") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -327,8 +363,9 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Descalificar Competidor") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -356,8 +393,9 @@ const AppSidebar: React.FC = () => {
       }
 
       if (item.name === "Avalar Fase") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -384,8 +422,9 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Lista de Clasificados") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -413,8 +452,9 @@ const AppSidebar: React.FC = () => {
       }
 
       if (item.name === "Lista de Premiados") {
-        if (userAreas.length > 0) {
-          const areasOnly = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasOnly = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             return {
@@ -444,13 +484,10 @@ const AppSidebar: React.FC = () => {
     });
 
     setMenuItems(updatedMenu);
-  }, [userPerms, userAreas, phases]);
-
+  }, [userPerms, roleAreas, phases]);
 
 
   //Editar
-
-
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
