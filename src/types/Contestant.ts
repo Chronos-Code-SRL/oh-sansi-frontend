@@ -114,3 +114,10 @@ export interface AwardMedalsResponse {
 // export interface UpdateMedalPayload {
 //     classification_place?: number | null;
 // }
+
+export interface numberOfMedalsByArea {
+    number_gold: number;
+    number_silver: number;
+    number_bronze: number;
+    number_honorable_mention: number;
+}
