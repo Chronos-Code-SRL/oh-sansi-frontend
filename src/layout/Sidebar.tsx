@@ -94,13 +94,13 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.GRADE_COMPETITOR
   },
-  // {
-  //   icon: <DisqualifyIcon />,
-  //   name: "Desclasificar Competidor",
-  //   path: "/descalificar-competidor",
-  //   subItems: [],
-  //   permission: UPermission.DISQUALIFY_COMPETITOR,
-  // },
+  {
+    icon: <DisqualifyIcon />,
+    name: "Desclasificar Competidor",
+    path: "/descalificar-competidor",
+    subItems: [],
+    permission: UPermission.DISQUALIFY_COMPETITOR,
+  },
   {
     icon: <CheckLineIcon />,
     name: "Avalar Fase",

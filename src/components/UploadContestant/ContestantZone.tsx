@@ -155,20 +155,20 @@ export default function AdRegistration() {
             {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
-                {/* Estado de carga */}
-                {isUploading && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-brand-600">
-                    <span className="animate-spin inline-block w-4 h-4 border-2 border-brand-600 border-t-transparent rounded-full" />
-                    <span>Subiendo archivo(s)...</span>
-                  </div>
-                )}
+                
                 {/* Dropzone deshabilitado visualmente mientras sube */}
                 <div className={isUploading ? "opacity-50 pointer-events-none" : ""}>
                   <DropzoneComponent onFilesAdded={handleFilesAdded} />
                 </div>
                 {/* Lista de archivos subidos */}
                 <ComponentCard title="Archivos subidos">
-
+                  {/* Estado de carga */}
+                {isUploading && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full" />
+                    <span>Subiendo archivo(s)...</span>
+                  </div>
+                )}
                   {isLoadingUploads ? (
                     <p className="text-gray-500">Cargando archivos...</p>
                   ) : files.length === 0 ? (
