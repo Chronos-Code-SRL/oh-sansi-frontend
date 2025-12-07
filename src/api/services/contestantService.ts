@@ -1,5 +1,10 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import {
+    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsResponse,
+    ConstestantRanked, Contestant, ContestantMedal, Evaluation,
+    EvaluationUpdatePayload, FilterList,
+    numberOfMedalsByLevel
+} from "../../types/Contestant";
 import { LastPhaseStatusResponse } from "../../types/Phase";
 
 const CONTESTANTS_URL = `/contestants`;
@@ -65,7 +70,7 @@ export const getAwardWinningCompetitors = async (
         `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
     );
 
-    return res.data.contestants; // ✔️ ahora sí devuelves un array
+    return res.data.contestants;
 };
 
 //For medals
@@ -113,3 +118,14 @@ export const getLastPhaseStatus = async (
 
     return res.data;
 };
+
+export const getNumberOfMedalsByLevel = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number
+): Promise<numberOfMedalsByLevel> => {
+    const res = await ohSansiApi.get<numberOfMedalsByLevel>(
+        `/medals/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+    return res.data;
+}
