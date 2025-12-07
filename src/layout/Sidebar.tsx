@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
 import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal, TrashBinIcon } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal, TrashBinIcon, QualificationIcon, DisqualifyIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -80,15 +80,15 @@ const navItems: NavItem[] = [
     path: "/registration",
     permission: UPermission.REGISTER_COMPETITOR
   },
-  //  {
-  //     icon: <TrashBinIcon />,
-  //     name: "Descalificar Competidor",
-  //     path: "/descalificar-competidor",
-  //     subItems: [],
-  //     permission: UPermission.DISQUALIFY_COMPETITOR,
-  //   },
+    {
+      icon: <DisqualifyIcon />,
+      name: "Descalificar Competidor",
+      path: "/descalificar-competidor",
+      subItems: [],
+      permission: UPermission.DISQUALIFY_COMPETITOR,
+    },
   {
-    icon: <ListIcon />,
+    icon: <QualificationIcon />,
     name: "Calificar Competidores",
     path: "/calificaciones",
     subItems: [],
@@ -102,12 +102,6 @@ const navItems: NavItem[] = [
     permission: UPermission.EDIT_SCORE_CUT,
   },
   {
-    icon: <Slider />,
-    name: "Filtrar lista de Competidores",
-    path: "/filtros-de-lista",
-    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
-  },
-  {
     icon: <CheckLineIcon />,
     name: "Avalar Fase",
     path: "/aprobar-fase",
@@ -119,6 +113,12 @@ const navItems: NavItem[] = [
     name: "Medallero",
     path: "/medallero",
     permission: UPermission.MEDAL_PAGE,
+  },
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
   {
     icon: <ListIcon />,

@@ -65,6 +65,8 @@ import { ReactComponent as Medal } from "./medal.svg?react";
 import { ReactComponent as TrophyGold } from "./trophy-Gold.svg?react";
 import { ReactComponent as TrophySilver } from "./trophy-Silver.svg?react";
 import { ReactComponent as TrophyBronze } from "./trophy-Bronze.svg?react";
+import { ReactComponent as QualificationIcon } from "./qualify.svg?react";
+import { ReactComponent as DisqualifyIcon } from "./disqualify.svg?react";
 export {
   HomeIcon,
   ErrorHexaIcon,
@@ -133,4 +135,6 @@ export {
   TrophyBronze,
   Award,
   Medal,
+  QualificationIcon,
+  DisqualifyIcon,
 };
