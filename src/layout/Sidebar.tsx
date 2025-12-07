@@ -80,20 +80,6 @@ const navItems: NavItem[] = [
     path: "/registration",
     permission: UPermission.REGISTER_COMPETITOR
   },
-    {
-      icon: <DisqualifyIcon />,
-      name: "Descalificar Competidor",
-      path: "/descalificar-competidor",
-      subItems: [],
-      permission: UPermission.DISQUALIFY_COMPETITOR,
-    },
-  {
-    icon: <QualificationIcon />,
-    name: "Calificar Competidores",
-    path: "/calificaciones",
-    subItems: [],
-    permission: UPermission.GRADE_COMPETITOR
-  },
   {
     icon: <PencilIcon />,
     name: "Editar Umbral",
@@ -101,6 +87,20 @@ const navItems: NavItem[] = [
     subItems: [],
     permission: UPermission.EDIT_SCORE_CUT,
   },
+  {
+    icon: <QualificationIcon />,
+    name: "Calificar Competidores",
+    path: "/calificaciones",
+    subItems: [],
+    permission: UPermission.GRADE_COMPETITOR
+  },
+  // {
+  //   icon: <DisqualifyIcon />,
+  //   name: "Desclasificar Competidor",
+  //   path: "/descalificar-competidor",
+  //   subItems: [],
+  //   permission: UPermission.DISQUALIFY_COMPETITOR,
+  // },
   {
     icon: <CheckLineIcon />,
     name: "Avalar Fase",
@@ -113,12 +113,6 @@ const navItems: NavItem[] = [
     name: "Medallero",
     path: "/medallero",
     permission: UPermission.MEDAL_PAGE,
-  },
-  {
-    icon: <Slider />,
-    name: "Filtrar lista de Competidores",
-    path: "/filtros-de-lista",
-    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
   {
     icon: <ListIcon />,
@@ -139,6 +133,12 @@ const navItems: NavItem[] = [
     name: "Historial de cambios",
     path: "/historial-cambios",
     permission: UPermission.AUDIT_LISTS,
+  },
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
   },
 
 ];
@@ -362,7 +362,7 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
-      if (item.name === "Descalificar Competidor") {
+      if (item.name === "Desclasificar Competidor") {
         const areas = getAreasForPermission(item.permission);
         if (areas.length > 0) {
           const areasWithPhases = areas.map((area) => {
