@@ -19,7 +19,14 @@ export interface LoginResponse {
   user:User;
 }
 
-export interface UserAreasResponse {
+export interface UserRoleAreas{
+  role_id: number;
+  role_name: string;
   areas: Area[];
+}
+
+export interface UserAreasResponse {
+  message: string;
+  data: UserRoleAreas[];
   status: number;
 }

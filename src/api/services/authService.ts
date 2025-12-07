@@ -75,7 +75,8 @@ export const getUserAreas = async (idOlympiad: number): Promise<UserAreasRespons
     headers: { Authorization: `Bearer ${token}` },
   });
   return {
-    areas: res.data.data,
+    message: res.data.message,
+    data: res.data.data,
     status: res.data.status,
   };
 };

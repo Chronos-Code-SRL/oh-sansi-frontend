@@ -75,6 +75,7 @@ export default function AdRegistration() {
   }, [selectedOlympiad]);
 
   const handleFilesAdded = async (acceptedFiles: File[]) => {
+    if (isUploading) return; // evitar múltiples cargas simultáneas
     if (!selectedOlympiad) return alert("Selecciona una olimpiada primero");
     setIsUploading(true);
     try {
@@ -154,11 +155,20 @@ export default function AdRegistration() {
             {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
-
-                <DropzoneComponent onFilesAdded={handleFilesAdded} />
+                
+                {/* Dropzone deshabilitado visualmente mientras sube */}
+                <div className={isUploading ? "opacity-50 pointer-events-none" : ""}>
+                  <DropzoneComponent onFilesAdded={handleFilesAdded} />
+                </div>
                 {/* Lista de archivos subidos */}
                 <ComponentCard title="Archivos subidos">
-
+                  {/* Estado de carga */}
+                {isUploading && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full" />
+                    <span>Subiendo archivo(s)...</span>
+                  </div>
+                )}
                   {isLoadingUploads ? (
                     <p className="text-gray-500">Cargando archivos...</p>
                   ) : files.length === 0 ? (
@@ -167,6 +177,7 @@ export default function AdRegistration() {
 
                     <div className="mt-6 text-left">
                       <div className="space-y-2">
+                        
                         {files.map((f) => (
                           <div
                             key={f.id}
@@ -177,7 +188,7 @@ export default function AdRegistration() {
                               <div>
                                 <p className="font-medium mb-1">{f.original_file_name}</p>
                                 <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
-
+                                
 
                                 {f.details[0].header_errors > 0 ? (
                                   <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
@@ -214,6 +225,7 @@ export default function AdRegistration() {
                                   variant="outline"
                                   startIcon={<DownloadIcon className="size-5" />}
                                   onClick={() => handleDownloadError(f.details[0].error_file!)}
+                                  disabled={isUploading}
                                 >
                                   Descargar CSV de errores
                                 </Button>
