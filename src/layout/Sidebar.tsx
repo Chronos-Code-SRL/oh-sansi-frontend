@@ -29,7 +29,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.CONFIGURE_AREAS,
     UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
     UPermission.REGISTER_EVALUATOR,
-    UPermission.REGISTER_COMPETITOR,
+    // UPermission.REGISTER_COMPETITOR,
     UPermission.AUDIT_LISTS,
   ],
   2: [ // Responsable Académico
@@ -45,6 +45,7 @@ const rolePermissions: Record<number, UPermission[]> = {
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
+    UPermission.REGISTER_COMPETITOR,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.DISQUALIFY_COMPETITOR,
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
     icon: <HomeIcon />,
     name: "Inicio",
     path: "/seleccionar-olimpiada",
+    permission: UPermission.REGISTER_COMPETITOR,
   },
   {
     icon: <GridIcon />,

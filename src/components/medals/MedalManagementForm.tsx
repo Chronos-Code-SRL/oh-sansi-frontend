@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../ui/button/Button";
 import { TrophyGold, TrophySilver, TrophyBronze, Award } from "../../icons";
+import { numberOfMedalsByLevel } from "../../types/Contestant";
 
 interface MedalManagementFormProps {
     selectedAreaId: number | null;
@@ -12,6 +13,7 @@ interface MedalManagementFormProps {
         honorable_mention: string;
     }) => Promise<void>;
     onShowAlert: (title: string, message: string, variant?: "success" | "error" | "warning" | "info") => void;
+    medalsByLevel: numberOfMedalsByLevel | null;
 }
 
 export default function MedalManagementForm({
@@ -19,12 +21,28 @@ export default function MedalManagementForm({
     selectedLevelId,
     onGenerateMedals,
     onShowAlert,
+    medalsByLevel,
 }: MedalManagementFormProps) {
     const [goldCount, setGoldCount] = useState("");
     const [silverCount, setSilverCount] = useState("");
     const [bronzeCount, setBronzeCount] = useState("");
     const [honorableMentionCount, setHonorableMentionCount] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // useEffect para actualizar los campos cuando se carguen los datos de medallas
+    useEffect(() => {
+        if (medalsByLevel) {
+            setGoldCount(medalsByLevel.number_gold.toString());
+            setSilverCount(medalsByLevel.number_silver.toString());
+            setBronzeCount(medalsByLevel.number_bronze.toString());
+            setHonorableMentionCount(medalsByLevel.number_honorable_mention.toString());
+        } else {
+            setGoldCount("");
+            setSilverCount("");
+            setBronzeCount("");
+            setHonorableMentionCount("");
+        }
+    }, [medalsByLevel]);
 
     async function handleSubmit() {
         if (!selectedAreaId || !selectedLevelId) {

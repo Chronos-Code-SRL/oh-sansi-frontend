@@ -6,8 +6,8 @@ import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantMedals, awardMedals, getLastPhaseStatus } from "../../api/services/contestantService";
-import { ContestantMedal } from "../../types/Contestant";
+import { getContestantMedals, awardMedals, getLastPhaseStatus, getNumberOfMedalsByLevel } from "../../api/services/contestantService";
+import { ContestantMedal, numberOfMedalsByLevel } from "../../types/Contestant";
 import Alert from "../ui/alert/Alert";
 import MedalManagementForm from "./MedalManagementForm";
 
@@ -35,6 +35,9 @@ export default function MedalsPage() {
     // Estados para validación de última fase
     const [isLastPhaseEndorsed, setIsLastPhaseEndorsed] = useState<boolean>(false);
     const [phaseStatusChecked, setPhaseStatusChecked] = useState<boolean>(false);
+
+    // Estado para las medallas por nivel
+    const [medalsByLevel, setMedalsByLevel] = useState<numberOfMedalsByLevel | null>(null);
 
     // Alert states
     const [alertOpen, setAlertOpen] = useState(false);
@@ -118,6 +121,7 @@ export default function MedalsPage() {
                     setStudents([]);
                     setIsLastPhaseEndorsed(false);
                     setPhaseStatusChecked(false);
+                    setMedalsByLevel(null);
                 }
                 return;
             }
@@ -139,6 +143,10 @@ export default function MedalsPage() {
                 // PASO 2: Cargar los estudiantes
                 const data = await getContestantMedals(idOlympiad, idArea, levelId);
                 if (alive) setStudents(data);
+
+                // PASO 3: Cargar las medallas por nivel
+                const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
+                if (alive) setMedalsByLevel(medalsData);
 
             } catch (error: any) {
                 if (!alive) return;
@@ -220,8 +228,20 @@ export default function MedalsPage() {
             // Recargar la tabla de estudiantes
             const data = await getContestantMedals(idOlympiad, idArea, levelId);
             setStudents(data);
+
+            // Recargar los datos de medallas para actualizar el formulario
+            const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
+            setMedalsByLevel(medalsData);
         } catch (error) {
             showAlert("Cantidad de medallas no válida", "La cantidad de medallas indicada supera el número total de estudiantes. Ajuste el valor y vuelva a intentarlo.", "error");
+
+            // Recuperar el estado anterior del formulario recargando los datos
+            try {
+                const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
+                setMedalsByLevel(medalsData);
+            } catch (recoveryError) {
+                console.error("Error al recuperar datos de medallas:", recoveryError);
+            }
         }
     }
 
@@ -297,6 +317,7 @@ export default function MedalsPage() {
                         selectedLevelId={selectedLevelId}
                         onGenerateMedals={handleGenerateMedals}
                         onShowAlert={showAlert}
+                        medalsByLevel={medalsByLevel}
                     />
                     <div className="flex items-center mb-3">
                         <SearchBar
