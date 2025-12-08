@@ -9,7 +9,8 @@ import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
 import SearchBar from "../Grade/Searcher";
 import Select from "../form/Select";
-import { Clean } from "../../icons";
+import Button from "../ui/button/Button";
+import ClearFiltersButton from "../ui/button/CleanFiltersButton";
 
 export const AuditLogsTable = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -186,28 +187,17 @@ export const AuditLogsTable = () => {
           <div className="mx-auto w-full space-y-8">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-lg font-semibold">Historial de cambios en el registro de notas</h2>
-
-              <button
-                onClick={refreshLogs}
-                className="px-4 py-2 bg-[#3756A6] text-white rounded-md hover:bg-[#2c458a]"
-              >
-                Refrescar
-              </button>
+              <Button className="" onClick={refreshLogs} >Refrescar</Button>
             </div>
-
             <div className="space-y-4 mt-4">
-
               <div className="flex flex-col">
                 <SearchBar
                   onSearch={setSearch}
                   placeholder="Buscar por usuario, email, CI, competidor..."
                 />
-
               </div>
-
               <div className="flex flex-col">
                 <label className="text-sm font-medium mb-1">Filtro por fecha</label>
-
                 <div className="flex items-center gap-3">
                   <div className="relative w-30">
                     {/* Día */}
@@ -219,7 +209,6 @@ export const AuditLogsTable = () => {
                       }))}
                       value={filterDay ?? ""}
                       onChange={(value: string) => setFilterDay(value)}
-
                     />
                   </div>
                   <div className="relative w-30">
@@ -249,19 +238,11 @@ export const AuditLogsTable = () => {
                       onChange={(value: string) => setFilterYear(value)}
                     />
                   </div>
-                  {/* Botón limpiar filtros */}
-                  <button
-                    onClick={handleClearFilters}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 py-2 mb-2 rounded-lg transition flex items-center gap-2"
-                  >
-                    <Clean className="w-5 h-5" />
-                  </button>
+                  <ClearFiltersButton onClick={handleClearFilters} />
                 </div>
               </div>
             </div>
-
           </div>
-
           <div className="mt-6 overflow-x-auto rounded-xl ">
             <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-center">
               <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
@@ -277,7 +258,6 @@ export const AuditLogsTable = () => {
                   <th className="px-5 py-4 text-sm font-semibold text-foreground">Puntaje Nuevo</th>
                 </TableRow>
               </TableHeader>
-
               <TableBody>
                 {paginatedLogs.map((log) => (
                   <TableRow key={log.audit_id} className="hover:bg-gray-50 border-b border-border last:border-0">

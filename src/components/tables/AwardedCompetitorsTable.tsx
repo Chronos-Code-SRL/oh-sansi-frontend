@@ -10,6 +10,7 @@ import FloatingDownloadButton from "../filter/FloatingDownloadButton";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import { autoTable } from "jspdf-autotable";
+import ClearFiltersButton from "../ui/button/CleanFiltersButton";
 
 interface Props {
   idOlympiad: number;
@@ -140,86 +141,77 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
   if (loading) return <p>Cargando datos…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
+  const formatRows = () => {
+    return filteredRows.map((c) => ({
+        Nombre: c.first_name,
+        Apellido: c.last_name,
+        Colegio: c.school_name,
+        Departamento: c.department,
+        Área: c.area_name,
+        Nivel: c.level_name,
+        Puesto: c.classification_place,
+    }));
+  };
 
-//  DESCARGAR PDF
-const handleDownloadPDF = () => {
-  const doc = new jsPDF({ orientation: "landscape" });
+  //  DESCARGAR PDF
+  const handleDownloadPDF = () => {
+    const rows = formatRows();
+    if (!rows.length) return;
 
-  doc.setFontSize(14);
-  doc.text("Reporte de Ganadores", 14, 15);
+    const doc = new jsPDF({ orientation: "landscape" });
 
-  const tableData = filteredRows.map((c) => [
-    c.first_name,
-    c.last_name,
-    c.school_name,
-    c.department,
-    c.level_name,
-    c.area_name,
-    c.classification_place ?? "—"
-  ]);
+    doc.setFontSize(14);
+    doc.text("Podio de Ganadores", 14, 15);
 
-  autoTable(doc, {
-    startY: 20,
-    head: [[
-      "Nombre", "Apellido", "Unidad Educativa", "Departamento",
-      "Nivel", "Área", "Lugar"
-    ]],
-    body: tableData,
-    styles: { halign: "center", valign: "middle" },
-    headStyles: { fillColor: [23, 86, 166] }
-  });
+    autoTable(doc, {
+      startY: 20,
+      head: [Object.keys(rows[0])],
+      body: rows.map((r) => Object.values(r)),
+      styles: { halign: "center", valign: "middle" },
+      headStyles: { fillColor: [23, 86, 166] },
+    });
 
-  doc.save("reporte_ganadores.pdf");
-};
+    doc.save("podio_ganadores.pdf");
+  };
+
 
   // DESCARGAR CSV
   const handleDownloadCSV = () => {
-    const headers = [
-      "Nombre","Apellido","Unidad Educativa","Departamento",
-      "Nivel","Área","Lugar"
-    ];
+    const rows = formatRows();
+    if (!rows.length) return;
 
-    const rowsCSV = filteredRows.map((c) => [
-      c.first_name,
-      c.last_name,
-      c.school_name,
-      c.department,
-      c.level_name,
-      c.area_name,
-      c.classification_place ?? ""
-    ]);
+    const headers = Object.keys(rows[0]).join(",");
 
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rowsCSV].map((e) => e.join(",")).join("\n");
+    const body = rows
+      .map((r) =>
+        Object.values(r)
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const csv = `${headers}\n${body}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = "reporte_ganadores.csv";
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = "podio_ganadores.csv";
     link.click();
-    document.body.removeChild(link);
   };
+
 
   // DESCARGAR EXCEL
   const handleDownloadExcel = () => {
-    const data = filteredRows.map((c) => ({
-      Nombre: c.first_name,
-      Apellido: c.last_name,
-      UnidadEducativa: c.school_name,
-      Departamento: c.department,
-      Nivel: c.level_name,
-      Área: c.area_name,
-      Lugar: c.classification_place ?? ""
-    }));
+    const rows = formatRows();
+    if (!rows.length) return;
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Ganadores");
-    XLSX.writeFile(wb, "reporte_ganadores.xlsx");
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Ganadores");
+
+    XLSX.writeFile(workbook, "podio_ganadores.xlsx");
   };
-
 
   return (
     <div className="mx-auto w-full space-y-4">
@@ -257,15 +249,12 @@ const handleDownloadPDF = () => {
           onChange={setFilterDepartamento}
         />
 
-        <button
+        <ClearFiltersButton
           onClick={() => {
             setFilterNivel([]);
             setFilterDepartamento([]);
           }}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition"
-        >
-          Limpiar
-        </button>
+        />
       </div>
 
       {/* Tabla */}
@@ -277,8 +266,8 @@ const handleDownloadPDF = () => {
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Apellido</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Unida Educativa</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Departamento</th>
-              <th className="px-5 py-4 text-sm font-semibold text-foreground">Nivel</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Área</th>
+              <th className="px-5 py-4 text-sm font-semibold text-foreground">Nivel</th>
               <th className="px-5 py-4 text-sm font-semibold text-foreground">Lugar</th>
             </TableRow>
           </TableHeader>
@@ -297,8 +286,8 @@ const handleDownloadPDF = () => {
                   <td className="px-5 py-4 text-sm">{c.last_name}</td>
                   <td className="px-5 py-4 text-sm">{c.school_name}</td>
                   <td className="px-5 py-4 text-sm">{c.department}</td>
-                  <td className="px-5 py-4 text-sm">{c.level_name}</td>
                   <td className="px-5 py-4 text-sm">{c.area_name}</td>
+                  <td className="px-5 py-4 text-sm">{c.level_name}</td>
                   <td className="px-5 py-4 text-sm whitespace-nowrap text-center">
                     <Badge color={getColorByMedal(c.classification_place)}>
                       {c.classification_place ?? "Sin clasificación"}

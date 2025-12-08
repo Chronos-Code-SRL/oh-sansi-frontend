@@ -10,7 +10,7 @@ import FloatingDownloadButton from "../filter/FloatingDownloadButton";
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
-import { Clean } from "../../icons";
+import ClearFiltersButton from "../ui/button/CleanFiltersButton";
 
 interface Props {
   idOlympiad: number;
@@ -94,7 +94,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
     loadData();
   }, [idOlympiad, idArea]);
 
-  // FILTRO POR NIVEL
+  // filtros por nivel
   const filteredRows = rows.filter((r) => {
     if (selectedNivel.length === 0) return true;
     return selectedNivel.includes(r.level.toLowerCase());
@@ -111,7 +111,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
         Puntaje: c.score,
         Puesto: c.classification_place,
         Profesor: c.teacher,
-        Responsable: c.area_responsible,
+        "Responsable Academico": c.area_responsible,
     }));
   };
 
@@ -134,7 +134,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
 
         const link = document.createElement("a");
         link.href = url;
-        link.download = "certificados.csv";
+        link.download = "lista_para_certificados.csv";
         link.click();
     };
 
@@ -155,7 +155,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
             headStyles: { fillColor: [40, 40, 40] },
         });
 
-        doc.save("certificados.pdf");
+        doc.save("lista_para_certificados.pdf");
     };
 
     const handleDownloadExcel = () => {
@@ -166,7 +166,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Certificados");
 
-        XLSX.writeFile(workbook, "certificados.xlsx");
+        XLSX.writeFile(workbook, "lista_para_certificados.xlsx");
     };
 
   return (
@@ -184,48 +184,41 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
                 }))}
                 selectedValues={selectedNivel}
                 onChange={setSelectedNivel}
-                />
-            <button
-                onClick={handleClearFilters}
-                className="bg-gray-200 mt-2 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 py-2 mb-2 rounded-lg transition flex items-center gap-2"
-                >
-                <Clean className="w-5 h-5" />
-            </button>
+            />
+            <ClearFiltersButton onClick={handleClearFilters} />
         </div>
-
         <div className="mt-6 overflow-x-auto rounded-xl">
             <Table className="min-w-full border border-gray-200 rounded-xl text-sm text-center">
-            <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
-                <TableRow>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Nombre</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Apellido</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Colegio</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Departamento</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Área</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Nivel</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Puntaje</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Puesto</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Profesor</th>
-                <th className="px-5 py-4 text-sm font-semibold text-foreground">Responsable Academico</th>
-                </TableRow>
-            </TableHeader>
-
-            <TableBody>
-                {filteredRows.map((c, i) => (
-                <TableRow key={i} className="hover:bg-gray-50 border-b border-border last:border-0">
-                    <td className="px-5 py-4 text-sm">{c.name}</td>
-                    <td className="px-5 py-4 text-sm">{c.last_name}</td>
-                    <td className="px-5 py-4 text-sm">{c.school_name}</td>
-                    <td className="px-5 py-4 text-sm">{c.department}</td>
-                    <td className="px-5 py-4 text-sm">{c.area}</td>
-                    <td className="px-5 py-4 text-sm">{c.level}</td>
-                    <td className="px-5 py-4 text-sm">{c.score}</td>
-                    <td className="px-5 py-4 text-sm">{c.classification_place}</td>
-                    <td className="px-5 py-4 text-sm">{c.teacher}</td>
-                    <td className="px-5 py-4 text-sm">{c.area_responsible}</td>
-                </TableRow>
-                ))}
-            </TableBody>
+              <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
+                  <TableRow>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Apellido</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Colegio</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Departamento</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Nivel</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Puntaje</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Puesto</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Profesor</th>
+                  <th className="px-5 py-4 text-sm font-semibold text-foreground">Responsable Academico</th>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {filteredRows.map((c, i) => (
+                  <TableRow key={i} className="hover:bg-gray-50 border-b border-border last:border-0">
+                      <td className="px-5 py-4 text-sm">{c.name}</td>
+                      <td className="px-5 py-4 text-sm">{c.last_name}</td>
+                      <td className="px-5 py-4 text-sm">{c.school_name}</td>
+                      <td className="px-5 py-4 text-sm">{c.department}</td>
+                      <td className="px-5 py-4 text-sm">{c.area}</td>
+                      <td className="px-5 py-4 text-sm">{c.level}</td>
+                      <td className="px-5 py-4 text-sm">{c.score}</td>
+                      <td className="px-5 py-4 text-sm">{c.classification_place}</td>
+                      <td className="px-5 py-4 text-sm">{c.teacher}</td>
+                      <td className="px-5 py-4 text-sm">{c.area_responsible}</td>
+                  </TableRow>
+                  ))}
+              </TableBody>
             </Table>
         </div>
       <FloatingDownloadButton
