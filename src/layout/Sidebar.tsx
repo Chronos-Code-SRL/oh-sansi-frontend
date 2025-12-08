@@ -41,6 +41,7 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.AWARDED_CONTESTANTS_LIST,
     UPermission.MEDAL_PAGE,
+    UPermission.CERTIFICATED_CONTESTANTS_LIST,
     // UPermission.DISQUALIFY_COMPETITOR,
   ],
   3: [ // Evaluador
@@ -129,6 +130,13 @@ const navItems: NavItem[] = [
     path: "/lista-competidores-premiados",
     subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
+  },
+  {
+    icon: <ListIcon />,
+    name: "Lista para Certificados",
+    path: "/lista-competidores-certificados",
+    subItems: [],
+    permission: UPermission.CERTIFICATED_CONTESTANTS_LIST,
   },
   {
     icon: <ListIcon />,
@@ -454,6 +462,27 @@ const AppSidebar: React.FC = () => {
 
           return { ...item, subItems: areasWithPhases };
         }
+        return { ...item, subItems: item.subItems };
+      }
+
+      if (item.name === "Lista para Certificados") {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasOnly = areas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/lista-competidores-certificados/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`
+            };
+          });
+
+          return { ...item, subItems: areasOnly };
+        }
+
         return { ...item, subItems: item.subItems };
       }
 
