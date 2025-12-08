@@ -15,6 +15,7 @@ import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import DisqualifyModal from "./DisqualifyModal";
 
+
 interface Props {
     idPhase: number;
     idOlympiad: number;

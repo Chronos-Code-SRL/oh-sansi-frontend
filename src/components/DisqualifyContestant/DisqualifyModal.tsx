@@ -58,18 +58,31 @@ export default function DisqualifyModal({
                     <div>
                         <div className="flex items-center gap-2">
                             <AlertHexaIcon />
+                            {readOnly === false ? (
                             <h2 id="disqualify-title" className="text-lg font-semibold text-gray-900">
                                 Desclasificar Competidor
                             </h2>
+                            ) : (
+                            <h2 id="disqualify-title" className="text-lg font-semibold text-gray-900">
+                                Competidor Desclasificado
+                            </h2>
+                            )}
                         </div>
 
                         {student && (
-                            <p className="mt-1 text-sm text-gray-700">
-                                Se desclasificará a <strong>{student.first_name} {student.last_name}</strong>.
-                                Esta acción indica que el competidor no ha cumplido con las reglas de ética y
-                                comportamiento definidas en la convocatoria.
-                            </p>
+                            readOnly === false ? (
+                                <p className="mt-1 text-sm text-gray-700">
+                                    Se desclasificará a <strong>{student.first_name} {student.last_name}</strong>.
+                                    Esta acción indica que el competidor no ha cumplido con las reglas de ética y
+                                    comportamiento definidas en la convocatoria.
+                                </p>
+                            ) : (
+                                <p className="mt-1 text-sm text-gray-700">
+                                    Se desclasificó a: <strong>{student.first_name} {student.last_name}</strong>.
+                                </p>
+                            )
                         )}
+
                     </div>
 
                     <button
@@ -81,10 +94,11 @@ export default function DisqualifyModal({
                         ×
                     </button>
                 </div>
-                
-                <p className="mt-1 text-xs text-gray-500">
-                    Este campo es obligatorio y quedará registrado en la evaluación del competidor.
-                </p>
+                {readOnly === false && (
+                    <p className="mt-1 text-xs text-gray-500">
+                        Este campo es obligatorio y quedará registrado en la evaluación del competidor.
+                    </p>
+                )}
                 {/* Textarea */}
                 <div className="mt-3">
                     <textarea
@@ -93,7 +107,7 @@ export default function DisqualifyModal({
                         tabIndex={readOnly ? -1 : undefined}
                         disabled={readOnly}
                         onChange={(e) => onChangeDraft(e.target.value)}
-                        placeholder={readOnly ? "Modo solo lectura" : "Describe el motivo de la descalificación..."}
+                        placeholder={readOnly ? "Modo solo lectura" : "Describe el motivo de la desclasificación..."}
                         className={`block h-40 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-yellow-300 focus:outline-hidden focus:ring-3 focus:ring-yellow-500/10
                          ${readOnly
                                 ? 'bg-gray-100 border-gray-200 pointer-events-none'
@@ -101,9 +115,9 @@ export default function DisqualifyModal({
                             }`}
                     />
                     {readOnly === false && (
-                    <p className="mt-1 text-xs text-red-500">
-                        Esta acción no se puede deshacer. Asegúrate de que las razones de desclasificación sean justificadas.
-                    </p>
+                        <p className="mt-1 text-xs text-red-500">
+                            Esta acción no se puede deshacer. Asegúrate de que las razones de desclasificación sean justificadas.
+                        </p>
                     )}
                 </div>
 
