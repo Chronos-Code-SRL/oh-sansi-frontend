@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import StudentTable from "../../components/DisqualifyContestant/StudentTable";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 
 
 export default function ApprovePhase() {
@@ -23,6 +24,7 @@ export default function ApprovePhase() {
                 title={title}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
+            < TitleBreadCrumb pageTitle="Desclasificar Competidor" />
             <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={title}>
                 <StudentTable
                     key={`${areaId}-${phaseId ?? 'none'}`}

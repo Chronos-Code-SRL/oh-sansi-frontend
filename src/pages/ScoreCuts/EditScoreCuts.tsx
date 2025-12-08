@@ -8,6 +8,7 @@ import ScoreTable from "../../components/Score/ScoreTable";
 import BoxFinishedPhase from "../../components/common/BoxFinishedPhase";
 import { getPhaseStatus } from "../../api/services/phaseService";
 import { BoxFaseLevel } from "../../components/common/BoxFaseLevel";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 
 export default function EditScoreCuts() {
   const { idOlympiad, areaName, areaId, phaseName, phaseId } = useParams<{
@@ -63,6 +64,7 @@ export default function EditScoreCuts() {
         title={title}
         description={`Editar umbral y nota máxima para el área ${decodedAreaName}, fase ${decodedPhaseName}.`}
       />
+      < TitleBreadCrumb pageTitle="Editar Umbral" />
 
       {selectedLevel && phaseStatus === "Terminada" && (
         <div className="mb-4">
