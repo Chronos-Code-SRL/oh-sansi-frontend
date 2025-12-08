@@ -1,18 +1,18 @@
 import { useParams } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
-import StudentTable from "../../components/disqualifyContestant/StudentTable";
+import StudentTable from "../../components/DisqualifyContestant/StudentTable";
 
 
 export default function ApprovePhase() {
 
     const { idOlympiad, areaName, areaId, phaseId, phaseName } = useParams<{
-    idOlympiad?: string;
-    areaName?: string;
-    areaId?: string;
-    phaseId?: string;
-    phaseName?: string;
-  }>();
+        idOlympiad?: string;
+        areaName?: string;
+        areaId?: string;
+        phaseId?: string;
+        phaseName?: string;
+    }>();
     const decodedPhaseName = phaseName ? decodeURIComponent(phaseName) : "";
     const decodedAreaName = areaName ? decodeURIComponent(areaName) : "";
     const title = `${decodedAreaName} - ${decodedPhaseName}`;

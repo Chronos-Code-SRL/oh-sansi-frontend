@@ -16,9 +16,8 @@ const LadingPage = () => {
             setLoading(true);
             try {
                 const response = await getOlympiadsByUser();
-                const data = response as OlympiadApi[]; // Aseguramos el tipo de data
-                setData(data); // Guardamos las olimpiadas en el estado
-                console.log(data);
+                const data = response as OlympiadApi[];
+                setData(data);
             } catch (err) {
                 setError("No hay Olimpiadas creadas. Cree una olimpiada por favor");
             } finally {

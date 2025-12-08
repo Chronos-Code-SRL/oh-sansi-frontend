@@ -34,9 +34,6 @@ export default function AcademicManagerForm() {
   const [isEvaluator, setIsEvaluator] = useState(false);
 
   const [userExists, setUserExists] = useState(false);
-  //const [registeredInOlympiad, setRegisteredInOlympiad] = useState(false);
-  //const [roleMatches, setRoleMatches] = useState(false);
-  //const [userRealRole, setUserRealRole] = useState<number | null>(null);
   const [searchAlert, setSearchAlert] = useState<{
     type: "success" | "info" | "warning" | "error";
     title: string;
@@ -44,33 +41,28 @@ export default function AcademicManagerForm() {
   } | null>(null);
   const [searchErrors, setSearchErrors] = useState<{ olympiad?: string; ci?: string }>({});
 
-  //const [currentRole, setCurrentRole] = useState("");
-
-
   const [olympiadOptions, setOlympiadOptions] = useState([]);
 
   useEffect(() => {
-  const loadOlympiads = async () => {
-    try {
-      const res = await userSearch.getOlympiadsActiveOrPlanning();
-      const list = res.data.data || [];
+    const loadOlympiads = async () => {
+      try {
+        const res = await userSearch.getOlympiadsActiveOrPlanning();
+        const list = res.data.data || [];
 
-      setOlympiadOptions(
-        list.map((o: any) => ({
-          value: o.id.toString(),
-          label: o.name
-        }))
-      );
-    } catch (error) {
-      console.error("Error cargando olimpiadas");
-    }
-  };
+        setOlympiadOptions(
+          list.map((o: any) => ({
+            value: o.id.toString(),
+            label: o.name
+          }))
+        );
+      } catch (error) {
+        console.error("Error cargando olimpiadas");
+      }
+    };
 
-  loadOlympiads();
-}, []);
+    loadOlympiads();
+  }, []);
 
-
-  //Buscar usuario
   const handleSearchUser = async () => {
     setSearchErrors({});
     setSearchAlert(null);
@@ -87,7 +79,6 @@ export default function AcademicManagerForm() {
 
     setIsSearching(true);
 
-    //Busca como responsable
     try {
       const response = await userSearch.searchUser(Number(olympiadId), ci, 2);
       const user = response.data.user;
@@ -103,7 +94,6 @@ export default function AcademicManagerForm() {
       setgenre(user.genre);
       setProfesion(user.profesion);
 
-      //Responsable registrado en la olimpiada selccionada
       if (userAreas.length > 0) {
         setUserAreasIds(userAreas.map((a: any) => String(a.id)));
         setAreas([]);
@@ -118,7 +108,6 @@ export default function AcademicManagerForm() {
         return;
       }
 
-      //Responsable no rsgistrado en la olimpiada seleccionada
       setUserAreasIds([]);
       setAreas([]);
       setShowFormSections(true);
@@ -134,7 +123,6 @@ export default function AcademicManagerForm() {
 
     } catch (errorResponsable: any) {
 
-      //No existe como responsable, busca como evaluador
       if (errorResponsable.response?.status === 404) {
         try {
           const response2 = await userSearch.searchUser(Number(olympiadId), ci, 3);
@@ -150,9 +138,8 @@ export default function AcademicManagerForm() {
           setphone_number(user.phone_number);
           setgenre(user.genre);
 
-          setProfesion(user.profesion ?? "");//Profesión editable
+          setProfesion(user.profesion ?? "");
 
-          //Evaluador registrado la olimpiada seleccionada
           if (userAreas.length > 0) {
             setUserAreasIds(userAreas.map((a: any) => String(a.id)));
             setAreas([]);
@@ -182,7 +169,6 @@ export default function AcademicManagerForm() {
 
         } catch (errorEvaluador: any) {
 
-          // Usuario no existe
           if (errorEvaluador.response?.status === 404) {
             setUserExists(false);
             setIsEvaluator(false);
@@ -207,7 +193,6 @@ export default function AcademicManagerForm() {
             return;
           }
 
-          // Error al buscar como evaluador
           setSearchAlert({
             type: "error",
             title: "Error inesperado",
@@ -216,7 +201,6 @@ export default function AcademicManagerForm() {
         }
 
       } else {
-        // Error inesperado al buscar responsable
         setSearchAlert({
           type: "error",
           title: "Error inesperado",
@@ -231,7 +215,6 @@ export default function AcademicManagerForm() {
 
 
 
-  //validaciones
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -275,7 +258,7 @@ export default function AcademicManagerForm() {
     if (!genre) {
       newErrors.genre = "Debe seleccionar un género.";
     }
-    
+
     if (areas_id.length === 0) newErrors.areas = "Seleccione al menos un área.";
 
     setErrors(newErrors);
@@ -300,7 +283,7 @@ export default function AcademicManagerForm() {
     setShowFormSections(false);
     setIsEvaluator(false);
     setUserExists(false);
-    };
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,8 +316,8 @@ export default function AcademicManagerForm() {
         phone_number,
         email,
         genre,
-        profesion,     
-        roles_id,      
+        profesion,
+        roles_id,
         areas_id,
         olympiad_id: olympiadId,
       };
@@ -364,7 +347,7 @@ export default function AcademicManagerForm() {
       }
 
     } catch (error: any) {
-        if (error.response) {
+      if (error.response) {
         const backendMessage = error.response.data?.message || "";
 
         if (
@@ -385,7 +368,7 @@ export default function AcademicManagerForm() {
     }
   };
 
-  
+
   return (
     <>
       <PageMeta
@@ -394,16 +377,16 @@ export default function AcademicManagerForm() {
       />
       <TitleBreadCrumb pageTitle="Registrar Responsable Académico" />
       <ComponentCard title="Buscar información del Responsable académico" className="mb-6">
-        
+
         <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-4">
           <div>
             <Label>Seleccionar Olimpiada:</Label>
-              <Select
-                options={olympiadOptions}
-                value={olympiadId}
-                onChange={setOlympiadId}
-                placeholder="Seleccione una olimpiada"
-              />
+            <Select
+              options={olympiadOptions}
+              value={olympiadId}
+              onChange={setOlympiadId}
+              placeholder="Seleccione una olimpiada"
+            />
             {searchErrors.olympiad && (
               <p className="text-xs text-red-500 mt-1">{searchErrors.olympiad}
               </p>
@@ -418,7 +401,7 @@ export default function AcademicManagerForm() {
               placeholder="Ingresa tu CI"
               value={ci}
               onChange={(e) => setCi(e.target.value)}
-              error={!!searchErrors.ci}           
+              error={!!searchErrors.ci}
               hint={searchErrors.ci}
             />
           </div>
@@ -448,152 +431,152 @@ export default function AcademicManagerForm() {
       </ComponentCard>
 
       {showFormSections && (
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-          <div className="space-y-6" tabIndex={1}> 
+            <div className="space-y-6" tabIndex={1}>
 
-            <ComponentCard title="Ingrese información" className="mb-6">
-              <div className="grid grid-cols-1 gap-6">
+              <ComponentCard title="Ingrese información" className="mb-6">
+                <div className="grid grid-cols-1 gap-6">
 
-                <div>
-                  <Label htmlFor="first_name">Nombre(s):</Label>
-                  <InputField
-                    id="first_name"
-                    type="text"
-                    placeholder="Ingresa tu nombre(s)"
-                    value={first_name}
-                    onChange={(e) => setfirst_name(e.target.value)}
-                    disabled={userExists}
-                    error={!!errors.first_name}
-                    hint={errors.first_name}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="last_name">Apellido(s):</Label>
-                  <InputField
-                    id="last_name"
-                    type="text"
-                    placeholder="Ingresa tu apellido(s)"
-                    value={last_name}
-                    onChange={(e) => setlast_name(e.target.value)}
-                    disabled={userExists}
-                    error={!!errors.last_name}
-                    hint={errors.last_name}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone_number">Teléfono:</Label>
-                  <InputField
-                    id="phone_number"
-                    type="text"
-                    placeholder="Ingresa tu número de teléfono"
-                    value={phone_number}
-                    onChange={(e) => setphone_number(e.target.value)}
-                    disabled={userExists}
-                    error={!!errors.phone_number}
-                    hint={errors.phone_number}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="email">Correo electrónico:</Label>
-                  <InputField
-                    id="email"
-                    type="email"
-                    placeholder="Ingresa tu correo electrónico"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={userExists}
-                    error={!!errors.email}
-                    hint={errors.email}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="profesion">Profesión:</Label>
-                  <InputField
-                    id="profesion"
-                    type="text"
-                    placeholder="Ejemplo: Licenciado en Matemáticas"
-                    value={profesion}
-                    onChange={(e) => setProfesion(e.target.value)}
-                    error={!!errors.profesion}
-                    hint={errors.profesion}
-                    disabled={userExists && !isEvaluator}
-                  />
-                </div>
-              </div>
-            </ComponentCard>
-          </div>
-
-          <div className="space-y-6" tabIndex={2}> 
-            <ComponentCard title="Seleccione">
-              <div className="grid grid-cols-1 gap-6">
-
-                <div>
-                  <Label>Género:</Label>
-                  <div className="flex gap-4"
-                    onFocus={() => {
-                      if (!genre) {
-                        setgenre("femenino");
-                      }
-                    }}
-                  >
-                    <Radio
-                      id="genre-f"
-                      name="genre"
-                      value="femenino"
-                      label="Femenino"
-                      checked={genre === "femenino"}
-                      onChange={setgenre}
+                  <div>
+                    <Label htmlFor="first_name">Nombre(s):</Label>
+                    <InputField
+                      id="first_name"
+                      type="text"
+                      placeholder="Ingresa tu nombre(s)"
+                      value={first_name}
+                      onChange={(e) => setfirst_name(e.target.value)}
                       disabled={userExists}
-                    />
-                    <Radio
-                      id="genre-m"
-                      name="genre"
-                      value="masculino"
-                      label="Masculino"
-                      checked={genre === "masculino"}
-                      onChange={setgenre}
-                      disabled={userExists}
+                      error={!!errors.first_name}
+                      hint={errors.first_name}
                     />
                   </div>
-                  {errors.genre && (
-                    <p className="text-xs text-red-500 mt-1">{errors.genre}</p>
-                  )}
-                </div>
 
-                <div>
+                  <div>
+                    <Label htmlFor="last_name">Apellido(s):</Label>
+                    <InputField
+                      id="last_name"
+                      type="text"
+                      placeholder="Ingresa tu apellido(s)"
+                      value={last_name}
+                      onChange={(e) => setlast_name(e.target.value)}
+                      disabled={userExists}
+                      error={!!errors.last_name}
+                      hint={errors.last_name}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone_number">Teléfono:</Label>
+                    <InputField
+                      id="phone_number"
+                      type="text"
+                      placeholder="Ingresa tu número de teléfono"
+                      value={phone_number}
+                      onChange={(e) => setphone_number(e.target.value)}
+                      disabled={userExists}
+                      error={!!errors.phone_number}
+                      hint={errors.phone_number}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Correo electrónico:</Label>
+                    <InputField
+                      id="email"
+                      type="email"
+                      placeholder="Ingresa tu correo electrónico"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={userExists}
+                      error={!!errors.email}
+                      hint={errors.email}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="profesion">Profesión:</Label>
+                    <InputField
+                      id="profesion"
+                      type="text"
+                      placeholder="Ejemplo: Licenciado en Matemáticas"
+                      value={profesion}
+                      onChange={(e) => setProfesion(e.target.value)}
+                      error={!!errors.profesion}
+                      hint={errors.profesion}
+                      disabled={userExists && !isEvaluator}
+                    />
+                  </div>
+                </div>
+              </ComponentCard>
+            </div>
+
+            <div className="space-y-6" tabIndex={2}>
+              <ComponentCard title="Seleccione">
+                <div className="grid grid-cols-1 gap-6">
+
+                  <div>
+                    <Label>Género:</Label>
+                    <div className="flex gap-4"
+                      onFocus={() => {
+                        if (!genre) {
+                          setgenre("femenino");
+                        }
+                      }}
+                    >
+                      <Radio
+                        id="genre-f"
+                        name="genre"
+                        value="femenino"
+                        label="Femenino"
+                        checked={genre === "femenino"}
+                        onChange={setgenre}
+                        disabled={userExists}
+                      />
+                      <Radio
+                        id="genre-m"
+                        name="genre"
+                        value="masculino"
+                        label="Masculino"
+                        checked={genre === "masculino"}
+                        onChange={setgenre}
+                        disabled={userExists}
+                      />
+                    </div>
+                    {errors.genre && (
+                      <p className="text-xs text-red-500 mt-1">{errors.genre}</p>
+                    )}
+                  </div>
+
+                  <div>
                     <AreaSelectDinamic
-                    olympiadId={Number(olympiadId)}
-                    key={multiSelectKey}
-                    initialSelected={userAreasIds}
-                    onChange={(values) => {
-                      setAreas(values); 
-                      setErrors(prev => {
-                        const draft = { ...prev };
-                        if (values.length > 0) delete draft.areas;
-                        return draft;
-                      });
-                    }}
-                    valueType="id"
-                    error={errors.areas}
-                  />
-                </div>
+                      olympiadId={Number(olympiadId)}
+                      key={multiSelectKey}
+                      initialSelected={userAreasIds}
+                      onChange={(values) => {
+                        setAreas(values);
+                        setErrors(prev => {
+                          const draft = { ...prev };
+                          if (values.length > 0) delete draft.areas;
+                          return draft;
+                        });
+                      }}
+                      valueType="id"
+                      error={errors.areas}
+                    />
+                  </div>
 
-                <div className="flex justify-end">
-                  <Button size="md" variant="primary" >
-                    Registrar
-                  </Button>
+                  <div className="flex justify-end">
+                    <Button size="md" variant="primary" >
+                      Registrar
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </ComponentCard>
+              </ComponentCard>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
       )}
 
       <Modal

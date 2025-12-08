@@ -5,7 +5,6 @@ export default function ScrollToTopButton() {
 
   const [visible, setVisible] = useState(false);
 
-  // Detectar scroll para mostrar el botón
   useEffect(() => {
     const handleScroll = () => {
       setVisible(window.scrollY > 200);

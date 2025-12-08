@@ -19,7 +19,6 @@ const Alert: React.FC<AlertProps> = ({
   linkText = "Learn more",
   onLinkClick
 }) => {
-  // Tailwind classes for each variant
   const variantClasses = {
     success: {
       container:
@@ -43,7 +42,6 @@ const Alert: React.FC<AlertProps> = ({
     },
   };
 
-  // Icon for each variant
   const icons = {
     success: (
       <svg
@@ -123,25 +121,25 @@ const Alert: React.FC<AlertProps> = ({
         </div>
 
         <div>
-          <h4 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white/90">
+          <h4 className="mb-1 text-sm font-semibold text-gray-800">
             {title}
           </h4>
 
-          <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+          <p className="text-sm text-gray-500">{message}</p>
 
           {showLink && (
             <>
               {onLinkClick ? (
                 <button
                   onClick={onLinkClick}
-                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
+                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline"
                 >
                   {linkText}
                 </button>
               ) : (
                 <Link
                   to={linkHref}
-                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
+                  className="inline-block mt-3 text-sm font-medium text-gray-500 underline"
                 >
                   {linkText}
                 </Link>

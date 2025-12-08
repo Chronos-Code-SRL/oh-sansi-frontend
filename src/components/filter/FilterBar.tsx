@@ -300,9 +300,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
                       {c.score !== null ? c.score : "—"}
                     </td>
                     <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
-                        <Badge color={c.status === true ? "success" : "error"}>
-                             {c.status ? "Evaluado" : "No Evaluado"}
-                        </Badge>
+                      <Badge color={c.status === true ? "success" : "error"}>
+                        {c.status ? "Evaluado" : "No Evaluado"}
+                      </Badge>
                     </td>
                   </TableRow>
                 ))}

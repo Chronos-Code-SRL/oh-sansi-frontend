@@ -29,7 +29,6 @@ export default function MedalManagementForm({
     const [honorableMentionCount, setHonorableMentionCount] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // useEffect para actualizar los campos cuando se carguen los datos de medallas
     useEffect(() => {
         if (medalsByLevel) {
             setGoldCount(medalsByLevel.number_gold.toString());
@@ -64,7 +63,6 @@ export default function MedalManagementForm({
                 honorable_mention: honorableMentionCount || "0",
             });
 
-            // Limpiar el formulario después de éxito
             setGoldCount("");
             setSilverCount("");
             setBronzeCount("");
@@ -77,7 +75,6 @@ export default function MedalManagementForm({
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* Oro */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         <span className="inline-flex items-center gap-2">
@@ -95,7 +92,6 @@ export default function MedalManagementForm({
                     />
                 </div>
 
-                {/* Plata */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         <span className="inline-flex items-center gap-2">
@@ -113,7 +109,6 @@ export default function MedalManagementForm({
                     />
                 </div>
 
-                {/* Bronce */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         <span className="inline-flex items-center gap-2">
@@ -131,7 +126,6 @@ export default function MedalManagementForm({
                     />
                 </div>
 
-                {/* Mención Honorífica */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         <span className="inline-flex items-center gap-2">
@@ -150,13 +144,6 @@ export default function MedalManagementForm({
                 </div>
             </div>
 
-            {/* <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !selectedAreaId || !selectedLevelId}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-            >
-                {isSubmitting ? "Generando..." : "Generar Medallero"}
-            </button> */}
             <div className="flex justify-end">
                 <Button
                     onClick={handleSubmit}

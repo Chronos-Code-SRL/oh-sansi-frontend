@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CommentIcon, MoreDotIcon } from "../../icons";
+import { CheckLineIcon, CommentIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
 import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
@@ -10,13 +10,12 @@ import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesServic
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Button from "../ui/button/Button";
-// import Alert from "../ui/alert/Alert";
 import Alert from "../ui/alert/Alert";
 import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
-import ApprovePhaseModal from "./ApprovePhaseModal";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import CommentModal from "../Grade/CommentModal";
+import ApprovePhaseModal from "./ApprovePhaseModal";
 
 interface Props {
     idPhase: number;
@@ -31,14 +30,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
 
-
-    // ---- Modal Avalar ----
     const [openApproveModal, setOpenApproveModal] = useState(false);
     const [savingApprove, setSavingApprove] = useState(false);
     const [approveDraft, setApproveDraft] = useState("");
@@ -48,13 +44,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
 
-    // Estado para el Alert
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
 
 
-    // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
 
@@ -63,13 +57,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Reset aval (endorsed) al cambiar de nivel o fase
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
 
     const getEvaluationId = (s: Contestant): number | string => {
-        // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
     };
     function openCommentModal(student: Contestant): void {
@@ -101,7 +93,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idArea]);
 
-    // Cargar estudiantes SOLO cuando haya nivel seleccionado
     useEffect(() => {
         if (selectedLevelId == null) {
             setStudents([]);
@@ -123,8 +114,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     levelId,
                 );
                 if (alive) setStudents(data);
-                // const st = await getContestantStats(idOlympiad, idArea, idPhase, levelId);
-                // setStats(st);
+
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
@@ -135,7 +125,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    // Obtener el estado de la fase para el nivel seleccionado y bloquear edición si está terminada
     useEffect(() => {
         let alive = true;
         async function loadPhaseStatus() {
@@ -163,15 +152,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
         async function pollOnce() {
             const since = lastUpdateAtRef.current ?? new Date().toISOString();
-            console.log(since);
 
             try {
-                console.debug("[poll] tick -> lastUpdateAt:", since);
                 const res = await checkUpdates(since);
-                console.debug("[poll] response:", {
-                    newCount: res?.new_evaluations?.length ?? 0,
-                    last_updated_at: res?.last_updated_at
-                });
 
                 if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
                     console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
@@ -179,10 +162,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                         contestant_id: (ev as any).contestant_id
                     })));
 
-                    // Construimos dos índices: por contestant_id y por evaluation_id (id || evaluation_id)
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        // Indexar únicamente por evaluation_id/id.
                         const evalId = (typeof ev.evaluation_id === "number") ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
                         if (typeof evalId === "number") byEvaluation.set(evalId as number, ev);
                     }
@@ -190,12 +171,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     setStudents((prev) =>
                         prev.map((st) => {
                             const evalId = (st as any).evaluation_id as number | undefined;
-                            // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
 
                             if (!ev) return st;
 
-                            // Actualizamos nota, estado, descripción y clasificación en tiempo real
                             const nextScore = typeof ev.score === "number" ? ev.score : st.score;
                             const nextStatus = typeof ev.status === "boolean" ? ev.status : st.status;
                             const hasDescription = Object.prototype.hasOwnProperty.call(ev as any, "description");
@@ -216,17 +195,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     );
                 }
 
-                // if (selectedLevelId != null) {
-                //     try {
-                //         const newStats = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-                //         setStats(newStats);
-                //     } catch (e) {
-                //         console.warn("No se pudieron actualizar las estadísticas", e);
-                //     }
-                // }
-
-
-                // Cursor seguro
                 const serverLast = res?.last_updated_at ?? since;
                 const t = new Date(serverLast);
                 const safe = new Date(t.getTime() - 1).toISOString();
@@ -237,17 +205,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             }
         }
 
-        // Reiniciar cursor cuando cambian los filtros principales
         lastUpdateAtRef.current = new Date().toISOString();
 
-        // Iniciar intervalo
         pollingRef.current = window.setInterval(pollOnce, 3000);
-        console.log("[poll] start (3000ms)");
 
-        // Tick inmediato para no esperar al primer intervalo
         void pollOnce();
 
-        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
         const onFocus = () => { void pollOnce(); };
         const onVis = () => { if (!document.hidden) void pollOnce(); };
         window.addEventListener("focus", onFocus);
@@ -257,7 +220,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             if (pollingRef.current) {
                 window.clearInterval(pollingRef.current);
                 pollingRef.current = null;
-                console.log("[poll] stopped");
             }
             window.removeEventListener("focus", onFocus);
             document.removeEventListener("visibilitychange", onVis);
@@ -265,7 +227,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
 
-    // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -276,15 +237,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
 
-        // const matchesEstado =
-        //     selectedFilters.estado.length === 0 ||
-        //     selectedFilters.estado.includes(statusLabel(s.status));
-
-        // const matchesGrado =
-        //     selectedFilters.grado.length === 0 ||
-        //     selectedFilters.grado.includes(s.grade_name);
-
-        // return matchesSearch && matchesEstado && matchesGrado;
         return matchesSearch;
     });
     async function saveComment(): Promise<void> {
@@ -298,14 +250,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         try {
             setCommentSaving(true);
             const id = Number(getEvaluationId(commentStudent));
-            // Cambia el estado a descalificado y guarda descripción
             await updateClassification(id, {
                 classification_status: "descalificado",
                 classification_place: null,
                 description: texto,
             });
 
-            // Actualiza estado local (classification_status y description)
             setStudents((prev) =>
                 prev.map((st) =>
                     st.ci_document === commentStudent.ci_document
@@ -313,15 +263,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                         : st,
                 ),
             );
-            // Refrescar estadísticas
-            // if (selectedLevelId != null) {
-            //     try {
-            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-            //         setStats(st);
-            //     } catch {
-            //         // ignore
-            //     }
-            // }
             closeCommentModal();
         } catch {
             showAlert("Error", "No se pudo guardar el comentario ni estado. Intenta nuevamente.");
@@ -331,7 +272,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     }
 
     function showAlert(title: string, message: string): void {
-        // Limpia un timer previo si existiera
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -340,14 +280,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         setAlertMessage(message);
         setAlertOpen(true);
 
-        // Auto-cerrar a los 3 segundos (ajustable)
         autoHideTimerRef.current = window.setTimeout(() => {
             setAlertOpen(false);
             autoHideTimerRef.current = null;
         }, 3000);
     }
 
-    // Avalar fase para el nivel seleccionado
     async function handleApproveSave(): Promise<void> {
         if (!selectedLevelId) return;
         setSavingApprove(true);
@@ -359,7 +297,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             setAlertOpen(true);
             if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
-            // Refrescar la lista de concursantes para este nivel/fase — el backend puede mover clasificados a la siguiente fase
             try {
                 if (selectedLevelId != null) {
                     const refreshed = await getContestantByPhaseOlympiadAreaLevel(
@@ -369,7 +306,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                         selectedLevelId,
                     );
                     setStudents(refreshed);
-                    // Resetear cursor de polling para evitar aplicar actualizaciones antiguas
                     lastUpdateAtRef.current = new Date().toISOString();
                 }
             } catch (e) {
@@ -414,7 +350,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-            
+
             {phaseStatus === "Terminada" && (
                 <div className="mb-4">
                     <BoxFinishedPhase />
@@ -494,7 +430,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 </div>
             )}
 
-            {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                     <div className="max-w-full overflow-x-auto"></div>

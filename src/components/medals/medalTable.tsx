@@ -1,45 +1,39 @@
 import { useEffect, useRef, useState } from "react";
 import Select from "../form/Select";
-import SearchBar from "../Grade/Searcher";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getContestantMedals, awardMedals, getLastPhaseStatus, getNumberOfMedalsByLevel } from "../../api/services/contestantService";
+import { getContestantMedals, awardMedals, getNumberOfMedalsByLevel } from "../../api/services/contestantService";
 import { ContestantMedal, numberOfMedalsByLevel } from "../../types/Contestant";
 import Alert from "../ui/alert/Alert";
 import MedalManagementForm from "./MedalManagementForm";
 
 export default function MedalsPage() {
 
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, _setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Datos hardcodeados (mock)
     const [areas, setAreas] = useState<Area[]>([]);
-    const [areasLoading, setAreasLoading] = useState(false);
-    const [areasError, setAreasError] = useState<string | null>(null);
+    const [_areasLoading, setAreasLoading] = useState(false);
+    const [_areasError, setAreasError] = useState<string | null>(null);
 
     const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
 
     const [levels, setLevels] = useState<Level[]>([]);
-    const [levelsLoading, setLevelsLoading] = useState(false);
-    const [levelsError, setLevelsError] = useState<string | null>(null);
+    const [_levelsLoading, setLevelsLoading] = useState(false);
+    const [_levelsError, setLevelsError] = useState<string | null>(null);
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
 
     const [students, setStudents] = useState<ContestantMedal[]>([]);
-    const [savingRow, setSavingRow] = useState<number | null>(null);
 
-    // Estados para validación de última fase
     const [isLastPhaseEndorsed, setIsLastPhaseEndorsed] = useState<boolean>(false);
     const [phaseStatusChecked, setPhaseStatusChecked] = useState<boolean>(false);
 
-    // Estado para las medallas por nivel
     const [medalsByLevel, setMedalsByLevel] = useState<numberOfMedalsByLevel | null>(null);
 
-    // Alert states
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState("");
     const [alertMessage, setAlertMessage] = useState("");
@@ -51,18 +45,17 @@ export default function MedalsPage() {
         name: string;
         status: string;
     };
-    const [selectedOlympiad, setSelectedOlympiad] = useState<SelectedOlympiad | null>(() => {
+    const [selectedOlympiad, _setSelectedOlympiad] = useState<SelectedOlympiad | null>(() => {
         const stored = localStorage.getItem("selectedOlympiad");
         return stored ? (JSON.parse(stored) as SelectedOlympiad) : null;
     });
 
 
-    // For the areas Select
     useEffect(() => {
         const fetchAreas = async () => {
             try {
                 setAreasLoading(true);
-                const data = await getAreasFromUserOlympiads(); // Promise<Area[]>
+                const data = await getAreasFromUserOlympiads();
                 setAreas(data);
                 setAreasError(null);
             } catch {
@@ -106,8 +99,6 @@ export default function MedalsPage() {
         return () => clearTimeout(t);
     }, []);
 
-    // Cargar concursantes cuando hay área, nivel y olimpiada, Primero valida con getLastPhaseStatus, 
-    // LUEGO carga estudiantes
     useEffect(() => {
         let alive = true;
 
@@ -131,33 +122,26 @@ export default function MedalsPage() {
                 setPhaseStatusChecked(false);
                 setIsLastPhaseEndorsed(false);
 
-                // PASO 1: Validar el estado de la última fase
-                const phaseStatusResponse = await getLastPhaseStatus(idOlympiad, idArea, levelId);
 
                 if (!alive) return;
 
-                // Si llega aquí, la respuesta fue exitosa (200)
                 setIsLastPhaseEndorsed(true);
                 setPhaseStatusChecked(true);
 
-                // PASO 2: Cargar los estudiantes
                 const data = await getContestantMedals(idOlympiad, idArea, levelId);
                 if (alive) setStudents(data);
 
-                // PASO 3: Cargar las medallas por nivel
                 const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
                 if (alive) setMedalsByLevel(medalsData);
 
             } catch (error: any) {
                 if (!alive) return;
                 if (error?.response?.status === 403) {
-                    // 403: La última fase no está avalada
                     setIsLastPhaseEndorsed(false);
                     setPhaseStatusChecked(true);
                     setStudents([]);
                 }
                 else {
-                    // Otro tipo de error (red, servidor, etc.)
                     console.error("Error al validar fase:", error);
                     setIsLastPhaseEndorsed(false);
                     setPhaseStatusChecked(true);
@@ -225,17 +209,14 @@ export default function MedalsPage() {
 
             showAlert("Medallero generado", response.message, "success");
 
-            // Recargar la tabla de estudiantes
             const data = await getContestantMedals(idOlympiad, idArea, levelId);
             setStudents(data);
 
-            // Recargar los datos de medallas para actualizar el formulario
             const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
             setMedalsByLevel(medalsData);
         } catch (error) {
             showAlert("Cantidad de medallas no válida", "La cantidad de medallas indicada supera el número total de estudiantes. Ajuste el valor y vuelva a intentarlo.", "error");
 
-            // Recuperar el estado anterior del formulario recargando los datos
             try {
                 const medalsData = await getNumberOfMedalsByLevel(idOlympiad, idArea, levelId);
                 setMedalsByLevel(medalsData);
@@ -298,7 +279,6 @@ export default function MedalsPage() {
                 </div>
             </div>
 
-            {/* Mensaje cuando la fase no está avalada */}
             {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && !isLastPhaseEndorsed && (
                 <div className="mt-6">
                     <Alert
@@ -311,7 +291,6 @@ export default function MedalsPage() {
 
             {selectedAreaId !== null && selectedLevelId !== null && phaseStatusChecked && isLastPhaseEndorsed && (
                 <>
-                    {/* Gestión de Medallas Form */}
                     <MedalManagementForm
                         selectedAreaId={selectedAreaId}
                         selectedLevelId={selectedLevelId}
@@ -319,12 +298,6 @@ export default function MedalsPage() {
                         onShowAlert={showAlert}
                         medalsByLevel={medalsByLevel}
                     />
-                    <div className="flex items-center mb-3">
-                        <SearchBar
-                            onSearch={setSearchQuery}
-                            placeholder="Buscar por nombre, apellido o CI..."
-                        />
-                    </div>
 
                     <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
                         <div className="max-w-full overflow-x-auto"></div>
@@ -334,10 +307,10 @@ export default function MedalsPage() {
                                     <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Unidad Educativa</th>
-                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Area</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Área</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
                                     <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Pocisión</th>
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Posición</th>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>

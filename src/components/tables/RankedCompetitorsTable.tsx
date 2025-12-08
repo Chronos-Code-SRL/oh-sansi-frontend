@@ -33,7 +33,6 @@ export default function ClassifiedByLevelSimple({
   const [notaInicial, setNotaInicial] = useState(0);
   const [notaFinal, setNotaFinal] = useState(100);
 
-  // Cargar niveles
   useEffect(() => {
     async function loadLevels() {
       try {
@@ -46,7 +45,6 @@ export default function ClassifiedByLevelSimple({
     loadLevels();
   }, [idOlympiad, idArea]);
 
-  // Cargar concursantes por nivel
   useEffect(() => {
     if (levels.length === 0) return;
 
@@ -93,13 +91,12 @@ export default function ClassifiedByLevelSimple({
   if (loading) return <p>Cargando datos…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
-  // Opciones de estado
+
   const estadoOptions = [
     { label: "Clasificado", value: "clasificado" },
     { label: "No Clasificado", value: "no_clasificado" },
   ];
 
-  // 🔎 FILTRADO FINAL
   const filteredRows = rows.filter((r) => {
     const byNivel =
       filterNivel.length === 0 ||
@@ -131,7 +128,6 @@ export default function ClassifiedByLevelSimple({
     }));
   };
 
-  // Descargar en PDF
   const handleDownloadPDF = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -152,7 +148,6 @@ export default function ClassifiedByLevelSimple({
     doc.save("reporte_clasificados.pdf");
   };
 
-  // Descargar en CSV
   const handleDownloadCSV = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -177,7 +172,7 @@ export default function ClassifiedByLevelSimple({
     link.click();
   };
 
-  // Descargar en Excel (XLSX)
+
   const handleDownloadExcel = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -269,8 +264,8 @@ export default function ClassifiedByLevelSimple({
                         c.classification_status === "clasificado"
                           ? "success"
                           : c.classification_status === "no_clasificado"
-                          ? "error"
-                          : "neutral"
+                            ? "error"
+                            : "neutral"
                       }
                     >
                       {c.classification_status

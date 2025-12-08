@@ -29,13 +29,11 @@ export default function AdRegistration() {
     }
   }
 
-  // Obtener uploads de la olimpiada seleccionada
   const fetchUploads = async (olympiadId: number) => {
     setIsLoadingUploads(true);
     try {
       const res = await getCsvUploadsByOlympiad(olympiadId);
 
-      // Unificar estructura de detalles
       const filesWithDetails: FileWithDetails[] = res.data.csv_uploads.map(f => ({
         ...f,
         details: [
@@ -75,13 +73,12 @@ export default function AdRegistration() {
   }, [selectedOlympiad]);
 
   const handleFilesAdded = async (acceptedFiles: File[]) => {
-    if (isUploading) return; // evitar múltiples cargas simultáneas
+    if (isUploading) return;
     if (!selectedOlympiad) return alert("Selecciona una olimpiada primero");
     setIsUploading(true);
     try {
       const res = await uploadCompetitorCsv(acceptedFiles, selectedOlympiad.id);
 
-      //  mapear detalles de la respuesta POST
       const uploadedFiles: FileWithDetails[] = res.data.details.map(d => ({
         id: d.id,
         original_file_name: d.filename,
@@ -108,7 +105,7 @@ export default function AdRegistration() {
       setIsUploading(false);
     }
   };
-  // Descargar CSV de errores
+
   const handleDownloadError = async (filename: string) => {
     try {
       const blob = await downloadErrorCsv(filename);
@@ -128,7 +125,6 @@ export default function AdRegistration() {
       <div>
         <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
           <div className="mx-auto w-full  space-y-8">
-            {/* Selector de Olimpiada */}
             <p className="block text-left text-lg font-semibold mb-3">
               Seleccionar Olimpiada
             </p>
@@ -145,30 +141,29 @@ export default function AdRegistration() {
                   const ol = olympiads.find((o) => o.id.toString() === val);
                   if (ol) {
                     setSelectedOlympiad(ol);
-                    console.log("ID seleccionado:", ol.id);
                   }
                 }}
                 placeholder="Selecciona una Olimpiada"
               />
             </div>
             <InformationZone />
-            {/* Mostrar Dropzone SOLO si se selecciona una olimpiada */}
+
             {selectedOlympiad && (
               <div className="mx-auto w-full text-center space-y-6">
-                
-                {/* Dropzone deshabilitado visualmente mientras sube */}
+
+
                 <div className={isUploading ? "opacity-50 pointer-events-none" : ""}>
                   <DropzoneComponent onFilesAdded={handleFilesAdded} />
                 </div>
-                {/* Lista de archivos subidos */}
+
                 <ComponentCard title="Archivos subidos">
-                  {/* Estado de carga */}
-                {isUploading && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                    <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full" />
-                    <span>Subiendo archivo(s)...</span>
-                  </div>
-                )}
+
+                  {isUploading && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                      <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full" />
+                      <span>Subiendo archivo(s)...</span>
+                    </div>
+                  )}
                   {isLoadingUploads ? (
                     <p className="text-gray-500">Cargando archivos...</p>
                   ) : files.length === 0 ? (
@@ -177,7 +172,7 @@ export default function AdRegistration() {
 
                     <div className="mt-6 text-left">
                       <div className="space-y-2">
-                        
+
                         {files.map((f) => (
                           <div
                             key={f.id}
@@ -188,7 +183,7 @@ export default function AdRegistration() {
                               <div>
                                 <p className="font-medium mb-1">{f.original_file_name}</p>
                                 <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
-                                
+
 
                                 {f.details[0].header_errors > 0 ? (
                                   <Badge color="error" startIcon={<ErrorIcon className="size-5" />}>
@@ -230,7 +225,7 @@ export default function AdRegistration() {
                                   Descargar CSV de errores
                                 </Button>
                               )}
-                              
+
                             </div>
 
 

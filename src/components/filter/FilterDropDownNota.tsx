@@ -43,7 +43,6 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
 
   return (
     <div ref={dropdownRef} className="relative inline-block text-left m-1">
-      {/* Botón principal */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -55,7 +54,6 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
         />
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute left-0 mt-2 w-[190px] rounded-md bg-white shadow-lg ring-1 ring-gray-200 z-10 p-4">
           <div className="flex justify-between mb-3">

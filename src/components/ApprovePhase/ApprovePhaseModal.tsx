@@ -17,7 +17,6 @@ export default function ApprovePhaseModal({
     open,
     phaseName,
     saving,
-    onChangeDraft,
     onSave,
     onClose,
 }: ApprovePhaseModalProps) {
@@ -55,15 +54,15 @@ export default function ApprovePhaseModal({
                         <div className="flex items-center gap-2">
                             <AlertHexaIcon />
                             <h2 id="approve-phase-title" className="text-lg font-semibold text-gray-900">
-                               Avalar Fase
+                                Avalar Fase
                             </h2>
                         </div>
 
-                            <p className="mt-1 text-sm text-gray-700">
-                                Se avalará la {phaseName} de este nivel.
-                                Esta acción indica que ya no se podrá modificar nada
-                            </p>
-                        
+                        <p className="mt-1 text-sm text-gray-700">
+                            Se avalará la {phaseName} de este nivel.
+                            Esta acción indica que ya no se podrá modificar nada
+                        </p>
+
                     </div>
 
                     <button
@@ -91,7 +90,7 @@ export default function ApprovePhaseModal({
                         onClick={onSave}
                         variant="primary"
                     >
-                        Confirmar 
+                        Confirmar
                     </Button>
                 </div>
 

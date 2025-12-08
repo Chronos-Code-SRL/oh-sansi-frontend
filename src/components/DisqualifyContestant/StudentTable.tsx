@@ -9,13 +9,11 @@ import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
-// import Filter from "../Grade/Filter";
-// import Alert from "../ui/alert/Alert";
-import DisqualifyModal from "./DisqualifyModal";
 import Alert from "../ui/alert/Alert";
 import { getPhaseStatus } from "../../api/services/phaseService";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
+import DisqualifyModal from "./DisqualifyModal";
 
 interface Props {
     idPhase: number;
@@ -29,7 +27,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
@@ -39,12 +36,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
 
-    // Estado para el Alert
+
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
 
-    // Polling refs
+
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
 
@@ -87,7 +84,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idArea]);
 
-    // Cargar estudiantes SOLO cuando haya nivel seleccionado
     useEffect(() => {
         if (selectedLevelId == null) {
             setStudents([]);
@@ -109,8 +105,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     levelId,
                 );
                 if (alive) setStudents(data);
-                // const st = await getContestantStats(idOlympiad, idArea, idPhase, levelId);
-                // setStats(st);
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
@@ -121,7 +115,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    // Obtener el estado de la fase para el nivel seleccionado y bloquear edición si está terminada
     useEffect(() => {
         let alive = true;
         async function loadPhaseStatus() {
@@ -149,26 +142,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
         async function pollOnce() {
             const since = lastUpdateAtRef.current ?? new Date().toISOString();
-            console.log(since);
 
             try {
-                console.debug("[poll] tick -> lastUpdateAt:", since);
                 const res = await checkUpdates(since);
-                console.debug("[poll] response:", {
-                    newCount: res?.new_evaluations?.length ?? 0,
-                    last_updated_at: res?.last_updated_at
-                });
 
                 if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
-                    console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
-                        id: (ev as any).id ?? (ev as any).evaluation_id,
-                        contestant_id: (ev as any).contestant_id
-                    })));
 
-                    // Construimos dos índices: por contestant_id y por evaluation_id (id || evaluation_id)
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        // Indexar únicamente por evaluation_id/id.
                         const evalId = (typeof ev.evaluation_id === "number") ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
                         if (typeof evalId === "number") byEvaluation.set(evalId as number, ev);
                     }
@@ -177,12 +158,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         prev.map((st) => {
 
                             const evalId = (st as any).evaluation_id as number | undefined;
-                            // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
 
                             if (!ev) return st;
-
-                            // Actualizamos nota, estado, descripción y clasificación en tiempo real
                             const nextScore = typeof ev.score === "number" ? ev.score : st.score;
                             const nextStatus = typeof ev.status === "boolean" ? ev.status : st.status;
                             const hasDescription = Object.prototype.hasOwnProperty.call(ev as any, "description");
@@ -202,29 +180,21 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         }),
                     );
                 }
-
-                // Cursor seguro
                 const serverLast = res?.last_updated_at ?? since;
                 const t = new Date(serverLast);
                 const safe = new Date(t.getTime() - 1).toISOString();
                 lastUpdateAtRef.current = safe;
-                console.debug("[poll] next lastUpdateAt:", safe);
             } catch (err) {
                 console.warn("[StudentTable] polling:error", err);
             }
         }
 
-        // Reiniciar cursor cuando cambian los filtros principales
         lastUpdateAtRef.current = new Date().toISOString();
 
-        // Iniciar intervalo
         pollingRef.current = window.setInterval(pollOnce, 3000);
-        console.log("[poll] start (3000ms)");
 
-        // Tick inmediato para no esperar al primer intervalo
         void pollOnce();
 
-        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
         const onFocus = () => { void pollOnce(); };
         const onVis = () => { if (!document.hidden) void pollOnce(); };
         window.addEventListener("focus", onFocus);
@@ -234,7 +204,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             if (pollingRef.current) {
                 window.clearInterval(pollingRef.current);
                 pollingRef.current = null;
-                console.log("[poll] stopped");
             }
             window.removeEventListener("focus", onFocus);
             document.removeEventListener("visibilitychange", onVis);
@@ -242,7 +211,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
 
-    // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -267,14 +235,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         try {
             setCommentSaving(true);
             const id = Number(getEvaluationId(commentStudent));
-            // Cambia el estado a descalificado y guarda descripción
             await updateClassification(id, {
                 classification_status: "descalificado",
                 classification_place: null,
                 description: texto,
             });
 
-            // Actualiza estado local (classification_status y description)
             setStudents((prev) =>
                 prev.map((st) =>
                     st.ci_document === commentStudent.ci_document
@@ -292,7 +258,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     }
 
     function showAlert(title: string, message: string): void {
-        // Limpia un timer previo si existiera
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -301,7 +266,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setAlertMessage(message);
         setAlertOpen(true);
 
-        // Auto-cerrar a los 3 segundos (ajustable)
         autoHideTimerRef.current = window.setTimeout(() => {
             setAlertOpen(false);
             autoHideTimerRef.current = null;
@@ -360,15 +324,10 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                             onSearch={setSearchQuery}
                             placeholder="Buscar por nombre, apellido o CI..."
                         />
-                        {/* <Filter
-                        selectedFilters={selectedFilters}
-                        setSelectedFilters={setSelectedFilters}
-                    /> */}
                     </div>
                 </div>
             )}
 
-            {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                     <div className="max-w-full overflow-x-auto"></div>
@@ -433,8 +392,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                                         <td className="px-6 py-4 text-sm text-center">
                                             <button
                                                 type="button"
-                                                // disabled={phaseStatus === "Terminada"}
-                                               onClick={() => openCommentModal(s)}
+                                                onClick={() => openCommentModal(s)}
                                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
                                                 title={s.description && s.description.length > 0 ? "Ver comentario" : "Agregar comentario"}
                                             >
@@ -464,7 +422,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </div>
             )
             }
-            {/* Modal de comentario */}
             <DisqualifyModal
                 open={commentModalOpen}
                 student={commentStudent}
@@ -473,7 +430,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 onChangeDraft={setCommentDraft}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
-                readOnly={phaseStatus === "Terminada" || commentStudent?.classification_status === "descalificado" }
+                readOnly={phaseStatus === "Terminada" || commentStudent?.classification_status === "descalificado"}
             />
 
         </>

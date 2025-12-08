@@ -4,7 +4,7 @@ import Button from "../ui/button/Button"
 import { useOlympiad } from "../../context/OlympiadContext";
 
 interface BoxOlympiadProps {
-    id: number; //Para que pasemo el ID Como parametro id tiene que ser obligario
+    id: number;
     name: string;
     status: string;
     startDate: string;
@@ -13,17 +13,17 @@ interface BoxOlympiadProps {
 }
 
 export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, startDate, endDate, areas }) => {
-    const navigate = useNavigate(); // Hook para manejar la navegación
+    const navigate = useNavigate();
     const { setSelectedOlympiad } = useOlympiad();
 
-    // Verificar si la olimpiada está en planificación
     const isInPlanning = status === "En planificación";
+    const isFinished = status === "Terminada";
+    const isDisabled = isInPlanning || isFinished;
 
-    // Función para manejar el clic en el botón
     const handleButtonClick = () => {
-        if (isInPlanning) return; // No permitir acceso si está en planificación
+        if (isDisabled) return;
         setSelectedOlympiad({ id, name, status });
-        navigate(`/registration`);
+        navigate(`/filtros-de-lista/${id}`);
     };
 
 
@@ -37,7 +37,6 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                     dark:bg-white/[0.03] ">
             <div className="flex items-start justify-between mb-3">
                 <h3 className="text-lg font-semibold text-card-foreground leading-tight">
-                    {/* Aca tenemos que consumir de la Api el nombre de la olimpiada */}
                     {name}
                 </h3>
                 <Badge
@@ -48,13 +47,13 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                     }
                 >
                     {status}
-                </Badge>  {/*Aca tengo que consumir de la Api si esta activo o inactivo */}
+                </Badge>
             </div>
 
             <div className="mb-4">
                 <p className="text-sm font-medium text-gray-800 mb-1">Fechas:</p>
                 <p className="text-sm ">
-                    {startDate} - {endDate}  {/*Aca tengo que consumir de la Api las fechas para ponerlo*/}
+                    {startDate} - {endDate}
                 </p>
             </div>
 
@@ -64,8 +63,6 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                 </p>
                 <div className="flex flex-wrap gap-2">
 
-                    {/*Aca tengo que consumir de la Api todas las areas que tiene esa olimpiada y se tiene que automatizar en poner
-                     los n areas para y solo usar un Badge y talves usar el Map*/}
                     {areas.map((area, index) => (
                         <Badge key={index} color="light">
                             {area}
@@ -78,9 +75,9 @@ export const BoxOlympiad: React.FC<BoxOlympiadProps> = ({ id, name, status, star
                     size="sm"
                     className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleButtonClick}
-                    disabled={isInPlanning}
+                    disabled={isDisabled}
                 >
-                    {isInPlanning ? "En planificación" : "Acceder a olimpiada"}
+                    {isInPlanning ? "En planificación" : isFinished ? "Olimpiada terminada" : "Acceder a olimpiada"}
                 </Button>
             </div>
 

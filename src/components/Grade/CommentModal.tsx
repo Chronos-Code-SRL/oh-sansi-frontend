@@ -43,7 +43,7 @@ export default function CommentModal({
 
     const modal = (
         <div
-            className="fixed inset-0 z-[2147483647] flex items-center justify-center" // z-index muy alto
+            className="fixed inset-0 z-[2147483647] flex items-center justify-center"
             role="dialog"
             aria-modal="true"
             aria-labelledby="comment-title"

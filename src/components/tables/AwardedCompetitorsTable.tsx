@@ -17,7 +17,6 @@ interface Props {
   idArea: number;
 }
 
-// 🟢 Tipo extendido SOLO para esta tabla
 type AwardedRow = AwardWinningCompetitors & {
   level_name: string;
   area_name: string;
@@ -28,7 +27,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
   const [levels, setLevels] = useState<{ name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Filtros
   const [filterNivel, setFilterNivel] = useState<string[]>([]);
   const [filterDepartamento, setFilterDepartamento] = useState<string[]>([]);
 
@@ -40,13 +38,11 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
         if (!idOlympiad || !idArea) return;
 
-        //  Ejecutar ambas APIs en paralelo
         const [levelsData, data] = await Promise.all([
           getLevelsByOlympiadAndArea(idOlympiad, idArea),
           getAwardWinningCompetitors(idOlympiad, idArea),
         ]);
 
-        // 1) Setear niveles
         setLevels(levelsData);
 
         const levelOrder = levelsData.reduce((acc, level, index) => {
@@ -54,7 +50,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           return acc;
         }, {} as Record<string, number>);
 
-        // 2) Normalizar datos
         const normalized: AwardedRow[] = data.map((item: any) => ({
           contestant_id: item.contestant_id,
           first_name: item.first_name ?? item.firstName ?? "",
@@ -66,12 +61,10 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
             item.classification_place ??
             item.classificationPlace ??
             null,
-          // extras
           level_name: item.level_name ?? item.levelName ?? item.level ?? "",
           area_name: item.area_name ?? item.areaName ?? item.area ?? "",
         })).filter(item => item.classification_place !== null);
 
-        // 3) Orden de medallas
         const medalOrder: Record<string, number> = {
           Oro: 1,
           Plata: 2,
@@ -79,7 +72,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
           "Mención de Honor": 4,
         };
 
-        // 4) Orden final
         const sorted = [...normalized].sort((a, b) => {
           const lvlA = levelOrder[a.level_name] ?? 999;
           const lvlB = levelOrder[b.level_name] ?? 999;
@@ -94,16 +86,15 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
         setRows(sorted);
       } catch (err) {
-        console.error(err);
-        setError("Error al cargar los datos.");
+        setError("No se avalaron todos los niveles de esta área. Asegúrese de avalar todos los niveles.");
         setRows([]);
       } finally {
         setLoading(false);
       }
     }
-    
+
     loadData();
-    
+
   }, [idOlympiad, idArea]);
 
 
@@ -137,23 +128,22 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
 
     return byNivel && byDep;
   });
-  
+
   if (loading) return <p>Cargando datos…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
   const formatRows = () => {
     return filteredRows.map((c) => ({
-        Nombre: c.first_name,
-        Apellido: c.last_name,
-        Colegio: c.school_name,
-        Departamento: c.department,
-        Área: c.area_name,
-        Nivel: c.level_name,
-        Puesto: c.classification_place,
+      Nombre: c.first_name,
+      Apellido: c.last_name,
+      Colegio: c.school_name,
+      Departamento: c.department,
+      Área: c.area_name,
+      Nivel: c.level_name,
+      Puesto: c.classification_place,
     }));
   };
 
-  //  DESCARGAR PDF
   const handleDownloadPDF = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -175,7 +165,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
   };
 
 
-  // DESCARGAR CSV
   const handleDownloadCSV = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -201,7 +190,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
   };
 
 
-  // DESCARGAR EXCEL
   const handleDownloadExcel = () => {
     const rows = formatRows();
     if (!rows.length) return;
@@ -219,7 +207,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
         Podio de Competidores
       </h2>
 
-      {/* Filtros */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <h1>Filtrar por:</h1>
         <FilterDropdown
@@ -257,7 +244,6 @@ export default function AwardedTable({ idOlympiad, idArea }: Props) {
         />
       </div>
 
-      {/* Tabla */}
       <div className="mt-6 overflow-x-auto rounded-xl">
         <Table className="min-w-full border border-gray-200 rounded-xl text-sm text-center">
           <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">

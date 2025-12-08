@@ -5,7 +5,6 @@ import Label from "../../components/form/Label";
 import InputField from "../../components/form/input/InputField";
 import { gradesService } from "../../api/services/grades";
 import { levelGradesService } from "../../api/services/levelGradesService";
-// import ButtonModal from "../../components/ui/button/ButtonModal";
 import Select from "../../components/form/Select";
 import Button from "../../components/ui/button/Button";
 
@@ -29,14 +28,13 @@ export default function ConfigureAreaModal({
   const [startGrade, setStartGrade] = useState("");
   const [endGrade, setEndGrade] = useState("");
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
-  const [errors, setErrors] = useState<{ name?: string; startGrade?: string; endGrade?:string }>({});
+  const [errors, setErrors] = useState<{ name?: string; startGrade?: string; endGrade?: string }>({});
 
   const fetchGrades = async () => {
     try {
       const gradesData = await gradesService.getGrades();
       setGrades(gradesData);
     } catch (error) {
-      console.error("Error al obtener los grados:", error);
     }
   };
 
@@ -55,7 +53,6 @@ export default function ConfigureAreaModal({
       ) as LevelsResponse;
 
       if (!levelsData || !Array.isArray(levelsData.level_grades)) {
-        console.error("Error: La API no devolvió un array válido de niveles.");
         return;
       }
 
@@ -85,7 +82,6 @@ export default function ConfigureAreaModal({
 
       setLevels(uniqueLevels);
     } catch (error) {
-      console.error("Error al obtener los niveles:", error);
     }
   };
   useEffect(() => {
@@ -133,7 +129,7 @@ export default function ConfigureAreaModal({
     }
 
     try {
-      setErrors({}); 
+      setErrors({});
 
       const startIndex = grades.findIndex((g) => g.name === startGrade);
       const endIndex = grades.findIndex((g) => g.name === endGrade);
@@ -160,7 +156,6 @@ export default function ConfigureAreaModal({
       setStartGrade("");
       setEndGrade("");
     } catch (error: any) {
-      console.error("Error al agregar nivel:", error);
       alert("No se pudo agregar el nivel.");
     }
   };
@@ -181,7 +176,6 @@ export default function ConfigureAreaModal({
       await fetchLevels();
       alert("Nivel eliminado correctamente");
     } catch (error) {
-      console.error("Error al eliminar nivel:", error);
       alert("No se pudo eliminar el nivel.");
     }
   };
@@ -212,9 +206,9 @@ export default function ConfigureAreaModal({
                 placeholder="Ej. Nivel Básico, Inicial, Avanzado"
                 value={newLevelName}
                 onChange={(e) => {
-                    setNewLevelName(e.target.value);
-                    setErrors({ ...errors, name: undefined });
-                  }}
+                  setNewLevelName(e.target.value);
+                  setErrors({ ...errors, name: undefined });
+                }}
               />
               {errors.name && (
                 <p className="text-sm text-red-500 mt-1">{errors.name}</p>
@@ -224,7 +218,7 @@ export default function ConfigureAreaModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Curso Inicial</Label>
-                 <Select
+                <Select
                   options={grades.map((grade) => ({
                     value: grade.name,
                     label: grade.name,

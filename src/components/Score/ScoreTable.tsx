@@ -22,7 +22,7 @@ export default function ScoreTable({
   const [students, setStudents] = useState<Contestant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const lastUpdateAtRef = useRef<string | null>(null);
   const pollingRef = useRef<number | null>(null);
 
@@ -65,7 +65,6 @@ export default function ScoreTable({
     };
   }, [olympiadId, areaId, levelId, phaseId]);
 
-  // Polling en tiempo real para notas y estado de clasificación
   useEffect(() => {
     if (!levelId || !phaseId) return;
 
@@ -98,7 +97,6 @@ export default function ScoreTable({
         const t = new Date(serverLast);
         lastUpdateAtRef.current = new Date(t.getTime() - 1).toISOString();
       } catch (err) {
-        // Silenciar errores de polling en esta vista
       }
     }
 
@@ -142,7 +140,7 @@ export default function ScoreTable({
 
   return (
     <>
-      
+
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <Table className="rounded-xl">
@@ -153,7 +151,6 @@ export default function ScoreTable({
               <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
               <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
               <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-              {/* <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th> */}
               <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
               <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Clasificación</th>
             </TableRow>
@@ -166,8 +163,8 @@ export default function ScoreTable({
                 className={`border-b border-border last:border-0 transition-colors hover:bg-gray-50 ${s.isClassified
                   ? "bg-emerald-50 dark:bg-emerald-950/20"
                   : typeof s.score === "number"
-                  ? "bg-rose-50 dark:bg-rose-950/20"
-                  : "bg-gray-50 dark:bg-gray-900/30"
+                    ? "bg-rose-50 dark:bg-rose-950/20"
+                    : "bg-gray-50 dark:bg-gray-900/30"
                   }`}
               >
                 <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
@@ -176,38 +173,10 @@ export default function ScoreTable({
                 <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
                 <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
 
-                {/* <td className="px-6 py-4 text-sm text-center">
-                <span
-                  className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium ${
-                    s.status
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-rose-100 text-rose-700"
-                  }`}
-                >
-                  {s.status ? "Evaluado" : "No Evaluado"}
-                </span>
-              </td> */}
-
                 <td className="px-6 py-4 text-sm text-center">
                   {typeof s.score === "number" ? s.score :
                     <Badge color="neutral">-</Badge>}
                 </td>
-
-                {/* <td className="px-6 py-4 text-sm text-center">
-                {typeof s.score === "number" ? (
-                  s.isClassified ? (
-                    <span className="inline-flex rounded-full px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium">
-                      Clasificado
-                    </span>
-                  ) : (
-                    <span className="inline-flex rounded-full px-3 py-1 bg-rose-100 text-rose-700 text-xs font-medium">
-                      No clasificado
-                    </span>
-                  )
-                ) : (
-                  <span className="text-gray-500 italic">Sin nota</span>
-                )}
-              </td> */}
 
                 <td className="px-6 py-4 text-sm text-center">
                   {s.classification_status === "clasificado" && (
