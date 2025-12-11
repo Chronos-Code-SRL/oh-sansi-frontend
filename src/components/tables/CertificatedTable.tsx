@@ -83,7 +83,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
         setRows(sorted);
       } catch (err) {
         console.error(err);
-        setError("Error al cargar los datos o no se avalaron todos los niveles de esta área. Asegúrese de avalar todos los niveles.");
+        setError("Error al cargar los datos o no se avalaron todos los niveles de la fase final.");
         setRows([]);
       } finally {
         setLoading(false);
