@@ -45,6 +45,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
+    const phaseStatusPollingRef = useRef<number | null>(null);
 
     const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
     const autoHideTimerRef = useRef<number | null>(null);
@@ -134,7 +135,28 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             }
         }
         void loadPhaseStatus();
-        return () => { alive = false; };
+
+        // Polling: actualizar estado de fase cada 5 segundos
+        if (selectedLevelId != null) {
+            phaseStatusPollingRef.current = window.setInterval(() => {
+                void loadPhaseStatus();
+            }, 5000);
+        }
+
+        const onFocus = () => { if (selectedLevelId != null) void loadPhaseStatus(); };
+        const onVis = () => { if (!document.hidden && selectedLevelId != null) void loadPhaseStatus(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVis);
+
+        return () => {
+            alive = false;
+            if (phaseStatusPollingRef.current) {
+                window.clearInterval(phaseStatusPollingRef.current);
+                phaseStatusPollingRef.current = null;
+            }
+            window.removeEventListener("focus", onFocus);
+            document.removeEventListener("visibilitychange", onVis);
+        };
     }, [selectedLevelId, idPhase, idOlympiad, idArea]);
 
     useEffect(() => {
