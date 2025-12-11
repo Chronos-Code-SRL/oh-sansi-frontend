@@ -95,6 +95,7 @@ export default function ClassifiedByLevelSimple({
   const estadoOptions = [
     { label: "Clasificado", value: "clasificado" },
     { label: "No Clasificado", value: "no_clasificado" },
+    { label: "Desclasificado", value: "descalificado" },
   ];
 
   const filteredRows = rows.filter((r) => {
@@ -258,20 +259,23 @@ export default function ClassifiedByLevelSimple({
                   <td className="px-5 py-4">{c.last_name}</td>
                   <td className="px-5 py-4">{c.ci_document}</td>
                   <td className="px-5 py-4">{c.levelName}</td>
-                  <td className="px-5 py-4">
-                    <Badge
-                      color={
-                        c.classification_status === "clasificado"
-                          ? "success"
-                          : c.classification_status === "no_clasificado"
-                            ? "error"
-                            : "neutral"
-                      }
-                    >
-                      {c.classification_status
-                        ? c.classification_status.replace("_", " ")
-                        : "—"}
-                    </Badge>
+                  <td className="px-5 py-4 text-center">
+                    {c.classification_status === "clasificado" && (
+                      <Badge color="success">Clasificado</Badge>
+                    )}
+
+                    {c.classification_status === "no_clasificado" && (
+                      <Badge color="error">No clasificado</Badge>
+                    )}
+
+                    {c.classification_status === "descalificado" && (
+                      <Badge color="warning">Desclasificado</Badge>
+                    )}
+
+                    {(c.classification_status === null ||
+                      c.classification_status === undefined) && (
+                      <Badge color="neutral">—</Badge>
+                    )}
                   </td>
                   <td className="px-5 py-4">{c.score ?? "—"}</td>
                 </TableRow>

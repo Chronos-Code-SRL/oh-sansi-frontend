@@ -22,7 +22,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
   const [levels, setLevels] = useState<Level[]>([]);
   const [selectedNivel, setSelectedNivel] = useState<string[]>([]);
   const [_loading, setLoading] = useState<boolean>(false);
-  const [_error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const handleClearFilters = () => {
     setSelectedNivel([]);
   };
@@ -83,7 +83,7 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
         setRows(sorted);
       } catch (err) {
         console.error(err);
-        setError("Error al cargar los datos.");
+        setError("Error al cargar los datos o no se avalaron todos los niveles de esta área. Asegúrese de avalar todos los niveles.");
         setRows([]);
       } finally {
         setLoading(false);
@@ -92,6 +92,8 @@ export default function CertificatedTable({ idOlympiad, idArea }: Props) {
 
     loadData();
   }, [idOlympiad, idArea]);
+
+  if (error) return <p className="text-red-600">{error}</p>;
 
   const filteredRows = rows.filter((r) => {
     if (selectedNivel.length === 0) return true;
