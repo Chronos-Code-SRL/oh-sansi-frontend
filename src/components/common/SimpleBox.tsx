@@ -21,8 +21,16 @@ interface SimpleBoxProps {
 export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDate, endDate, areas, onToggleActive }) => {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const canConfigureAreas = status === "En planificación";
+    const statusColor =
+    status === "Activa"
+        ? "success"
+        : status === "En planificación"
+        ? "warning"
+        : "error";
 
     const handleButtonClick = () => {
+        if (!canConfigureAreas) return;
         navigate(`/OlimpiadaAreas/${id}`);
     };
 
@@ -35,7 +43,7 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
                     {name}
                 </h3>
                 <div className="flex items-center gap-2">
-                    <Badge color={status === "Activa" ? "success" : "error"}>
+                    <Badge color={statusColor}>
                         {status}
                     </Badge>
 
@@ -93,6 +101,8 @@ export const SimpleBox: React.FC<SimpleBoxProps> = ({ id, name, status, startDat
             <div className="flex justify-end">
                 <Button size="sm"
                     onClick={handleButtonClick}
+                    disabled={!canConfigureAreas}
+                    
                 >
                     Configurar Áreas
                 </Button>
