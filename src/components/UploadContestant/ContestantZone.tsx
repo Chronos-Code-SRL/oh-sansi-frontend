@@ -20,6 +20,14 @@ export default function AdRegistration() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingUploads, setIsLoadingUploads] = useState(false);
   const [isLoadingOlympiads, setIsLoadingOlympiads] = useState(true);
+  const formatFileSize = (sizeInBytes: number): string => {
+  if (sizeInBytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(sizeInBytes) / Math.log(k));
+  const size = sizeInBytes / Math.pow(k, i);
+  return `${size.toFixed(2)} ${sizes[i]}`;
+};
 
 
   const fetchOlympiads = async () => {
@@ -193,7 +201,7 @@ export default function AdRegistration() {
                               <FileIcon className="w-6 h-6 text-gray-600 mt-1" />
                               <div>
                                 <p className="font-medium mb-1">{f.original_file_name}</p>
-                                <p className="text-sm text-gray-500 mb-2">{f.file_size} MB</p>
+                                <p className="text-sm text-gray-500 mb-2">{formatFileSize(f.file_size)}</p>
 
 
                                 {f.details[0].header_errors > 0 ? (
