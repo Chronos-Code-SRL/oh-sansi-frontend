@@ -6,7 +6,7 @@ import { CheckCircleIcon, DownloadIcon, ErrorIcon, FileIcon, InfoIcon } from "..
 import Badge from "../ui/badge/Badge";
 import Select from "../form/Select";
 import { Olympiad } from "../../types/Olympiad";
-import { getOlympiads } from "../../api/services/olympiadService";
+import {  getOlympiadsInPlannification } from "../../api/services/olympiadService";
 import { uploadCompetitorCsv, downloadErrorCsv, getCsvUploadsByOlympiad } from "../../api/services/uploadContestantService"
 import { FileDetail, UploadCsv } from "../../types/CompetitorUpload";
 import InformationZone from "./InformationZone";
@@ -22,7 +22,7 @@ export default function AdRegistration() {
 
   const fetchOlympiads = async () => {
     try {
-      const data = await getOlympiads();
+      const data = await getOlympiadsInPlannification();
       setOlympiads(data);
     } catch (error) {
       console.log(error);
