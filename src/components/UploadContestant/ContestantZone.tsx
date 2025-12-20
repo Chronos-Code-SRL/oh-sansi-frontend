@@ -6,7 +6,7 @@ import { CheckCircleIcon, DownloadIcon, ErrorIcon, FileIcon, InfoIcon } from "..
 import Badge from "../ui/badge/Badge";
 import Select from "../form/Select";
 import { Olympiad } from "../../types/Olympiad";
-import {  getOlympiadsInPlannification } from "../../api/services/olympiadService";
+import { getOlympiadsInPlannification } from "../../api/services/olympiadService";
 import { uploadCompetitorCsv, downloadErrorCsv, getCsvUploadsByOlympiad } from "../../api/services/uploadContestantService"
 import { FileDetail, UploadCsv } from "../../types/CompetitorUpload";
 import InformationZone from "./InformationZone";
@@ -19,14 +19,19 @@ export default function AdRegistration() {
   const [files, setFiles] = useState<FileWithDetails[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingUploads, setIsLoadingUploads] = useState(false);
+  const [isLoadingOlympiads, setIsLoadingOlympiads] = useState(true);
+
 
   const fetchOlympiads = async () => {
+    setIsLoadingOlympiads(true);
     try {
       const data = await getOlympiadsInPlannification();
       setOlympiads(data);
     } catch (error) {
       console.log(error);
-    }
+    } finally {
+    setIsLoadingOlympiads(false);
+  }
   }
 
   const fetchUploads = async (olympiadId: number) => {
@@ -134,17 +139,23 @@ export default function AdRegistration() {
               <Select
                 options={olympiads.map((ol) => ({
                   value: ol.id.toString(),
-                  label: `${ol.name}`,
+                  label: ol.name,
                 }))}
                 value={selectedOlympiad?.id.toString() || ""}
                 onChange={(val) => {
                   const ol = olympiads.find((o) => o.id.toString() === val);
-                  if (ol) {
-                    setSelectedOlympiad(ol);
-                  }
+                  if (ol) setSelectedOlympiad(ol);
                 }}
-                placeholder="Selecciona una Olimpiada"
+                placeholder={
+                  isLoadingOlympiads
+                    ? "Cargando olimpiadas..."
+                    : olympiads.length > 0
+                      ? "Selecciona una Olimpiada"
+                      : "No hay olimpiadas en planificación disponibles"
+                }
+                disabled={isLoadingOlympiads || olympiads.length === 0}
               />
+
             </div>
             <InformationZone />
 
