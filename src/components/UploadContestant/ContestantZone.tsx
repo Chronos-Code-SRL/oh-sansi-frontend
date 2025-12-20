@@ -23,7 +23,7 @@ export default function AdRegistration() {
   const formatFileSize = (sizeInBytes: number): string => {
   if (sizeInBytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = [ "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(sizeInBytes) / Math.log(k));
   const size = sizeInBytes / Math.pow(k, i);
   return `${size.toFixed(2)} ${sizes[i]}`;
