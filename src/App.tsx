@@ -83,7 +83,8 @@ export default function App() {
             <Route path="/lista-competidores-clasificados/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<RankedContestantsList />} />
 
             {/* Awarded List contestants */}
-            <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} />
+            {/* <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} /> */}
+            <Route path="/lista-competidores-premiados" element={<AwardedList />} />
 
             {/* Certificated List contestants */}
             <Route path="/lista-competidores-certificados/:idOlympiad/:areaName/:areaId" element={<CertificatedList />} />
