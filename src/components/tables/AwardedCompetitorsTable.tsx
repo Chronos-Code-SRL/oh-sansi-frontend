@@ -3,10 +3,15 @@ import { Area } from "../../types/Area";
 import { Level } from "../../types/Level";
 import { getAreasFromUserOlympiads } from "../../api/services/olympiadService";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
-import { getAwardWinningCompetitorsArea } from "../../api/services/contestantService";
+import { getAwardWinningCompetitorsArea, getLastPhaseStatus } from "../../api/services/contestantService";
 import { AwardWinningCompetitorsByArea } from "../../types/Contestant";
 import Select from "../form/Select";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
+import Badge from "../ui/badge/Badge";
+import FloatingDownloadButton from "../filter/FloatingDownloadButton";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+import autoTable from "jspdf-autotable";
 
 export default function AwardedContestantsTable() {
     const [areas, setAreas] = useState<Area[]>([]);
@@ -80,52 +85,184 @@ export default function AwardedContestantsTable() {
     }, [selectedAreaId, selectedOlympiad?.id]);
 
     useEffect(() => {
-    let alive = true;
+        let alive = true;
 
-    async function fetchAwardedStudents() {
-        const olympiadId = selectedOlympiad?.id ?? 0;
-        const areaId = selectedAreaId ?? 0;
-        const levelId = selectedLevelId ?? 0;
+        async function fetchAwardedStudents() {
+            const olympiadId = selectedOlympiad?.id ?? 0;
+            const areaId = selectedAreaId ?? 0;
+            const levelId = selectedLevelId ?? 0;
 
-        if (olympiadId === 0 || areaId === 0 || levelId === 0) {
-            if (alive) {
-                setStudents([]);
-                setError(null);
+            if (olympiadId === 0 || areaId === 0 || levelId === 0) {
+                if (alive) {
+                    setStudents([]);
+                    setError(null);
+                }
+                return;
             }
-            return;
+
+            try {
+                setLoading(true);
+                setError(null);
+
+                // validar si la última fase está avalada
+                try {
+                    await getLastPhaseStatus(olympiadId, areaId, levelId);
+                } catch (phaseErr: any) {
+                    const status = phaseErr?.response?.status;
+
+                    if (status === 403) {
+                        if (alive) {
+                            setStudents([]);
+                            setError("La última fase de este nivel no ha sido avalada.");
+                        }
+                        return;
+                    }
+
+                    if (status === 404) {
+                        if (alive) {
+                            setStudents([]);
+                            setError("No hay estudiantes premiados en este nivel.");
+                        }
+                        return;
+                    }
+
+                    // Otros errores de validación
+                    if (alive) {
+                        setStudents([]);
+                        setError("No se pudo cargar la lista de premiados.");
+                    }
+                    return;
+                }
+
+                const data = await getAwardWinningCompetitorsArea(
+                    olympiadId,
+                    areaId,
+                    levelId
+                );
+
+                const MEDAL_ORDER: Record<string | null, number> = {
+                    "Oro": 1,
+                    "Plata": 2,
+                    "Bronce": 3,
+                    "Mención honorífica": 4,
+                    null: 99
+                };
+
+                const ordered = [...data]
+                .filter(s => s.classification_place !== null) // solo premiados
+                .sort(
+                    (a, b) => MEDAL_ORDER[a.classification_place] - MEDAL_ORDER[b.classification_place]
+                );
+
+
+                if (!alive) return;
+
+                if (!data.length) {
+                    setStudents([]);
+                    setError("No hay estudiantes premiados en este nivel.");
+                    return;
+                }
+
+                setStudents(ordered);
+
+            } catch (err) {
+                console.error(err);
+                if (!alive) return;
+                setStudents([]);
+                setError("No se pudo cargar la lista de premiados.");
+            } finally {
+                if (alive) setLoading(false);
+            }
         }
 
-        try {
-            setLoading(true);
-            setError(null);
+        fetchAwardedStudents();
+        return () => { alive = false; };
 
-            const data = await getAwardWinningCompetitorsArea(
-                olympiadId,
-                areaId,
-                levelId
-            );
+    }, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
 
-            console.log("Awarded Students Data:", data);
-
-            if (alive) setStudents(data);
-        } catch (err) {
-            if (!alive) return;
-            console.error(err);
-            setStudents([]);
-            setError("No se pudieron cargar los estudiantes premiados.");
-        } finally {
-            if (alive) setLoading(false);
-        }
+    const getColorByMedal = (
+    place: AwardWinningCompetitorsByArea["classification_place"] | null
+  ) => {
+    if (!place) return "neutral";
+    switch (place) {
+      case "Oro":
+        return "success";
+      case "Plata":
+        return "info";
+      case "Bronce":
+        return "warning";
+      case "Mención honorífica":
+        return "purple";
+      default:
+        return "neutral";
     }
+  };
 
-    fetchAwardedStudents();
+  const formatAwardedRows = () => {
+    return students.map((s) => ({
+        Nombre: s.first_name,
+        Apellido: s.last_name,
+        "Unidad Educativa": s.school_name,
+        Área: s.area_name,
+        Nivel: s.level_name,
+        Departamento: s.department,
+        Medalla: s.classification_place ?? "—",
+    }));
+  };
 
-    return () => {
-        alive = false;
+    const handleDownloadCSV = () => {
+        const rows = formatAwardedRows();
+        if (!rows.length) return;
+
+        const headers = Object.keys(rows[0]).join(",");
+        const body = rows
+            .map((r) =>
+            Object.values(r)
+                .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+                .join(",")
+            )
+            .join("\n");
+
+        const csv = `${headers}\n${body}`;
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "estudiantes_premiados.csv";
+        link.click();
     };
-}, [selectedAreaId, selectedLevelId, selectedOlympiad?.id]);
 
+    const handleDownloadPDF = () => {
+        const rows = formatAwardedRows();
+        if (!rows.length) return;
 
+        const doc = new jsPDF({ orientation: "landscape" });
+
+        doc.setFontSize(14);
+        doc.text("Estudiantes Premiados", 14, 15);
+
+        autoTable(doc, {
+            startY: 20,
+            head: [Object.keys(rows[0])],
+            body: rows.map((r) => Object.values(r)),
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [40, 40, 40] },
+        });
+
+        doc.save("estudiantes_premiados.pdf");
+    };
+
+    const handleDownloadExcel = () => {
+        const rows = formatAwardedRows();
+        if (!rows.length) return;
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Premiados");
+
+        XLSX.writeFile(workbook, "estudiantes_premiados.xlsx");
+    };
 
     return (
       <>
@@ -174,15 +311,15 @@ export default function AwardedContestantsTable() {
           {selectedAreaId !== null && selectedLevelId !== null ? (
               <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white">
                   <Table className="min-w-full border border-gray-200 text-sm text-left">
-                      <TableHeader className="bg-gray-100 border-b">
+                      <TableHeader className="bg-gray-100 border-b border-border bg-muted/50">
                           <TableRow>
-                              <th className="px-4 py-3 text-center font-semibold">Nombre</th>
-                              <th className="px-4 py-3 text-center font-semibold">Apellido</th>
-                              <th className="px-4 py-3 text-center font-semibold">Unidad Educativa</th>
-                              <th className="px-4 py-3 text-center font-semibold">Área</th>
-                              <th className="px-4 py-3 text-center font-semibold">Nivel</th>
-                              <th className="px-4 py-3 text-center font-semibold">Departamento</th>
-                              <th className="px-4 py-3 text-center font-semibold">Medalla</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Nombre</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Apellido</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Unidad Educativa</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Área</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Nivel</th>
+                              <th className="px-4 py-3 text-sm text-center font-semibold">Departamento</th>
+                              <th className="px-2 py-3 text-sm text-center font-semibold">Medalla</th>
                           </TableRow>
                       </TableHeader>
 
@@ -215,22 +352,31 @@ export default function AwardedContestantsTable() {
                               students.map((s, index) => (
                                   <TableRow
                                       key={`${s.first_name}-${s.last_name}-${index}`}
-                                      className="border-b last:border-0"
+                                      className="hover:bg-gray-50 border-b border-border last:border-0"
                                   >
-                                      <td className="px-4 py-3 text-center">{s.first_name}</td>
-                                      <td className="px-4 py-3 text-center">{s.last_name}</td>
-                                      <td className="px-4 py-3 text-center">{s.school_name}</td>
-                                      <td className="px-4 py-3 text-center">{s.area_name}</td>
-                                      <td className="px-4 py-3 text-center">{s.level_name}</td>
-                                      <td className="px-4 py-3 text-center">{s.department}</td>
-                                      <td className="px-4 py-3 text-center font-semibold">
-                                          {s.classification_place ?? "—"}
+                                      <td className="px-4 py-4 text-sm text-center">{s.first_name}</td>
+                                      <td className="px-4 py-4 text-sm text-center">{s.last_name}</td>
+                                      <td className="px-4 py-4 text-sm text-center">{s.school_name}</td>
+                                      <td className="px-4 py-4 text-sm text-center">{s.area_name}</td>
+                                      <td className="px-4 py-4 text-sm text-center">{s.level_name}</td>
+                                      <td className="px-4 py-4 text-sm text-center">{s.department}</td>
+                                      <td className="px-2 py-4 text-sm text-nowrap text-center">
+                                        <Badge color={getColorByMedal(s.classification_place)}>
+                                            {s.classification_place ?? "Sin clasificación"}
+                                        </Badge>
                                       </td>
                                   </TableRow>
                               ))}
                       </TableBody>
                   </Table>
+                  <FloatingDownloadButton
+                          hasData={students.length > 0}
+                          onPDF={handleDownloadPDF}
+                          onCSV={handleDownloadCSV}
+                          onExcel={handleDownloadExcel}
+                        />
               </div>
+              
           ) : (
               <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
                   Seleccione un área y un nivel para visualizar los estudiantes premiados.

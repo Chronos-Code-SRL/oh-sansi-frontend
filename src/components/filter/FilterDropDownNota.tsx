@@ -41,6 +41,12 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    setNotaInicial(initialValue);
+    setNotaFinal(finalValue);
+  }, [initialValue, finalValue]);
+
+
   return (
     <div ref={dropdownRef} className="relative inline-block text-left m-1">
       <button

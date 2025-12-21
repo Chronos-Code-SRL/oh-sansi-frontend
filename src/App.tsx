@@ -87,7 +87,7 @@ export default function App() {
             <Route path="/lista-competidores-premiados" element={<AwardedList />} />
 
             {/* Certificated List contestants */}
-            <Route path="/lista-competidores-certificados/:idOlympiad/:areaName/:areaId" element={<CertificatedList />} />
+            <Route path="/lista-competidores-certificados" element={<CertificatedList />} />
 
           </Route>
 

@@ -65,10 +65,13 @@ export interface AwardWinningCompetitorsByArea {
     first_name: string;
     last_name: string;
     school_name: string;
-    area_name: string;
     department: string;
+    area_name: string;
     level_name: string;
-    classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+    score: number;
+    classification_place: "Oro" | "Plata" | "Bronce" | "Mención honorífica" | null;
+    tutor: string;
+    area_responsible: string;
 }
 
 export interface AwardWinningCompetitorsResponse {

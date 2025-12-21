@@ -5,9 +5,9 @@ import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 export default function AwardedList() {
     return (
         <>
-            <TitleBreadCrumb pageTitle="Medallero" />
+            <TitleBreadCrumb pageTitle="Lista de premiados" />
 
-            <ComponentCard title="Gestión de Medallas">
+            <ComponentCard title="Podio de Concursantes premiados">
                 <AwardedCompetitorsTable />
             </ComponentCard>
 

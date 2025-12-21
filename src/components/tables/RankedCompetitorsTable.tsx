@@ -212,8 +212,8 @@ export default function ClassifiedByLevelSimple({
 
         <FilterDropdownNota
           label="Nota"
-          initialValue={0}
-          finalValue={100}
+          initialValue={notaInicial}
+          finalValue={notaFinal}
           onConfirm={(min, max) => {
             setNotaInicial(min);
             setNotaFinal(max);
