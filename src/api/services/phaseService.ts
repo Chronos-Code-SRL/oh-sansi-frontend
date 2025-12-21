@@ -1,4 +1,5 @@
 import { Phase, PhaseResponse} from "../../types/Phase";
+import { MedalAdjustment } from "../../types/Tie";
 import { ohSansiApi } from "../ohSansiApi";
 
 export const getOlympiadPhases = async (olympiadId: number): Promise<Phase[]> => {
@@ -21,6 +22,12 @@ export const getPhaseStatus = async (olympiadId: number,  areaId: number, levelI
 };
 
 export const updatePhaseStatus = async (olympiadId: number, areaId: number, levelId: number, phaseId: number) => {
-    return ohSansiApi.put(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/endorse`, { 
+    return ohSansiApi.put(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/endorse-v2`, { 
     });
+}
+
+export const adjustMedals  = async (olympiadId: number, areaId: number, levelId: number, phaseId: number,  adjustments: MedalAdjustment[]) => {
+    return ohSansiApi.post(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/adjust-medals`, { 
+    adjustments }
+);
 }

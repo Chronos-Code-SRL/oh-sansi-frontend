@@ -16,6 +16,9 @@ import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import CommentModal from "../Grade/CommentModal";
 import ApprovePhaseModal from "./ApprovePhaseModal";
+import TieBreakerMedalsModal from "./TieBreakerMedalsModal";
+import { adjustMedals } from "../../api/services/phaseService";
+
 
 interface Props {
     idPhase: number;
@@ -56,6 +59,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
+
+    const [tieConflicts, setTieConflicts] = useState<any[]>([]);
+    const [openTieModal, setOpenTieModal] = useState(false);
 
     useEffect(() => {
         setEndorsed(false);
@@ -286,38 +292,83 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         }, 3000);
     }
 
+    // async function handleApproveSave(): Promise<void> {
+    //     if (!selectedLevelId) return;
+    //     setSavingApprove(true);
+    //     try {
+    //         await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+    //         setEndorsed(true);
+    //         setAlertTitle("Fase avalada");
+    //         setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
+    //         setAlertOpen(true);
+    //         if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
+    //         autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
+    //         try {
+    //             if (selectedLevelId != null) {
+    //                 const refreshed = await getContestantByPhaseOlympiadAreaLevel(
+    //                     idPhase,
+    //                     idOlympiad,
+    //                     idArea,
+    //                     selectedLevelId,
+    //                 );
+    //                 setStudents(refreshed);
+    //                 lastUpdateAtRef.current = new Date().toISOString();
+    //             }
+    //         } catch (e) {
+    //             console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
+    //         }
+    //     } catch (e) {
+    //         setError("No se pudo avalar la fase. Intenta nuevamente.");
+    //     } finally {
+    //         setSavingApprove(false);
+    //         setOpenApproveModal(false);
+    //     }
+    // }
+
     async function handleApproveSave(): Promise<void> {
         if (!selectedLevelId) return;
+
         setSavingApprove(true);
+
         try {
-            await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
+            const res = await updatePhaseStatus(
+                idOlympiad,
+                idArea,
+                selectedLevelId,
+                idPhase
+            );
+
+            // ✅ TODO OK → avalado
             setEndorsed(true);
-            setAlertTitle("Fase avalada");
-            setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
-            setAlertOpen(true);
-            if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
-            autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
-            try {
-                if (selectedLevelId != null) {
-                    const refreshed = await getContestantByPhaseOlympiadAreaLevel(
-                        idPhase,
-                        idOlympiad,
-                        idArea,
-                        selectedLevelId,
-                    );
-                    setStudents(refreshed);
-                    lastUpdateAtRef.current = new Date().toISOString();
-                }
-            } catch (e) {
-                console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
+            showAlert("Fase avalada", "La fase fue avalada correctamente.");
+            setOpenApproveModal(false);
+
+        } catch (err: any) {
+
+            const response = err?.response?.data;
+
+            // ⚠️ CASO EMPATES
+            if (
+                response?.status === 409 &&
+                Array.isArray(response?.ties_requiring_resolution)
+            ) {
+                setTieConflicts(response.ties_requiring_resolution);
+                setOpenTieModal(true);
+                setOpenApproveModal(false);
+                return;
             }
-        } catch (e) {
-            setError("No se pudo avalar la fase. Intenta nuevamente.");
+
+            // ❌ ERROR NORMAL
+            showAlert(
+                "Error",
+                response?.message ?? "No se pudo avalar la fase."
+            );
+
         } finally {
             setSavingApprove(false);
-            setOpenApproveModal(false);
         }
     }
+
 
     useEffect(() => {
         return () => {
@@ -547,6 +598,36 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 onSave={() => void handleApproveSave()}
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
             />
+            <TieBreakerMedalsModal
+                open={openTieModal}
+                phaseName={phaseName}
+                ties={tieConflicts}
+                onClose={() => setOpenTieModal(false)}
+                onSaveAdjustments={async adjustments => {
+                    if (selectedLevelId == null) return;
+
+                    await adjustMedals(
+                        idOlympiad,
+                        idArea,
+                        selectedLevelId,
+                        idPhase,
+                        adjustments
+                    );
+
+                    await adjustMedals(
+                        idOlympiad,
+                        idArea,
+                        selectedLevelId,
+                        idPhase,
+                        adjustments
+                    );
+
+                    setOpenTieModal(false);
+                    await handleApproveSave(); // 🔁 reintenta aval
+                }}
+            />
+
+
         </>
     )
 }
