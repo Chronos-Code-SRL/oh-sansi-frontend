@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import Badge from "../ui/badge/Badge"
-import { useState } from "react";
 import Button from "../ui/button/Button"
 
 interface SimpleBoxProps {
@@ -17,7 +16,6 @@ interface SimpleBoxProps {
 
 export const SimpleBoxMedal: React.FC<SimpleBoxProps> = ({ id, name, status, startDate, endDate, areas, buttonName, onToggleActive }) => {
     const navigate = useNavigate();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleButtonClick = () => {
         navigate(`/OlimpiadaAreasMedallero/${id}`);

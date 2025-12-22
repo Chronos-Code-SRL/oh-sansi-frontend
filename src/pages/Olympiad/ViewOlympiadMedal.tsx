@@ -63,13 +63,13 @@ export const ViewOlympiadMedal = () => {
     return (
         <>
             <PageMeta
-                title="Gestionar Olimpiadas"
+                title="Configurar Medallero de áreas"
                 description="Página para gestionar las olimpiadas."
             />
 
-            <TitleBreadCrumb pageTitle="Configurar Medallero de áreas" />
+            <TitleBreadCrumb pageTitle="Configurar Medallero de olimpiadas" />
             <p className="text-sm text-gray-500 mb-4">
-                Selecciona una olimpiada para configurar sus áreas respectivas
+                Selecciona una olimpiada para configurar el medallero de sus áreas respectivas
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

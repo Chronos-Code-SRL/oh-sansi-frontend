@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Modal } from "../../components/ui/modal/index";
 import Button from "../../components/ui/button/Button";
+import Alert from "../../components/ui/alert/Alert";
 import { TrophyGold, TrophySilver, TrophyBronze, Award } from "../../icons";
 import { createMedals, getMedalsArea } from "../../api/services/medalServices";
 
@@ -10,7 +11,7 @@ interface ConfigureAreaModalProps {
     areaName: string;
     olympiadId: number;
     areaId: number;
-    onSuccess?: () => void;
+    onSuccess?: (feedback?: { title: string; message: string; variant: "success" | "error" | "warning" | "info" }) => void;
 }
 
 export default function ConfigureMedalModal({
@@ -29,7 +30,28 @@ export default function ConfigureMedalModal({
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
 
-    // Cargar datos de medallas cuando se abre el modal
+    // Alert states (floating overlay)
+    const [alertOpen, setAlertOpen] = useState(false);
+    const [alertTitle, setAlertTitle] = useState<string>("");
+    const [alertMessage, setAlertMessage] = useState<string>("");
+    const [alertVariant, setAlertVariant] = useState<"success" | "error" | "warning" | "info">("success");
+    const autoHideTimerRef = useRef<number | null>(null);
+
+    function showAlert(title: string, message: string, variant: "success" | "error" | "warning" | "info" = "success"): void {
+        if (autoHideTimerRef.current !== null) {
+            window.clearTimeout(autoHideTimerRef.current);
+            autoHideTimerRef.current = null;
+        }
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertVariant(variant);
+        setAlertOpen(true);
+        autoHideTimerRef.current = window.setTimeout(() => {
+            setAlertOpen(false);
+            autoHideTimerRef.current = null;
+        }, 4000);
+    }
+
     useEffect(() => {
         if (isOpen) {
             loadMedals();
@@ -40,8 +62,6 @@ export default function ConfigureMedalModal({
         try {
             setIsLoadingData(true);
             const data = await getMedalsArea(olympiadId, areaId);
-            // Mostrar el valor del API tal cual (incluido 0),
-            // pero permitir borrar al editar usando estado string
             setGold(typeof data.gold === "number" ? String(data.gold) : "");
             console.log("Medals data loaded:", data);
             setSilver(typeof data.silver === "number" ? String(data.silver) : "");
@@ -57,6 +77,7 @@ export default function ConfigureMedalModal({
             setBronze("");
             setHonorableMention("");
             setMinimumClassificationScore(0);
+            showAlert("Error al cargar", "No se pudo cargar el medallero.", "error");
         } finally {
             setIsLoadingData(false);
         }
@@ -64,6 +85,24 @@ export default function ConfigureMedalModal({
 
     const handleSubmit = async () => {
         try {
+            // Validaciones previas
+            const fields = [gold, silver, bronze, honorableMention];
+            if (fields.some((v) => v.trim() === "")) {
+                showAlert("Campos vacíos", "Completa todos los campos antes de guardar.", "warning");
+                return;
+            }
+
+            const values = fields.map((v) => parseInt(v, 10));
+            if (values.some((n) => Number.isNaN(n))) {
+                showAlert("Valores inválidos", "Ingresa solo números válidos en todos los campos.", "error");
+                return;
+            }
+
+            if (values.some((n) => n < 0)) {
+                showAlert("Número negativo", "Los valores no pueden ser negativos.", "error");
+                return;
+            }
+
             setIsLoading(true);
             await createMedals(olympiadId, areaId, {
                 gold: gold === "" ? 0 : parseInt(gold, 10),
@@ -74,25 +113,38 @@ export default function ConfigureMedalModal({
                 minimum_classification_score: minimumClassificationScore,
             });
 
-            // Reset form
             setGold("");
             setSilver("");
             setBronze("");
             setHonorableMention("");
             setMinimumClassificationScore(0);
 
-            // Call success callback if provided
             if (onSuccess) {
-                onSuccess();
+                onSuccess({
+                    title: "Medallero guardado",
+                    message: "Los cambios se guardaron correctamente.",
+                    variant: "success",
+                });
             }
 
             onClose();
+            showAlert("Medallero guardado", "Los cambios se guardaron correctamente.", "success");
         } catch (error) {
             console.error("Error creating medals:", error);
+            showAlert("Error al guardar", "No se pudo guardar el medallero. Intenta nuevamente.", "error");
         } finally {
             setIsLoading(false);
         }
     };
+
+    useEffect(() => {
+        return () => {
+            if (autoHideTimerRef.current !== null) {
+                window.clearTimeout(autoHideTimerRef.current);
+                autoHideTimerRef.current = null;
+            }
+        };
+    }, []);
 
     return (
         <Modal
@@ -205,6 +257,20 @@ export default function ConfigureMedalModal({
                 )}
             </div>
 
+            {alertOpen && (
+                <div
+                    className="fixed bottom-6 right-6 z-[1000] w-[360px] max-w-[92vw] pointer-events-none"
+                    role="presentation"
+                >
+                    <div className="pointer-events-auto" role="alert" aria-live="polite">
+                        <Alert
+                            variant={alertVariant}
+                            title={alertTitle}
+                            message={alertMessage}
+                        />
+                    </div>
+                </div>
+            )}
         </Modal>
     );
 }
