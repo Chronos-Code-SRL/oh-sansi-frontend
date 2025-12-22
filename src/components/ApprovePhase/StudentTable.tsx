@@ -11,7 +11,7 @@ import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Button from "../ui/button/Button";
 import Alert from "../ui/alert/Alert";
-import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
+import { updatePhaseStatus, getPhaseStatus, getOlympiadPhases } from "../../api/services/phaseService";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import CommentModal from "../Grade/CommentModal";
@@ -19,6 +19,7 @@ import ApprovePhaseModal from "./ApprovePhaseModal";
 import { getMedalsArea } from "../../api/services/medalServices";
 import { Medals } from "../../types/Medal";
 import { EndorseErrorItem } from "../../types/Phase";
+import { getLastPhaseStatus } from "../../api/services/contestantService";
 
 interface Props {
     idPhase: number;
@@ -68,6 +69,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [medalsLoading, setMedalsLoading] = useState(false);
     const [medalsError, setMedalsError] = useState<string | null>(null);
 
+    // Control para mostrar medallero solo cuando la última fase está avalada
+    const [canShowMedals, setCanShowMedals] = useState(false);
+    // Determinar si la fase actual es la última del flujo
+    const [isCurrentPhaseLast, setIsCurrentPhaseLast] = useState<boolean | null>(null);
+
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
@@ -112,7 +118,45 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idArea]);
 
-    // Cargar medallero del área (solo lectura)
+    // Determinar si la fase actual es la última de la olimpiada (por orden)
+    useEffect(() => {
+        let alive = true;
+        async function computeIsLast() {
+            try {
+                const phases = await getOlympiadPhases(idOlympiad);
+                const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
+                    if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
+                    return acc;
+                }, null);
+                if (!alive) return;
+                setIsCurrentPhaseLast(last ? last.id === idPhase : null);
+            } catch {
+                if (alive) setIsCurrentPhaseLast(null);
+            }
+        }
+        if (idOlympiad && idPhase) void computeIsLast(); else setIsCurrentPhaseLast(null);
+        return () => { alive = false; };
+    }, [idOlympiad, idPhase]);
+
+    // Validar estado de la última fase vía endpoint y habilitar medallero solo si procede
+    useEffect(() => {
+        let alive = true;
+        async function validateLastPhaseStatus() {
+            if (!idOlympiad || !idArea || !selectedLevelId) { if (alive) setCanShowMedals(false); return; }
+            if (!isCurrentPhaseLast) { if (alive) setCanShowMedals(false); return; }
+            try {
+                await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
+                if (alive) setCanShowMedals(true);
+            } catch (err: any) {
+                const status = err?.response?.status;
+                if (alive) setCanShowMedals(status === 403 ? true : false);
+            }
+        }
+        void validateLastPhaseStatus();
+        return () => { alive = false; };
+    }, [idOlympiad, idArea, selectedLevelId, isCurrentPhaseLast]);
+
+    // Cargar medallero del área (solo lectura) solo cuando corresponde mostrarlo
     useEffect(() => {
         let alive = true;
         async function fetchMedalsArea() {
@@ -130,15 +174,15 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 if (alive) setMedalsLoading(false);
             }
         }
-        // Solo intentamos cargar si los IDs son válidos (>0)
-        if (idOlympiad && idArea) {
+        // Solo intentamos cargar si es la última fase válida y está habilitado mostrar
+        if (idOlympiad && idArea && canShowMedals) {
             void fetchMedalsArea();
         } else {
             setMedalsArea(null);
             setMedalsError(null);
         }
         return () => { alive = false; };
-    }, [idOlympiad, idArea]);
+    }, [idOlympiad, idArea, canShowMedals]);
 
     useEffect(() => {
         if (selectedLevelId == null) {
@@ -364,6 +408,21 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     );
                     setStudents(refreshed);
                     lastUpdateAtRef.current = new Date().toISOString();
+                    // Revalidar visibilidad del medallero tras avalar
+                    try {
+                        const phases = await getOlympiadPhases(idOlympiad);
+                        const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
+                            if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
+                            return acc;
+                        }, null);
+                        setIsCurrentPhaseLast(last ? last.id === idPhase : null);
+                    } catch { }
+                    try {
+                        await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
+                        setCanShowMedals(true);
+                    } catch {
+                        setCanShowMedals(false);
+                    }
                 }
             } catch (e) {
                 console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
@@ -495,8 +554,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 </div>
             )}
 
-            {/* Barra de medallero (solo lectura) debajo del buscador */}
-            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+            {/* Barra de medallero (solo lectura) debajo del buscador: habilitado por getLastPhaseStatus */}
+            {canShowMedals && (
                 <div className="mb-4">
                     {medalsLoading && (
                         <p className="text-xs mt-1 text-black-700">Cargando medallero...</p>
