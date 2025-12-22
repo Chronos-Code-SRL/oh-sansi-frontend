@@ -62,17 +62,17 @@ export const getContestantsClassifieds = async (
     return res.data;
 };
 
-export const getAwardWinningCompetitors = async (
-    olympiadId: number,
-    areaId: number,
-): Promise<AwardWinningCompetitors[]> => {
+// export const getAwardWinningCompetitors = async (
+//     olympiadId: number,
+//     areaId: number,
+// ): Promise<AwardWinningCompetitors[]> => {
 
-    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
-        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
-    );
+//     const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+//         `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
+//     );
 
-    return res.data.contestants;
-};
+//     return res.data.contestants;
+// };
 
 export const getAwardWinningCompetitorsArea = async (
     olympiadId: number,
