@@ -1,6 +1,6 @@
 import { ohSansiApi } from "../ohSansiApi";
 import {
-    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsResponse,
+    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitorsByArea, AwardWinningCompetitorsResponse,
     CertificateContestant,
     ConstestantRanked, Contestant, ContestantMedal, Evaluation,
     EvaluationUpdatePayload, FilterList,
@@ -69,6 +69,19 @@ export const getAwardWinningCompetitors = async (
 
     const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
         `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
+    );
+
+    return res.data.contestants;
+};
+
+export const getAwardWinningCompetitorsArea = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number
+): Promise<AwardWinningCompetitorsByArea[]> => {
+
+    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
     );
 
     return res.data.contestants;

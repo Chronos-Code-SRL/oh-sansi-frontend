@@ -131,14 +131,12 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Lista de Premiados",
     path: "/lista-competidores-premiados",
-    subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
   {
     icon: <ListIcon />,
     name: "Lista para Certificados",
     path: "/lista-competidores-certificados",
-    subItems: [],
     permission: UPermission.CERTIFICATED_CONTESTANTS_LIST,
   },
   {
@@ -449,48 +447,6 @@ const AppSidebar: React.FC = () => {
 
           return { ...item, subItems: areasWithPhases };
         }
-        return { ...item, subItems: item.subItems };
-      }
-
-      if (item.name === "Lista para Certificados") {
-        const areas = getAreasForPermission(item.permission);
-        if (areas.length > 0) {
-          const areasOnly = areas.map((area) => {
-            const olympiadId = area.path.split("/")[2];
-
-            return {
-              id: area.id,
-              name: area.name,
-              path: `/lista-competidores-certificados/${olympiadId}/${encodeURIComponent(
-                area.name
-              )}/${area.id}`
-            };
-          });
-
-          return { ...item, subItems: areasOnly };
-        }
-
-        return { ...item, subItems: item.subItems };
-      }
-
-      if (item.name === "Lista de Premiados") {
-        const areas = getAreasForPermission(item.permission);
-        if (areas.length > 0) {
-          const areasOnly = areas.map((area) => {
-            const olympiadId = area.path.split("/")[2];
-
-            return {
-              id: area.id,
-              name: area.name,
-              path: `/lista-competidores-premiados/${olympiadId}/${encodeURIComponent(
-                area.name
-              )}/${area.id}`
-            };
-          });
-
-          return { ...item, subItems: areasOnly };
-        }
-
         return { ...item, subItems: item.subItems };
       }
 

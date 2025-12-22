@@ -13,6 +13,7 @@ import autoTable from "jspdf-autotable";
 import ScrollToTopButton from "../ui/button/ScrollToTopButton";
 import FloatingDownloadButton from "./FloatingDownloadButton";
 import ClearFiltersButton from "../ui/button/CleanFiltersButton";
+import Button from "../ui/button/Button";
 
 interface FilterBarProps {
   olympiadId: number;
@@ -32,8 +33,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
   const [notaRange, setNotaRange] = useState<{ min: number; max: number } | null>(null);
 
-  //Niveles
+  // Niveles
   const [levels, setLevels] = useState<LevelOption[]>([]);
+
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     const fetchContestants = async () => {
@@ -43,7 +48,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
         setContestants(data);
       } catch (err) {
         console.error(err);
-        setError("Error al cargar los concursantes");
+        setError("Error al cargar los concursantes o No se inscribieron concursantes.");
       } finally {
         setLoading(false);
       }
@@ -66,6 +71,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   }, []);
 
   const filteredContestants = contestants.filter((c) => {
+    // Paginar resultado filtrado
+
     const byGender = selectedGender.length === 0 || selectedGender.includes(c.gender.toLowerCase());
     const byDep = selectedDepartamento.length === 0 || selectedDepartamento.includes(c.department.toLowerCase());
     const byArea = selectedArea.length === 0 || selectedArea.includes(c.area_name.toLowerCase());
@@ -80,6 +87,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
 
     return byGender && byDep && byArea && byGrado && byNivel && byEstado && byNota;
   });
+
+  // const totalPages = Math.ceil(filteredContestants.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredContestants.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const paginatedContestants = filteredContestants.slice(start, start + pageSize);
 
   const handleClearFilters = () => {
     setSelectedGender([]);
@@ -165,6 +177,18 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
     XLSX.writeFile(workbook, "reporte_concursantes_filtrados.xlsx");
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    contestants,
+    selectedGender,
+    selectedDepartamento,
+    selectedArea,
+    selectedGrado,
+    selectedNivel,
+    selectedEstado,
+    notaRange
+  ]);
 
   return (
     <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-5 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-8">
@@ -273,30 +297,33 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
             <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
               <TableHeader className="bg-gray-100 border-b border-border bg-muted/50 ">
                 <TableRow >
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Género</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Área</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Género</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
                   <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
                   <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredContestants.map((c) => (
-                  <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
-                    <td className="px-5 py-4 text-sm text-center">{c.first_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.last_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.ci_document}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.gender}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.department}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.area_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.grade_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.level_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">
+                {paginatedContestants.map((c) => (
+                  // <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
+                  // <TableRow key={c.contestant_id ?? `${c.ci_document}-${c.first_name}`} className="hover:bg-gray-50 border-b border-border last:border-0">
+                  <TableRow key={crypto.randomUUID()} className="hover:bg-gray-50 border-b border-border last:border-0" >
+
+                    <td className="px-4 py-4 text-sm text-center">{c.first_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.last_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.ci_document}</td>
+                    <td className="px-3 py-4 text-sm text-center">{c.gender}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.department}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.area_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.grade_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.level_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">
                       {c.score !== null ? c.score : "—"}
                     </td>
                     <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
@@ -309,7 +336,40 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
               </TableBody>
             </Table>
           )}
+           {totalPages > 1 && (
+          <div className="flex justify-center mt-4 items-center space-x-3">
+
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              type="button"
+            >
+              Anterior
+            </Button>
+
+            <span className="px-2 text-sm text-gray-700">
+              {currentPage} de {totalPages}
+            </span>
+
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              type="button"
+            >
+              Siguiente
+            </Button>
+
+          </div>
+        )}
+
+
         </div>
+        
+
         <FloatingDownloadButton
           hasData={filteredContestants.length > 0}
           onPDF={handleDownloadPDF}

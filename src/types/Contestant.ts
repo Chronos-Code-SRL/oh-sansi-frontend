@@ -61,19 +61,23 @@ export interface ConstestantRanked {
     score: number | null;
 }
 
-export interface AwardWinningCompetitorsResponse {
-    contestants: AwardWinningCompetitors[];
-    status: number;
-}
-export interface AwardWinningCompetitors {
-    contestant_id: number;
+export interface AwardWinningCompetitorsByArea {
     first_name: string;
     last_name: string;
-    ci_document: string;
     school_name: string;
     department: string;
-    classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+    area_name: string;
+    level_name: string;
+    score: number;
+    classification_place: "Oro" | "Plata" | "Bronce" | "Mención honorífica" | null;
+    tutor: string;
+    area_responsible: string;
 }
+
+export interface AwardWinningCompetitorsResponse {
+    contestants: AwardWinningCompetitorsByArea[];
+}
+
 export interface ContestantStats {
     total: number;
     classified: number;

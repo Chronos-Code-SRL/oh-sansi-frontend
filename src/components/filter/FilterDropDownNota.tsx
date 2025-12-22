@@ -11,7 +11,7 @@ interface FilterDropdownNotaProps {
 export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
   label = "Nota",
   initialValue = 0,
-  finalValue = 100,
+  finalValue = 500,
   onConfirm,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +41,12 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    setNotaInicial(initialValue);
+    setNotaFinal(finalValue);
+  }, [initialValue, finalValue]);
+
+
   return (
     <div ref={dropdownRef} className="relative inline-block text-left m-1">
       <button
@@ -64,7 +70,7 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
                 value={notaInicial}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value >= 0 && value <= 100) setNotaInicial(value);
+                  if (value >= 0) setNotaInicial(value);
                 }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
@@ -77,7 +83,7 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
                 value={notaFinal}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value >= 0 && value <= 100) setNotaFinal(value);
+                  if (value >= 0) setNotaFinal(value);
                 }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
