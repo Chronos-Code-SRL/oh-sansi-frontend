@@ -14,3 +14,41 @@ ohSansiApi.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Interceptor para convertir scores de string a number
+// (necesario porque PostgreSQL numeric(10,2) devuelve strings)
+ohSansiApi.interceptors.response.use((response) => {
+  // Función recursiva para convertir campos score de string a number
+  const parseScoreFields = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    
+    if (Array.isArray(obj)) {
+      return obj.map(parseScoreFields);
+    }
+    
+    if (typeof obj === 'object') {
+      const parsed: any = {};
+      for (const key in obj) {
+        if (key === 'score' && typeof obj[key] === 'string') {
+          // Convertir score string a number
+          const num = parseFloat(obj[key]);
+          parsed[key] = isNaN(num) ? null : num;
+        } else {
+          parsed[key] = parseScoreFields(obj[key]);
+        }
+      }
+      return parsed;
+    }
+    
+    return obj;
+  };
+  
+  if (response.data) {
+    response.data = parseScoreFields(response.data);
+  }
+  
+  return response;
+}, (error) => {
+  // Pasar errores sin modificar
+  return Promise.reject(error);
+});

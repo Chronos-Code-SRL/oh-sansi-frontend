@@ -25,3 +25,12 @@ export interface LastPhaseStatusResponse {
     message: string;
     status: number;
 }
+
+export interface EndorseErrorItem {
+    medal: string;
+    score: string;
+    count: number;
+    available: number;
+    position: number;
+    message: string;
+};

@@ -11,11 +11,15 @@ import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
 import Button from "../ui/button/Button";
 import Alert from "../ui/alert/Alert";
-import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
+import { updatePhaseStatus, getPhaseStatus, getOlympiadPhases } from "../../api/services/phaseService";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import CommentModal from "../Grade/CommentModal";
 import ApprovePhaseModal from "./ApprovePhaseModal";
+import { getMedalsArea } from "../../api/services/medalServices";
+import { Medals } from "../../types/Medal";
+import { EndorseErrorItem } from "../../types/Phase";
+import { getLastPhaseStatus } from "../../api/services/contestantService";
 
 interface Props {
     idPhase: number;
@@ -40,6 +44,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [approveDraft, setApproveDraft] = useState("");
     const [endorsed, setEndorsed] = useState(false);
 
+    const [endorseErrorMessage, setEndorseErrorMessage] = useState<string | null>(null);
+    const [endorseErrorItems, setEndorseErrorItems] = useState<EndorseErrorItem[] | null>(null);
+
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
@@ -57,9 +64,27 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Medallero (solo lectura) por área de la olimpiada
+    const [medalsArea, setMedalsArea] = useState<Medals | null>(null);
+    const [medalsLoading, setMedalsLoading] = useState(false);
+    const [medalsError, setMedalsError] = useState<string | null>(null);
+
+    // Control para mostrar medallero solo cuando la última fase está avalada
+    const [canShowMedals, setCanShowMedals] = useState(false);
+    // Determinar si la fase actual es la última del flujo
+    const [isCurrentPhaseLast, setIsCurrentPhaseLast] = useState<boolean | null>(null);
+
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
+
+    // Limpiar errores del modal al abrirlo
+    useEffect(() => {
+        if (openApproveModal) {
+            setEndorseErrorMessage(null);
+            setEndorseErrorItems(null);
+        }
+    }, [openApproveModal]);
 
     const getEvaluationId = (s: Contestant): number | string => {
         return (s as any).evaluation_id ?? s.contestant_id;
@@ -92,6 +117,72 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         } fetchLevels();
         return () => { alive = false; };
     }, [idArea]);
+
+    // Determinar si la fase actual es la última de la olimpiada (por orden)
+    useEffect(() => {
+        let alive = true;
+        async function computeIsLast() {
+            try {
+                const phases = await getOlympiadPhases(idOlympiad);
+                const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
+                    if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
+                    return acc;
+                }, null);
+                if (!alive) return;
+                setIsCurrentPhaseLast(last ? last.id === idPhase : null);
+            } catch {
+                if (alive) setIsCurrentPhaseLast(null);
+            }
+        }
+        if (idOlympiad && idPhase) void computeIsLast(); else setIsCurrentPhaseLast(null);
+        return () => { alive = false; };
+    }, [idOlympiad, idPhase]);
+
+    // Validar estado de la última fase vía endpoint y habilitar medallero solo si procede
+    useEffect(() => {
+        let alive = true;
+        async function validateLastPhaseStatus() {
+            if (!idOlympiad || !idArea || !selectedLevelId) { if (alive) setCanShowMedals(false); return; }
+            if (!isCurrentPhaseLast) { if (alive) setCanShowMedals(false); return; }
+            try {
+                await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
+                if (alive) setCanShowMedals(true);
+            } catch (err: any) {
+                const status = err?.response?.status;
+                if (alive) setCanShowMedals(status === 403 ? true : false);
+            }
+        }
+        void validateLastPhaseStatus();
+        return () => { alive = false; };
+    }, [idOlympiad, idArea, selectedLevelId, isCurrentPhaseLast]);
+
+    // Cargar medallero del área (solo lectura) solo cuando corresponde mostrarlo
+    useEffect(() => {
+        let alive = true;
+        async function fetchMedalsArea() {
+            try {
+                setMedalsLoading(true);
+                setMedalsError(null);
+                const data = await getMedalsArea(idOlympiad, idArea);
+                if (!alive) return;
+                setMedalsArea(data);
+            } catch (err) {
+                if (!alive) return;
+                setMedalsArea(null);
+                setMedalsError("No se pudo cargar el medallero del área.");
+            } finally {
+                if (alive) setMedalsLoading(false);
+            }
+        }
+        // Solo intentamos cargar si es la última fase válida y está habilitado mostrar
+        if (idOlympiad && idArea && canShowMedals) {
+            void fetchMedalsArea();
+        } else {
+            setMedalsArea(null);
+            setMedalsError(null);
+        }
+        return () => { alive = false; };
+    }, [idOlympiad, idArea, canShowMedals]);
 
     useEffect(() => {
         if (selectedLevelId == null) {
@@ -239,6 +330,16 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
         return matchesSearch;
     });
+    // Ordenar por nota de mayor a menor (null/undefined al final)
+    const sortedStudents = [...filteredStudents].sort((a, b) => {
+        const aScore = typeof a.score === "number" ? a.score : -Infinity;
+        const bScore = typeof b.score === "number" ? b.score : -Infinity;
+        if (bScore !== aScore) return bScore - aScore;
+        // Desempate estable por apellido y nombre para evitar saltos visuales
+        const lastCmp = a.last_name.localeCompare(b.last_name);
+        if (lastCmp !== 0) return lastCmp;
+        return a.first_name.localeCompare(b.first_name);
+    });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
         if (phaseStatus === "Terminada") {
@@ -307,15 +408,38 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                     );
                     setStudents(refreshed);
                     lastUpdateAtRef.current = new Date().toISOString();
+                    // Revalidar visibilidad del medallero tras avalar
+                    try {
+                        const phases = await getOlympiadPhases(idOlympiad);
+                        const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
+                            if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
+                            return acc;
+                        }, null);
+                        setIsCurrentPhaseLast(last ? last.id === idPhase : null);
+                    } catch { }
+                    try {
+                        await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
+                        setCanShowMedals(true);
+                    } catch {
+                        setCanShowMedals(false);
+                    }
                 }
             } catch (e) {
                 console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
             }
-        } catch (e) {
-            setError("No se pudo avalar la fase. Intenta nuevamente.");
+            // cerrar modal solo en éxito
+            setOpenApproveModal(false);
+        } catch (e: any) {
+            const data = e?.response?.data;
+            if (data?.can_endorse === false && Array.isArray(data?.errors)) {
+                setEndorseErrorMessage( "Ajusta las calificaciones o criterios de desempate y vuelve a intentarlo.");
+                setEndorseErrorItems(data.errors);
+                // Mantener modal abierto para mostrar el detalle de empates
+            } else {
+                setError("No se pudo avalar la fase. Intenta nuevamente.");
+            }
         } finally {
             setSavingApprove(false);
-            setOpenApproveModal(false);
         }
     }
 
@@ -430,6 +554,38 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 </div>
             )}
 
+            {/* Barra de medallero (solo lectura) debajo del buscador: habilitado por getLastPhaseStatus */}
+            {canShowMedals && (
+                <div className="mb-4">
+                    {medalsLoading && (
+                        <p className="text-xs mt-1 text-black-700">Cargando medallero...</p>
+                    )}
+                    {medalsError && !medalsLoading && (
+                        <p className="text-xs mt-1 text-red-600">{medalsError}</p>
+                    )}
+                    {!medalsLoading && !medalsError && medalsArea && (
+                        <div className="flex flex-nowrap items-center gap-3 overflow-x-auto py-2">
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Oro</span>
+                                <span className="text-xl font-semibold text-amber-600">{medalsArea.gold}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Plata</span>
+                                <span className="text-xl font-semibold text-gray-500">{medalsArea.silver}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Bronce</span>
+                                <span className="text-xl font-semibold text-orange-600">{medalsArea.bronze}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Mención Honorífica</span>
+                                <span className="text-xl font-semibold text-violet-600">{medalsArea.honorable_mention}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
                     <div className="max-w-full overflow-x-auto"></div>
@@ -464,7 +620,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                                     </td>
                                 </tr>
                             )}
-                            {!loading && !error && filteredStudents.map((s) => {
+                            {!loading && !error && sortedStudents.map((s) => {
                                 return (
                                     <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                         <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
@@ -546,6 +702,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 onChangeDraft={setApproveDraft}
                 onSave={() => void handleApproveSave()}
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
+                errorMessage={endorseErrorMessage ?? undefined}
+                errorItems={endorseErrorItems ?? undefined}
             />
         </>
     )
