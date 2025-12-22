@@ -29,6 +29,7 @@ export default function ConfigureAreaModal({
   const [endGrade, setEndGrade] = useState("");
   const [grades, setGrades] = useState<{ id: number; name: string }[]>([]);
   const [errors, setErrors] = useState<{ name?: string; startGrade?: string; endGrade?: string }>({});
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   const fetchGrades = async () => {
     try {
@@ -155,6 +156,7 @@ export default function ConfigureAreaModal({
       setNewLevelName("");
       setStartGrade("");
       setEndGrade("");
+      setIsFeedbackModalOpen(true);
     } catch (error: any) {
       alert("No se pudo agregar el nivel.");
     }
@@ -251,7 +253,7 @@ export default function ConfigureAreaModal({
 
             <div className="flex justify-end">
               <Button type="submit" variant="primary" >
-                + Agregar Nivel
+                Agregar Nivel
               </Button>
             </div>
           </form>
@@ -294,6 +296,32 @@ export default function ConfigureAreaModal({
           </div>
         </ComponentCard>
       </div>
+      <Modal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+        showCloseButton={true}
+        isFullscreen={false}
+        className="max-w-md mx-auto shadow-lg"
+      >
+        <div className="p-6 text-center">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+            ¡Nivel agregado!
+          </h2>
+
+          <Label>
+            El nivel ha sido registrado correctamente para el área {areaName}.
+          </Label>
+
+          <Button
+            size="md"
+            variant="primary"
+            className="w-full mt-4"
+            onClick={() => setIsFeedbackModalOpen(false)}
+          >
+            Aceptar
+          </Button>
+        </div>
+      </Modal>
     </Modal>
   );
 }
