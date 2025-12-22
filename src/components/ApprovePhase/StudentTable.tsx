@@ -16,6 +16,8 @@ import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
 import CommentModal from "../Grade/CommentModal";
 import ApprovePhaseModal from "./ApprovePhaseModal";
+import { getMedalsArea } from "../../api/services/medalServices";
+import { Medals } from "../../types/Medal";
 
 interface Props {
     idPhase: number;
@@ -57,6 +59,11 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Medallero (solo lectura) por área de la olimpiada
+    const [medalsArea, setMedalsArea] = useState<Medals | null>(null);
+    const [medalsLoading, setMedalsLoading] = useState(false);
+    const [medalsError, setMedalsError] = useState<string | null>(null);
+
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
@@ -92,6 +99,34 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         } fetchLevels();
         return () => { alive = false; };
     }, [idArea]);
+
+    // Cargar medallero del área (solo lectura)
+    useEffect(() => {
+        let alive = true;
+        async function fetchMedalsArea() {
+            try {
+                setMedalsLoading(true);
+                setMedalsError(null);
+                const data = await getMedalsArea(idOlympiad, idArea);
+                if (!alive) return;
+                setMedalsArea(data);
+            } catch (err) {
+                if (!alive) return;
+                setMedalsArea(null);
+                setMedalsError("No se pudo cargar el medallero del área.");
+            } finally {
+                if (alive) setMedalsLoading(false);
+            }
+        }
+        // Solo intentamos cargar si los IDs son válidos (>0)
+        if (idOlympiad && idArea) {
+            void fetchMedalsArea();
+        } else {
+            setMedalsArea(null);
+            setMedalsError(null);
+        }
+        return () => { alive = false; };
+    }, [idOlympiad, idArea]);
 
     useEffect(() => {
         if (selectedLevelId == null) {
@@ -427,6 +462,38 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                         Avalar Fase
                     </Button>
 
+                </div>
+            )}
+
+            {/* Barra de medallero (solo lectura) debajo del buscador */}
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+                <div className="mb-4">
+                    {medalsLoading && (
+                        <p className="text-xs mt-1 text-black-700">Cargando medallero...</p>
+                    )}
+                    {medalsError && !medalsLoading && (
+                        <p className="text-xs mt-1 text-red-600">{medalsError}</p>
+                    )}
+                    {!medalsLoading && !medalsError && medalsArea && (
+                        <div className="flex flex-nowrap items-center gap-3 overflow-x-auto py-2">
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Oro</span>
+                                <span className="text-xl font-semibold text-amber-600">{medalsArea.gold}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Plata</span>
+                                <span className="text-xl font-semibold text-gray-500">{medalsArea.silver}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Bronce</span>
+                                <span className="text-xl font-semibold text-orange-600">{medalsArea.bronze}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Mención Honorífica</span>
+                                <span className="text-xl font-semibold text-violet-600">{medalsArea.honorable_mention}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
