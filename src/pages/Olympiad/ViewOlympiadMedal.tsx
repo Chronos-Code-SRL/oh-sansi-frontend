@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { SimpleBox } from "../../components/common/SimpleBox";
 import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { Olympiad } from "../../types/Olympiad";
 import { getOlympiads, putOlympiadIdActivate } from "../../api/services/olympiadService";
+import { SimpleBoxMedal } from "../../components/common/SimpleBoxMedal";
 
-export const ViewOlympiad = () => {
+export const ViewOlympiadMedal = () => {
 
     const [olympiads, setOlympiads] = useState<Olympiad[]>([]);
     const [loading, setLoading] = useState(true);
@@ -63,18 +63,18 @@ export const ViewOlympiad = () => {
     return (
         <>
             <PageMeta
-                title="Gestionar Olimpiadas"
+                title="Configurar Medallero de áreas"
                 description="Página para gestionar las olimpiadas."
             />
 
-            <TitleBreadCrumb pageTitle="Configurar Áreas" />
+            <TitleBreadCrumb pageTitle="Configurar Medallero de olimpiadas" />
             <p className="text-sm text-gray-500 mb-4">
-                Selecciona una olimpiada para configurar sus áreas respectivas. Solo las olimpiadas en estado "En planificación" pueden ser configuradas.
+                Selecciona una olimpiada para configurar el medallero de sus áreas respectivas
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {olympiads.map((olympiad) => (
-                    <SimpleBox
+                    <SimpleBoxMedal
                         key={olympiad.id}
                         id={olympiad.id}
                         name={olympiad.name}
@@ -82,6 +82,7 @@ export const ViewOlympiad = () => {
                         startDate={olympiad.start_date}
                         endDate={olympiad.end_date}
                         areas={olympiad.areas}
+                        buttonName="Configurar Medallero"
                         onToggleActive={handleToggleActive}
                     />
                 ))}
