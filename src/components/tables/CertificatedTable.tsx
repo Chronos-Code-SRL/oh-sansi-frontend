@@ -334,7 +334,7 @@ export default function CertificatedTable() {
                       <TableBody>
                           {loading && (
                               <TableRow>
-                                  <td colSpan={7} className="px-4 py-4 text-center">
+                                  <td colSpan={10} className="px-4 py-4 text-center">
                                       Cargando...
                                   </td>
                               </TableRow>
@@ -342,7 +342,7 @@ export default function CertificatedTable() {
 
                           {!loading && error && (
                               <TableRow>
-                                  <td colSpan={7} className="px-4 py-4 text-center text-red-600">
+                                  <td colSpan={10} className="px-4 py-4 text-center text-red-600">
                                       {error}
                                   </td>
                               </TableRow>
@@ -350,7 +350,7 @@ export default function CertificatedTable() {
 
                           {!loading && !error && students.length === 0 && (
                               <TableRow>
-                                  <td colSpan={7} className="px-4 py-4 text-center text-gray-500">
+                                  <td colSpan={10} className="px-4 py-4 text-center text-gray-500">
                                       No existen estudiantes para generar certificados para el nivel seleccionado.
                                   </td>
                               </TableRow>
