@@ -1,6 +1,6 @@
 import { ohSansiApi } from "../ohSansiApi";
 import {
-    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitors, AwardWinningCompetitorsByArea, AwardWinningCompetitorsResponse,
+    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitorsByArea, AwardWinningCompetitorsResponse,
     CertificateContestant,
     ConstestantRanked, Contestant, ContestantMedal, Evaluation,
     EvaluationUpdatePayload, FilterList,

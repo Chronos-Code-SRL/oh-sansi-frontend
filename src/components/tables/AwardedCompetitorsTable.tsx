@@ -140,20 +140,24 @@ export default function AwardedContestantsTable() {
                     levelId
                 );
 
-                const MEDAL_ORDER: Record<string | null, number> = {
+                // type Medal = "Oro" | "Plata" | "Bronce" | "Mención honorífica" | null;
+
+
+                const MEDAL_ORDER: { [key: string]: number } = {
                     "Oro": 1,
                     "Plata": 2,
                     "Bronce": 3,
                     "Mención honorífica": 4,
-                    null: 99
+                    "null": 99,
                 };
 
                 const ordered = [...data]
                 .filter(s => s.classification_place !== null) // solo premiados
                 .sort(
-                    (a, b) => MEDAL_ORDER[a.classification_place] - MEDAL_ORDER[b.classification_place]
+                    (a, b) =>
+                    MEDAL_ORDER[String(a.classification_place)] -
+                    MEDAL_ORDER[String(b.classification_place)]
                 );
-
 
                 if (!alive) return;
 
