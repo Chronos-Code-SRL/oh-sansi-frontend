@@ -18,6 +18,7 @@ import CommentModal from "../Grade/CommentModal";
 import ApprovePhaseModal from "./ApprovePhaseModal";
 import { getMedalsArea } from "../../api/services/medalServices";
 import { Medals } from "../../types/Medal";
+import { EndorseErrorItem } from "../../types/Phase";
 
 interface Props {
     idPhase: number;
@@ -41,6 +42,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [savingApprove, setSavingApprove] = useState(false);
     const [approveDraft, setApproveDraft] = useState("");
     const [endorsed, setEndorsed] = useState(false);
+
+    const [endorseErrorMessage, setEndorseErrorMessage] = useState<string | null>(null);
+    const [endorseErrorItems, setEndorseErrorItems] = useState<EndorseErrorItem[] | null>(null);
 
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
@@ -67,6 +71,14 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
+
+    // Limpiar errores del modal al abrirlo
+    useEffect(() => {
+        if (openApproveModal) {
+            setEndorseErrorMessage(null);
+            setEndorseErrorItems(null);
+        }
+    }, [openApproveModal]);
 
     const getEvaluationId = (s: Contestant): number | string => {
         return (s as any).evaluation_id ?? s.contestant_id;
@@ -346,11 +358,19 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
             } catch (e) {
                 console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
             }
-        } catch (e) {
-            setError("No se pudo avalar la fase. Intenta nuevamente.");
+            // cerrar modal solo en éxito
+            setOpenApproveModal(false);
+        } catch (e: any) {
+            const data = e?.response?.data;
+            if (data?.can_endorse === false && Array.isArray(data?.errors)) {
+                setEndorseErrorMessage( "No se puede avalar la fase debido a empates.");
+                setEndorseErrorItems(data.errors);
+                // Mantener modal abierto para mostrar el detalle de empates
+            } else {
+                setError("No se pudo avalar la fase. Intenta nuevamente.");
+            }
         } finally {
             setSavingApprove(false);
-            setOpenApproveModal(false);
         }
     }
 
@@ -613,6 +633,8 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 onChangeDraft={setApproveDraft}
                 onSave={() => void handleApproveSave()}
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
+                errorMessage={endorseErrorMessage ?? undefined}
+                errorItems={endorseErrorItems ?? undefined}
             />
         </>
     )

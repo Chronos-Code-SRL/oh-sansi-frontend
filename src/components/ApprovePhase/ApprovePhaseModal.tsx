@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useEffect } from "react";
 import { AlertHexaIcon } from "../../icons";
 import Button from "../ui/button/Button";
+import { EndorseErrorItem } from "../../types/Phase";
 
 interface ApprovePhaseModalProps {
     open: boolean;
@@ -11,6 +12,8 @@ interface ApprovePhaseModalProps {
     onChangeDraft: (value: string) => void;
     onSave: () => void;
     onClose: () => void;
+    errorMessage?: string;
+    errorItems?: EndorseErrorItem[];
 }
 
 export default function ApprovePhaseModal({
@@ -19,6 +22,8 @@ export default function ApprovePhaseModal({
     saving,
     onSave,
     onClose,
+    errorMessage,
+    errorItems,
 }: ApprovePhaseModalProps) {
 
     useEffect(() => {
@@ -75,6 +80,31 @@ export default function ApprovePhaseModal({
                     </button>
                 </div>
 
+                {/* Validation errors from backend (ties exceeding medals) */}
+                {(errorMessage || (errorItems && errorItems.length > 0)) && (
+                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <p className="text-sm font-medium text-red-800">
+                            {errorMessage ?? "No se puede avalar la fase debido a empates que exceden la disponibilidad de medallas."}
+                        </p>
+                        {errorItems && errorItems.length > 0 && (
+                            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-red-900">
+                                {errorItems.map((it, idx) => (
+                                    <li key={idx}>
+                                        <span className="font-semibold">{it.medal}</span> 
+                                        · puntaje {it.score} 
+                                        · posición {it.position}: 
+                                        {it.count} empatados, 
+                                        disponibles {it.available}. {it.message}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <p className="mt-3 text-xs text-red-800">
+                            Ajusta las calificaciones o criterios de desempate y vuelve a intentarlo.
+                        </p>
+                    </div>
+                )}
+
                 {/* Footer */}
                 <div className="mt-6 flex items-center justify-end gap-2">
                     <Button
@@ -89,8 +119,9 @@ export default function ApprovePhaseModal({
                         size="sm"
                         onClick={onSave}
                         variant="primary"
+                        disabled={saving}
                     >
-                        Confirmar
+                        {saving ? "Confirmando..." : "Confirmar"}
                     </Button>
                 </div>
 
