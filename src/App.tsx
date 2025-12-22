@@ -24,6 +24,8 @@ import AwardedList from "./pages/Lists/AwardedList";
 import DisqualifyContestant from "./pages/DisqualifyContestant/DisqualifyContestant";
 import AuditPage from "./pages/Lists/AuditPage";
 import CertificatedList from "./pages/Lists/CertificatedList";
+import { ViewOlympiadMedal } from "./pages/Olympiad/ViewOlympiadMedal";
+import ViewAreasMedal from "./pages/Olympiad/ViewAreasMedal";
 
 export default function App() {
   return (
@@ -50,6 +52,7 @@ export default function App() {
 
             {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
+            <Route path="/OlimpiadaAreasMedallero/:id" element={<ViewAreasMedal />} />
 
             {/* Register User */}
             < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
@@ -66,6 +69,7 @@ export default function App() {
 
             {/* Medals */}
             <Route path="/medallero" element={<MedalsPage />} />
+            <Route path="/OlimpiadasMedallero" element={<ViewOlympiadMedal />} />
 
             {/* Change History */}
             <Route path="/historial-cambios" element={<AuditPage />} />
