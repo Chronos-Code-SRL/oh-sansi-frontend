@@ -286,6 +286,16 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
         return matchesSearch;
     });
+    // Ordenar por nota de mayor a menor (null/undefined al final)
+    const sortedStudents = [...filteredStudents].sort((a, b) => {
+        const aScore = typeof a.score === "number" ? a.score : -Infinity;
+        const bScore = typeof b.score === "number" ? b.score : -Infinity;
+        if (bScore !== aScore) return bScore - aScore;
+        // Desempate estable por apellido y nombre para evitar saltos visuales
+        const lastCmp = a.last_name.localeCompare(b.last_name);
+        if (lastCmp !== 0) return lastCmp;
+        return a.first_name.localeCompare(b.first_name);
+    });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
         if (phaseStatus === "Terminada") {
@@ -551,7 +561,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                                     </td>
                                 </tr>
                             )}
-                            {!loading && !error && filteredStudents.map((s) => {
+                            {!loading && !error && sortedStudents.map((s) => {
                                 return (
                                     <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
                                         <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
