@@ -373,7 +373,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         } catch (e: any) {
             const data = e?.response?.data;
             if (data?.can_endorse === false && Array.isArray(data?.errors)) {
-                setEndorseErrorMessage( "No se puede avalar la fase debido a empates.");
+                setEndorseErrorMessage( "Ajusta las calificaciones o criterios de desempate y vuelve a intentarlo.");
                 setEndorseErrorItems(data.errors);
                 // Mantener modal abierto para mostrar el detalle de empates
             } else {
