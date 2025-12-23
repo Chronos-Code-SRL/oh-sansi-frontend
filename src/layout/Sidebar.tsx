@@ -41,11 +41,8 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.APPROVE_PHASE,
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.AWARDED_CONTESTANTS_LIST,
-    UPermission.MEDAL_PAGE,
     UPermission.CERTIFICATED_CONTESTANTS_LIST,
     UPermission.VIEW_OLYMPIAD,
-
-
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
@@ -483,7 +480,8 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      // Usar los items realmente renderizados para evitar desalineación de índices
+      const items = menuType === "main" ? menuItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -502,7 +500,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, menuItems]);
 
   useEffect(() => {
     const prev = prevOpenSubmenuRef.current;
