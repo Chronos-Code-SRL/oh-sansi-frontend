@@ -3,7 +3,7 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const ohSansiApi = axios.create({
-    baseURL: `${BASE_URL}/api`
+  baseURL: `${BASE_URL}/api`
 })
 
 // Interceptor para agregar token en cada request
@@ -18,6 +18,16 @@ ohSansiApi.interceptors.request.use((config) => {
 // Interceptor para convertir scores de string a number
 // (necesario porque PostgreSQL numeric(10,2) devuelve strings)
 ohSansiApi.interceptors.response.use((response) => {
+  // Evitar transformar respuestas binarias (blob/arraybuffer)
+  if (response?.config?.responseType === 'blob' || response?.config?.responseType === 'arraybuffer') {
+    return response;
+  }
+
+  // También evitar si data ya es un Blob
+  if (typeof Blob !== 'undefined' && response?.data instanceof Blob) {
+    return response;
+  }
+
   // Función recursiva para convertir campos score de string a number
   const parseScoreFields = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
