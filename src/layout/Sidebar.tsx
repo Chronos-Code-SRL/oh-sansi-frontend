@@ -35,7 +35,6 @@ const rolePermissions: Record<number, UPermission[]> = {
   ],
   2: [ // Responsable Académico
     UPermission.REGISTER_EVALUATOR,
-    UPermission.REGISTER_COMPETITOR,
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,

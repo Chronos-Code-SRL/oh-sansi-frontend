@@ -71,6 +71,16 @@ export const AuditLogsTable = () => {
 
       return dayMatch && monthMatch && yearMatch;
     })
+    
+    .filter((log) => {
+      const oldScore = log.changes.old_values?.score;
+      const newScore = log.changes.new_values?.score;
+
+      const isValidNumber = (v: any) =>
+        typeof v === "number" && !isNaN(v) && v !== 0;
+
+      return isValidNumber(oldScore) || isValidNumber(newScore);
+    })
 
     .filter((log) => {
       const text = search.toLowerCase();
@@ -175,6 +185,14 @@ export const AuditLogsTable = () => {
 
     XLSX.writeFile(workbook, "historial_auditoria.xlsx");
   };
+
+  const mostrarNota = (score?: number | null) => {
+  if (score === null || score === undefined || score === 0) {
+    return "-";
+  }
+  return score;
+};
+
 
   return (
     <>
@@ -281,11 +299,13 @@ export const AuditLogsTable = () => {
                   </td>
 
                   <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
-                    {log.changes.old_values.score ?? "-"}
+                    {mostrarNota(log.changes.old_values?.score)}
+
                   </td>
 
                   <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
-                    {log.changes.new_values.score ?? "-"}
+                    {mostrarNota(log.changes.new_values?.score)}
+
                   </td>
                 </TableRow>
               ))}
