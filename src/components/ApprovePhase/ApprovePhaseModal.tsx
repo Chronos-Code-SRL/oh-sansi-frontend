@@ -14,6 +14,7 @@ interface ApprovePhaseModalProps {
     onClose: () => void;
     errorMessage?: string;
     errorItems?: EndorseErrorItem[];
+    requiresConfirmation?: boolean;
 }
 
 export default function ApprovePhaseModal({
@@ -24,6 +25,7 @@ export default function ApprovePhaseModal({
     onClose,
     errorMessage,
     errorItems,
+    requiresConfirmation = false,
 }: ApprovePhaseModalProps) {
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function ApprovePhaseModal({
 
     if (!open) return null;
 
-    const hasErrors = Boolean(errorMessage || (errorItems && errorItems.length > 0));
+    const hasErrors = Boolean(errorMessage && !requiresConfirmation);
 
     const modal = (
         <div
@@ -55,7 +57,6 @@ export default function ApprovePhaseModal({
 
             <div className="relative z-10 w-[620px] max-w-[92vw] rounded-xl border border-gray-200 bg-white p-6 shadow-2xl">
 
-                {/* Header */}
                 <div className="mb-4 flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-2">
@@ -65,17 +66,13 @@ export default function ApprovePhaseModal({
                             </h2>
                         </div>
 
-                        {hasErrors ? (
-                            <p className="mt-1 text-sm text-gray-700">
-                                No se puede avalar la {phaseName} de este nivel debido a empates que exceden la disponibilidad de medallas.
-                            </p>
-                        ) : (
-                            <p className="mt-1 text-sm text-gray-700">
-                                Se avalará la {phaseName} de este nivel.
-                                Esta acción indica que ya no se podrá modificar nada
-                            </p>
-                        )}
-
+                        <p className="mt-1 text-sm text-gray-700">
+                            {hasErrors
+                                ? errorMessage
+                                : requiresConfirmation
+                                    ? `Se detectaron empates en medallas. Confirme para avalar definitivamente la ${phaseName}.`
+                                    : `Se avalará la ${phaseName} de este nivel. Esta acción indica que ya no se podrá modificar nada.`}
+                        </p>
                     </div>
 
                     <button
@@ -88,63 +85,45 @@ export default function ApprovePhaseModal({
                     </button>
                 </div>
 
-                {/* Validation errors from backend (ties exceeding medals) */}
-                {hasErrors && (
+                {errorItems && errorItems.length > 0 && (
                     <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-4">
-                        <p className="text-sm font-medium text-red-800">
-                            {errorMessage ?? "No se puede avalar la fase debido a empates que exceden la disponibilidad de medallas."}
-                        </p>
-                        {errorItems && errorItems.length > 0 && (
-                            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-red-900">
-                                {errorItems.map((it, idx) => (
-                                    <li key={idx} className="rounded-md bg-white p-3 border border-red-100">
-                                        <p>
-                                            <span className="font-semibold">Medalla {it.medal}</span>
-                                        </p>
-                                        <p>
-                                            Hay <b>{it.count}</b> participantes empatados con nota{" "}
-                                            <b>{Number(it.score).toFixed(2)}</b>, pero solo hay{" "}
-                                            <b>{it.available}</b> medalla(s) disponible(s).
-                                        </p>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                       
+                        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-red-900">
+                            {errorItems.map((it, idx) => (
+                                <li key={idx} className="rounded-md bg-white p-3 border border-red-100">
+                                    <p>
+                                        <span className="font-semibold">Medalla {it.medal}</span>
+                                    </p>
+                                    <p>
+                                        Hay <b>{it.count}</b> participantes empatados con nota{" "}
+                                        <b>{Number(it.score).toFixed(2)}</b>, pero solo hay{" "}
+                                        <b>{it.available}</b> medalla(s) disponible(s).
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 )}
 
                 {/* Footer */}
                 <div className="mt-6 flex items-center justify-end gap-2">
-                    {hasErrors ? (
-                        <Button
-                            size="sm"
-                            onClick={onClose}
-                            variant="primary"
-                        >
-                            Entendido
-                        </Button>
-                    ) : (
-                        <>
-                            <Button
-                                size="sm"
-                                onClick={onClose}
-                                disabled={saving}
-                                variant="outline"
-                            >
-                                Cancelar
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={onSave}
-                                variant="primary"
-                                disabled={saving}
-                            >
-                                {saving ? "Confirmando..." : "Confirmar"}
-                            </Button>
-                        </>
-                    )}
+                    <Button
+                        size="sm"
+                        onClick={onClose}
+                        disabled={saving}
+                        variant="outline"
+                    >
+                        {requiresConfirmation ? "Volver" : "Cancelar"}
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={onSave}
+                        variant="primary"
+                        disabled={saving}
+                    >
+                        {requiresConfirmation ? "Confirmar aval" : (saving ? "Confirmando..." : "Avalar fase")}
+                    </Button>
                 </div>
+
 
             </div>
         </div>

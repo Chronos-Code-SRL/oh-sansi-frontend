@@ -55,7 +55,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
 
-
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
 
@@ -64,25 +63,25 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Medallero (solo lectura) por área de la olimpiada
     const [medalsArea, setMedalsArea] = useState<Medals | null>(null);
     const [medalsLoading, setMedalsLoading] = useState(false);
     const [medalsError, setMedalsError] = useState<string | null>(null);
 
-    // Control para mostrar medallero solo cuando la última fase está avalada
     const [canShowMedals, setCanShowMedals] = useState(false);
-    // Determinar si la fase actual es la última del flujo
+
     const [isCurrentPhaseLast, setIsCurrentPhaseLast] = useState<boolean | null>(null);
+    const [requiresConfirmation, setRequiresConfirmation] = useState(false);
+
 
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
 
-    // Limpiar errores del modal al abrirlo
     useEffect(() => {
         if (openApproveModal) {
             setEndorseErrorMessage(null);
             setEndorseErrorItems(null);
+             setRequiresConfirmation(false);
         }
     }, [openApproveModal]);
 
@@ -118,7 +117,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idArea]);
 
-    // Determinar si la fase actual es la última de la olimpiada (por orden)
     useEffect(() => {
         let alive = true;
         async function computeIsLast() {
@@ -138,7 +136,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idOlympiad, idPhase]);
 
-    // Validar estado de la última fase vía endpoint y habilitar medallero solo si procede
     useEffect(() => {
         let alive = true;
         async function validateLastPhaseStatus() {
@@ -156,7 +153,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         return () => { alive = false; };
     }, [idOlympiad, idArea, selectedLevelId, isCurrentPhaseLast]);
 
-    // Cargar medallero del área (solo lectura) solo cuando corresponde mostrarlo
     useEffect(() => {
         let alive = true;
         async function fetchMedalsArea() {
@@ -174,7 +170,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 if (alive) setMedalsLoading(false);
             }
         }
-        // Solo intentamos cargar si es la última fase válida y está habilitado mostrar
+ 
         if (idOlympiad && idArea && canShowMedals) {
             void fetchMedalsArea();
         } else {
@@ -330,12 +326,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
 
         return matchesSearch;
     });
-    // Ordenar por nota de mayor a menor (null/undefined al final)
+
     const sortedStudents = [...filteredStudents].sort((a, b) => {
         const aScore = typeof a.score === "number" ? a.score : -Infinity;
         const bScore = typeof b.score === "number" ? b.score : -Infinity;
         if (bScore !== aScore) return bScore - aScore;
-        // Desempate estable por apellido y nombre para evitar saltos visuales
+
         const lastCmp = a.last_name.localeCompare(b.last_name);
         if (lastCmp !== 0) return lastCmp;
         return a.first_name.localeCompare(b.first_name);
@@ -387,61 +383,53 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
         }, 3000);
     }
 
-    async function handleApproveSave(): Promise<void> {
-        if (!selectedLevelId) return;
-        setSavingApprove(true);
-        try {
-            await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
-            setEndorsed(true);
-            setAlertTitle("Fase avalada");
-            setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
-            setAlertOpen(true);
-            if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
-            autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
-            try {
-                if (selectedLevelId != null) {
-                    const refreshed = await getContestantByPhaseOlympiadAreaLevel(
-                        idPhase,
-                        idOlympiad,
-                        idArea,
-                        selectedLevelId,
-                    );
-                    setStudents(refreshed);
-                    lastUpdateAtRef.current = new Date().toISOString();
-                    // Revalidar visibilidad del medallero tras avalar
-                    try {
-                        const phases = await getOlympiadPhases(idOlympiad);
-                        const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
-                            if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
-                            return acc;
-                        }, null);
-                        setIsCurrentPhaseLast(last ? last.id === idPhase : null);
-                    } catch { }
-                    try {
-                        await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
-                        setCanShowMedals(true);
-                    } catch {
-                        setCanShowMedals(false);
-                    }
-                }
-            } catch (e) {
-                console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
-            }
-            // cerrar modal solo en éxito
-            setOpenApproveModal(false);
-        } catch (e: any) {
-            const data = e?.response?.data;
-            if (data?.can_endorse === false && Array.isArray(data?.errors)) {
-                setEndorseErrorMessage( "Ajusta las calificaciones o criterios de desempate y vuelve a intentarlo.");
-                setEndorseErrorItems(data.errors);
-                // Mantener modal abierto para mostrar el detalle de empates
-            } else {
-                setError("No se pudo avalar la fase. Intenta nuevamente.");
-            }
-        } finally {
-            setSavingApprove(false);
+async function handleApproveSave(): Promise<void> {
+    if (!selectedLevelId) return;
+    setSavingApprove(true);
+
+    try {
+        const confirmTies = requiresConfirmation ? true : false;
+        await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase, confirmTies);
+
+        setEndorsed(true);
+        setAlertTitle("Fase avalada");
+        setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
+        setAlertOpen(true);
+        setOpenApproveModal(false);
+
+        const refreshed = await getContestantByPhaseOlympiadAreaLevel(
+            idPhase,
+            idOlympiad,
+            idArea,
+            selectedLevelId,
+        );
+        setStudents(refreshed);
+        setRequiresConfirmation(false);
+
+    } catch (e: any) {
+        const data = e?.response?.data;
+       
+        if (data?.can_endorse === true && data?.requires_confirmation === true) {
+            setEndorseErrorMessage(data.message ?? "Se detectaron empates en medallas.");
+            setEndorseErrorItems(data.warnings ?? []);
+            setRequiresConfirmation(true); 
+            return;
         }
+
+        if (data?.can_endorse === false) {
+            setEndorseErrorMessage(
+                "No se puede avalar la fase. Ajusta las calificaciones o criterios de desempate."
+            );
+            setEndorseErrorItems(data.errors ?? []);
+            setRequiresConfirmation(false);
+            return;
+        }
+
+        setError("No se pudo avalar la fase. Intenta nuevamente.");
+    } finally {
+        setSavingApprove(false);
     }
+}
 
     useEffect(() => {
         return () => {
@@ -554,7 +542,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 </div>
             )}
 
-            {/* Barra de medallero (solo lectura) debajo del buscador: habilitado por getLastPhaseStatus */}
             {canShowMedals && (
                 <div className="mb-4">
                     {medalsLoading && (
@@ -683,7 +670,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 </div>
             )
             }
-            {/* Modal de comentario */}
             <CommentModal
                 open={commentModalOpen}
                 student={commentStudent}
@@ -704,6 +690,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }:
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
                 errorMessage={endorseErrorMessage ?? undefined}
                 errorItems={endorseErrorItems ?? undefined}
+                 requiresConfirmation={requiresConfirmation}
             />
         </>
     )

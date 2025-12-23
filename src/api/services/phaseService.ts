@@ -20,7 +20,19 @@ export const getPhaseStatus = async (olympiadId: number, areaId: number, levelId
     return res.data;
 };
 
-export const updatePhaseStatus = async (olympiadId: number, areaId: number, levelId: number, phaseId: number) => {
-    return ohSansiApi.put(`/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/endorse`, {
-    });
-}
+export const updatePhaseStatus = async (
+  olympiadId: number,
+  areaId: number,
+  levelId: number,
+  phaseId: number,
+   requiresConfirmation: boolean = false
+) => {
+  return ohSansiApi.put(
+    `/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/phases/${phaseId}/endorse`,
+    {
+      // El backend requiere 'force_endorse' cuando se confirmó el aval
+      force_endorse: requiresConfirmation
+    }
+  );
+};
+
