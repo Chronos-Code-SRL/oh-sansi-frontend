@@ -106,22 +106,35 @@ export default function ApprovePhaseModal({
 
                 {/* Footer */}
                 <div className="mt-6 flex items-center justify-end gap-2">
-                    <Button
-                        size="sm"
-                        onClick={onClose}
-                        disabled={saving}
-                        variant="outline"
-                    >
-                        {requiresConfirmation ? "Volver" : "Cancelar"}
-                    </Button>
-                    <Button
-                        size="sm"
-                        onClick={onSave}
-                        variant="primary"
-                        disabled={saving}
-                    >
-                        {requiresConfirmation ? "Confirmar aval" : (saving ? "Confirmando..." : "Avalar fase")}
-                    </Button>
+                    {hasErrors ? (
+                        <Button
+                            size="sm"
+                            onClick={onClose}
+                            disabled={saving}
+                            variant="primary"
+                        >
+                            Entendido
+                        </Button>
+                    ) : (
+                        <>
+                            <Button
+                                size="sm"
+                                onClick={onClose}
+                                disabled={saving}
+                                variant="outline"
+                            >
+                                {requiresConfirmation ? "Volver" : "Cancelar"}
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={onSave}
+                                variant="primary"
+                                disabled={saving}
+                            >
+                                {requiresConfirmation ? "Confirmar aval" : (saving ? "Confirmando..." : "Avalar fase")}
+                            </Button>
+                        </>
+                    )}
                 </div>
 
 

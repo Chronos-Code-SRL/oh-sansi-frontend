@@ -388,8 +388,9 @@ async function handleApproveSave(): Promise<void> {
     setSavingApprove(true);
 
     try {
-        const confirmTies = requiresConfirmation ? true : false;
-        await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase, confirmTies);
+        // Aval forzado en el primer intento para omitir confirmaciones por empate
+        const forceEndorse = true;
+        await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase, forceEndorse);
 
         setEndorsed(true);
         setAlertTitle("Fase avalada");
@@ -408,13 +409,6 @@ async function handleApproveSave(): Promise<void> {
 
     } catch (e: any) {
         const data = e?.response?.data;
-       
-        if (data?.can_endorse === true && data?.requires_confirmation === true) {
-            setEndorseErrorMessage(data.message ?? "Se detectaron empates en medallas.");
-            setEndorseErrorItems(data.warnings ?? []);
-            setRequiresConfirmation(true); 
-            return;
-        }
 
         if (data?.can_endorse === false) {
             setEndorseErrorMessage(
