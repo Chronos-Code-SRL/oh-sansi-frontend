@@ -5,8 +5,7 @@ import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 import { FilterBar } from "../../components/filter/FilterBar";
 
 export default function FormElements() {
-  const { olympiadId } = useParams(); // <-- obtenemos el id dinámico
-
+  const { olympiadId } = useParams();
   return (
     <div>
       <PageMeta
@@ -18,7 +17,6 @@ export default function FormElements() {
       <div className="flex justify-center">
         <div className="w-full max-w-7xl space-y-3">
           <FilterBar olympiadId={Number(olympiadId)} />
-          {/* Convertimos el id a número */}
         </div>
       </div>
     </div>

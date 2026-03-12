@@ -10,7 +10,6 @@ import FormOlympiad from "./pages/Olympiad/FormOlympiad";
 import { ViewOlympiad } from "./pages/Olympiad/ViewOlympiad";
 import ViewAreas from "./pages/Olympiad/ViewAreas";
 import EditScoreCuts from "./pages/ScoreCuts/EditScoreCuts";
-
 import GradingContestant from "./pages/Grade/GradingContestant";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import RegisterAcademicManager from "./pages/Users/RegisterAcademicManager";
@@ -22,6 +21,11 @@ import ApprovePhase from "./pages/ApprovePhase/ApprovePhase";
 import MedalsPage from "./pages/Medals/MedalsPage";
 import RankedContestantsList from "./pages/Lists/RankedContestatsList";
 import AwardedList from "./pages/Lists/AwardedList";
+import DisqualifyContestant from "./pages/DisqualifyContestant/DisqualifyContestant";
+import AuditPage from "./pages/Lists/AuditPage";
+import CertificatedList from "./pages/Lists/CertificatedList";
+import { ViewOlympiadMedal } from "./pages/Olympiad/ViewOlympiadMedal";
+import ViewAreasMedal from "./pages/Olympiad/ViewAreasMedal";
 
 export default function App() {
   return (
@@ -32,7 +36,6 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route
             element={
-              // <AppLayout />
               <ProtectedRoute>
                 <AppLayout />
               </ProtectedRoute>
@@ -44,45 +47,51 @@ export default function App() {
             <Route index path="/registration" element={<AdRegistration />} />
 
             {/* Forms */}
-
             <Route path="/Olimpiada" element={<FormOlympiad />} />
             <Route path="/VerOlimpiadas" element={<ViewOlympiad />} />
 
             {/* Prueba Modal */}
             <Route path="/OlimpiadaAreas/:id" element={<ViewAreas />} />
+            <Route path="/OlimpiadaAreasMedallero/:id" element={<ViewAreasMedal />} />
 
-            {/*Register User*/}
+            {/* Register User */}
             < Route path="/Academic-Manager-register" element={<RegisterAcademicManager />} />
             < Route path="/Evaluator-register" element={<RegisterEvaluator />} />
 
-            {/*Editar Umbral*/}
+            {/* Edit threshold */}
             <Route path="/editar-umbral/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<EditScoreCuts />} />
 
-            {/* SI NADIE RESPONDE POR LA SIGUIENTE LINEA SE ELIMINA */}
+            {/* Qualifications */}
             <Route path="/calificaciones" element={<GradingContestant />} />
 
-            {/* Calificaciones por área y fase */}
-            <Route
-              path="/calificaciones/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId"
-              element={<MarksStudents />}
-            />
-            {/* Medallas */}
+            {/* Ratings by area and phase*/}
+            <Route path="/calificaciones/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<MarksStudents />} />
+
+            {/* Medals */}
             <Route path="/medallero" element={<MedalsPage />} />
+            <Route path="/OlimpiadasMedallero" element={<ViewOlympiadMedal />} />
+
+            {/* Change History */}
+            <Route path="/historial-cambios" element={<AuditPage />} />
 
             {/*Filters on list */}
             <Route path="/filtros-de-lista/:olympiadId" element={<FilterElements />} />
 
+            {/* Disqualify Contestant */}
+            <Route path="/descalificar-competidor/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<DisqualifyContestant />} />
 
-            {/*Approve Phase */}
+            {/* Approve Phase */}
             <Route path="/aprobar-fase/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<ApprovePhase />} />
 
-            {/*List ranked contestants */}
+            {/* List ranked contestants */}
             <Route path="/lista-competidores-clasificados/:idOlympiad/:areaName/:areaId/:phaseName/:phaseId" element={<RankedContestantsList />} />
 
-            {/*Awarded List contestants */}
-            <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} />
+            {/* Awarded List contestants */}
+            {/* <Route path="/lista-competidores-premiados/:idOlympiad/:areaName/:areaId" element={<AwardedList />} /> */}
+            <Route path="/lista-competidores-premiados" element={<AwardedList />} />
 
-
+            {/* Certificated List contestants */}
+            <Route path="/lista-competidores-certificados" element={<CertificatedList />} />
 
           </Route>
 

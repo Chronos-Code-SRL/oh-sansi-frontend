@@ -1,64 +1,60 @@
 import { useEffect, useRef, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { CheckLineIcon, CloseLineIcon, MoreDotIcon } from "../../icons";
+import { CheckLineIcon, CommentIcon } from "../../icons";
 import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import { Contestant, Evaluation } from "../../types/Contestant";
-import { updatePartialEvaluation, getContestantByPhaseOlympiadAreaLevel, checkUpdates} from "../../api/services/contestantService";
+import { getContestantByPhaseOlympiadAreaLevel, checkUpdates } from "../../api/services/contestantService";
 import { updateClassification } from "../../api/services/classification";
 import Select from "../form/Select";
 import { getLevelsByOlympiadAndArea } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
 import SearchBar from "../Grade/Searcher";
-// import Filter from "../Grade/Filter";
 import Button from "../ui/button/Button";
-// import Alert from "../ui/alert/Alert";
-import DisqualifyModal from "./DisqualifyModal";
 import Alert from "../ui/alert/Alert";
-import { updatePhaseStatus, getPhaseStatus } from "../../api/services/phaseService";
-import ApprovePhaseModal from "./ApprovePhaseModal";
+import { updatePhaseStatus, getPhaseStatus, getOlympiadPhases } from "../../api/services/phaseService";
 import BoxFinishedPhase from "../common/BoxFinishedPhase";
 import { BoxFaseLevel } from "../common/BoxPhasesLevel";
+import CommentModal from "../Grade/CommentModal";
+import ApprovePhaseModal from "./ApprovePhaseModal";
+import { getMedalsArea } from "../../api/services/medalServices";
+import { Medals } from "../../types/Medal";
+import { EndorseErrorItem } from "../../types/Phase";
+import { getLastPhaseStatus } from "../../api/services/contestantService";
 
 interface Props {
     idPhase: number;
     idOlympiad: number;
     idArea: number;
+    phaseName: string;
 }
 
-export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
+export default function StudentTable({ idPhase, idOlympiad, idArea, phaseName }: Props) {
     const [phaseStatus, setPhaseStatus] = useState<"Activa" | "Terminada" | "Sin empezar" | null>(null);
     const [students, setStudents] = useState<Contestant[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Estado del modal de comentario
     const [commentModalOpen, setCommentModalOpen] = useState(false);
     const [commentDraft, setCommentDraft] = useState<string>("");
     const [commentSaving, setCommentSaving] = useState(false);
     const [commentStudent, setCommentStudent] = useState<Contestant | null>(null);
 
-    // ---- Modal Avalar ----
     const [openApproveModal, setOpenApproveModal] = useState(false);
     const [savingApprove, setSavingApprove] = useState(false);
     const [approveDraft, setApproveDraft] = useState("");
     const [endorsed, setEndorsed] = useState(false);
 
+    const [endorseErrorMessage, setEndorseErrorMessage] = useState<string | null>(null);
+    const [endorseErrorItems, setEndorseErrorItems] = useState<EndorseErrorItem[] | null>(null);
+
     const [levels, setLevels] = useState<LevelOption[]>([]);
     const [levelsLoading, setLevelsLoading] = useState(false);
     const [levelsError, setLevelsError] = useState<string | null>(null);
 
-    // Edición de nota
-    const [editingCi, setEditingCi] = useState<string | null>(null);
-    const [draftNote, setDraftNote] = useState<number | "">("");
-    const [saving, setSaving] = useState(false);
-
-    // Estado para el Alert
     const [alertOpen, setAlertOpen] = useState(false);
     const [alertTitle, setAlertTitle] = useState<string>("");
     const [alertMessage, setAlertMessage] = useState<string>("");
 
-
-    // Polling refs
     const lastUpdateAtRef = useRef<string | null>(null);
     const pollingRef = useRef<number | null>(null);
 
@@ -66,33 +62,37 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     const autoHideTimerRef = useRef<number | null>(null);
 
     const [searchQuery, setSearchQuery] = useState("");
-    // const [selectedFilters, setSelectedFilters] = useState({
-    //     estado: [] as string[],
-    //     grado: [] as string[],
-    // });
 
-    // const [stats, setStats] = useState({
-    //     total: 0,
-    //     classified: 0,
-    //     no_classified: 0,
-    //     disqualified: 0
-    // });
+    const [medalsArea, setMedalsArea] = useState<Medals | null>(null);
+    const [medalsLoading, setMedalsLoading] = useState(false);
+    const [medalsError, setMedalsError] = useState<string | null>(null);
 
-    // Reset aval (endorsed) al cambiar de nivel o fase
+    const [canShowMedals, setCanShowMedals] = useState(false);
+
+    const [isCurrentPhaseLast, setIsCurrentPhaseLast] = useState<boolean | null>(null);
+    const [requiresConfirmation, setRequiresConfirmation] = useState(false);
+
+
     useEffect(() => {
         setEndorsed(false);
     }, [selectedLevelId, idPhase]);
 
-    // Helper para mapear boolean -> etiqueta usada por el filtro
-    // const statusLabel = (status: boolean) => (status ? "Evaluado" : "No Evaluado");
+    useEffect(() => {
+        if (openApproveModal) {
+            setEndorseErrorMessage(null);
+            setEndorseErrorItems(null);
+             setRequiresConfirmation(false);
+        }
+    }, [openApproveModal]);
+
     const getEvaluationId = (s: Contestant): number | string => {
-        // Preferir s.evaluation_id si existe en tu API; fallback a contestant_id
         return (s as any).evaluation_id ?? s.contestant_id;
     };
     function openCommentModal(student: Contestant): void {
         setCommentStudent(student);
         setCommentDraft(typeof student.description === "string" ? student.description : "");
         setCommentModalOpen(true);
+
     }
     function closeCommentModal(): void {
         if (commentSaving === true) return;
@@ -117,7 +117,69 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idArea]);
 
-    // Cargar estudiantes SOLO cuando haya nivel seleccionado
+    useEffect(() => {
+        let alive = true;
+        async function computeIsLast() {
+            try {
+                const phases = await getOlympiadPhases(idOlympiad);
+                const last = phases.reduce<{ id: number; order: number } | null>((acc, p: any) => {
+                    if (!acc || (typeof p.order === "number" && p.order > acc.order)) return { id: p.id, order: p.order };
+                    return acc;
+                }, null);
+                if (!alive) return;
+                setIsCurrentPhaseLast(last ? last.id === idPhase : null);
+            } catch {
+                if (alive) setIsCurrentPhaseLast(null);
+            }
+        }
+        if (idOlympiad && idPhase) void computeIsLast(); else setIsCurrentPhaseLast(null);
+        return () => { alive = false; };
+    }, [idOlympiad, idPhase]);
+
+    useEffect(() => {
+        let alive = true;
+        async function validateLastPhaseStatus() {
+            if (!idOlympiad || !idArea || !selectedLevelId) { if (alive) setCanShowMedals(false); return; }
+            if (!isCurrentPhaseLast) { if (alive) setCanShowMedals(false); return; }
+            try {
+                await getLastPhaseStatus(idOlympiad, idArea, selectedLevelId);
+                if (alive) setCanShowMedals(true);
+            } catch (err: any) {
+                const status = err?.response?.status;
+                if (alive) setCanShowMedals(status === 403 ? true : false);
+            }
+        }
+        void validateLastPhaseStatus();
+        return () => { alive = false; };
+    }, [idOlympiad, idArea, selectedLevelId, isCurrentPhaseLast]);
+
+    useEffect(() => {
+        let alive = true;
+        async function fetchMedalsArea() {
+            try {
+                setMedalsLoading(true);
+                setMedalsError(null);
+                const data = await getMedalsArea(idOlympiad, idArea);
+                if (!alive) return;
+                setMedalsArea(data);
+            } catch (err) {
+                if (!alive) return;
+                setMedalsArea(null);
+                setMedalsError("No se pudo cargar el medallero del área.");
+            } finally {
+                if (alive) setMedalsLoading(false);
+            }
+        }
+ 
+        if (idOlympiad && idArea && canShowMedals) {
+            void fetchMedalsArea();
+        } else {
+            setMedalsArea(null);
+            setMedalsError(null);
+        }
+        return () => { alive = false; };
+    }, [idOlympiad, idArea, canShowMedals]);
+
     useEffect(() => {
         if (selectedLevelId == null) {
             setStudents([]);
@@ -125,7 +187,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             setError(null);
             return;
         }
-        const levelId = selectedLevelId; 
+        const levelId = selectedLevelId;
 
         let alive = true;
         setLoading(true);
@@ -139,8 +201,7 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     levelId,
                 );
                 if (alive) setStudents(data);
-                // const st = await getContestantStats(idOlympiad, idArea, idPhase, levelId);
-                // setStats(st);
+
             } catch {
                 if (alive) setError("No existen estudiantes para el nivel seleccionado.");
             } finally {
@@ -151,7 +212,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         return () => { alive = false; };
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
-    // Obtener el estado de la fase para el nivel seleccionado y bloquear edición si está terminada
     useEffect(() => {
         let alive = true;
         async function loadPhaseStatus() {
@@ -179,15 +239,9 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
         async function pollOnce() {
             const since = lastUpdateAtRef.current ?? new Date().toISOString();
-            console.log(since);
 
             try {
-                console.debug("[poll] tick -> lastUpdateAt:", since);
                 const res = await checkUpdates(since);
-                console.debug("[poll] response:", {
-                    newCount: res?.new_evaluations?.length ?? 0,
-                    last_updated_at: res?.last_updated_at
-                });
 
                 if (Array.isArray(res.new_evaluations) && res.new_evaluations.length > 0) {
                     console.debug("[poll] ids:", res.new_evaluations.map(ev => ({
@@ -195,25 +249,19 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         contestant_id: (ev as any).contestant_id
                     })));
 
-                    // Construimos dos índices: por contestant_id y por evaluation_id (id || evaluation_id)
                     const byEvaluation = new Map<number, Evaluation>();
                     for (const ev of res.new_evaluations as any[]) {
-                        // Indexar únicamente por evaluation_id/id.
                         const evalId = (typeof ev.evaluation_id === "number") ? ev.evaluation_id : (typeof ev.id === "number" ? ev.id : undefined);
                         if (typeof evalId === "number") byEvaluation.set(evalId as number, ev);
                     }
 
                     setStudents((prev) =>
                         prev.map((st) => {
-                            // Evitar que el polling pise la fila que se está editando
-                            if (editingCi === st.ci_document) return st;
                             const evalId = (st as any).evaluation_id as number | undefined;
-                            // Sólo actualizamos filas cuya evaluation_id coincide exactamente.
                             const ev = (typeof evalId === "number") ? byEvaluation.get(evalId) : undefined;
 
                             if (!ev) return st;
 
-                            // Actualizamos nota, estado, descripción y clasificación en tiempo real
                             const nextScore = typeof ev.score === "number" ? ev.score : st.score;
                             const nextStatus = typeof ev.status === "boolean" ? ev.status : st.status;
                             const hasDescription = Object.prototype.hasOwnProperty.call(ev as any, "description");
@@ -234,17 +282,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                     );
                 }
 
-                // if (selectedLevelId != null) {
-                //     try {
-                //         const newStats = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-                //         setStats(newStats);
-                //     } catch (e) {
-                //         console.warn("No se pudieron actualizar las estadísticas", e);
-                //     }
-                // }
-
-
-                // Cursor seguro
                 const serverLast = res?.last_updated_at ?? since;
                 const t = new Date(serverLast);
                 const safe = new Date(t.getTime() - 1).toISOString();
@@ -255,17 +292,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             }
         }
 
-        // Reiniciar cursor cuando cambian los filtros principales
         lastUpdateAtRef.current = new Date().toISOString();
 
-        // Iniciar intervalo
         pollingRef.current = window.setInterval(pollOnce, 3000);
-        console.log("[poll] start (3000ms)");
 
-        // Tick inmediato para no esperar al primer intervalo
         void pollOnce();
 
-        // Cuando el tab recupera foco o vuelve a ser visible, disparamos un tick
         const onFocus = () => { void pollOnce(); };
         const onVis = () => { if (!document.hidden) void pollOnce(); };
         window.addEventListener("focus", onFocus);
@@ -275,7 +307,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             if (pollingRef.current) {
                 window.clearInterval(pollingRef.current);
                 pollingRef.current = null;
-                console.log("[poll] stopped");
             }
             window.removeEventListener("focus", onFocus);
             document.removeEventListener("visibilitychange", onVis);
@@ -283,7 +314,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     }, [idPhase, idOlympiad, idArea, selectedLevelId]);
 
 
-    // Filtrado según el texto recibido
     const normalize = (text: string) =>
         text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -294,16 +324,17 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
             normalize(s.last_name).includes(q) ||
             s.ci_document.toString().includes(q);
 
-        // const matchesEstado =
-        //     selectedFilters.estado.length === 0 ||
-        //     selectedFilters.estado.includes(statusLabel(s.status));
+        return matchesSearch;
+    });
 
-        // const matchesGrado =
-        //     selectedFilters.grado.length === 0 ||
-        //     selectedFilters.grado.includes(s.grade_name);
+    const sortedStudents = [...filteredStudents].sort((a, b) => {
+        const aScore = typeof a.score === "number" ? a.score : -Infinity;
+        const bScore = typeof b.score === "number" ? b.score : -Infinity;
+        if (bScore !== aScore) return bScore - aScore;
 
-        // return matchesSearch && matchesEstado && matchesGrado;
-        return matchesSearch ;
+        const lastCmp = a.last_name.localeCompare(b.last_name);
+        if (lastCmp !== 0) return lastCmp;
+        return a.first_name.localeCompare(b.first_name);
     });
     async function saveComment(): Promise<void> {
         if (commentStudent === null) return;
@@ -316,14 +347,12 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         try {
             setCommentSaving(true);
             const id = Number(getEvaluationId(commentStudent));
-            // Cambia el estado a descalificado y guarda descripción
             await updateClassification(id, {
                 classification_status: "descalificado",
                 classification_place: null,
                 description: texto,
             });
 
-            // Actualiza estado local (classification_status y description)
             setStudents((prev) =>
                 prev.map((st) =>
                     st.ci_document === commentStudent.ci_document
@@ -331,15 +360,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                         : st,
                 ),
             );
-            // Refrescar estadísticas
-            // if (selectedLevelId != null) {
-            //     try {
-            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-            //         setStats(st);
-            //     } catch {
-            //         // ignore
-            //     }
-            // }
             closeCommentModal();
         } catch {
             showAlert("Error", "No se pudo guardar el comentario ni estado. Intenta nuevamente.");
@@ -349,7 +369,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
     }
 
     function showAlert(title: string, message: string): void {
-        // Limpia un timer previo si existiera
         if (autoHideTimerRef.current !== null) {
             window.clearTimeout(autoHideTimerRef.current);
             autoHideTimerRef.current = null;
@@ -358,89 +377,53 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
         setAlertMessage(message);
         setAlertOpen(true);
 
-        // Auto-cerrar a los 3 segundos (ajustable)
         autoHideTimerRef.current = window.setTimeout(() => {
             setAlertOpen(false);
             autoHideTimerRef.current = null;
         }, 3000);
     }
 
-    // Guardar nota parcial
-    async function saveNote(s: Contestant): Promise<void> {
-        if (saving) return;
-        if (phaseStatus === "Terminada") {
-            showAlert("No editable", "La fase está terminada. No se permiten cambios.");
+async function handleApproveSave(): Promise<void> {
+    if (!selectedLevelId) return;
+    setSavingApprove(true);
+
+    try {
+        // Aval forzado en el primer intento para omitir confirmaciones por empate
+        const forceEndorse = true;
+        await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase, forceEndorse);
+
+        setEndorsed(true);
+        setAlertTitle("Fase avalada");
+        setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
+        setAlertOpen(true);
+        setOpenApproveModal(false);
+
+        const refreshed = await getContestantByPhaseOlympiadAreaLevel(
+            idPhase,
+            idOlympiad,
+            idArea,
+            selectedLevelId,
+        );
+        setStudents(refreshed);
+        setRequiresConfirmation(false);
+
+    } catch (e: any) {
+        const data = e?.response?.data;
+
+        if (data?.can_endorse === false) {
+            setEndorseErrorMessage(
+                "No se puede avalar la fase. Ajusta las calificaciones o criterios de desempate."
+            );
+            setEndorseErrorItems(data.errors ?? []);
+            setRequiresConfirmation(false);
             return;
         }
-        if (draftNote === "" || isNaN(Number(draftNote))) return;
-        const nota = Math.max(0, Math.min(100, Number(draftNote)));
 
-        try {
-            setSaving(true);
-            const id = getEvaluationId(s);
-            await updatePartialEvaluation(id, { score: nota });
-            // Actualiza estado local (opcional: marcar status=true)
-            setStudents((prev) =>
-                prev.map((st) =>
-                    st.contestant_id === s.contestant_id
-                        ? { ...st, score: nota, status: true }
-                        : st,
-                ),
-            );
-            setEditingCi(null);
-            setDraftNote("");
-
-            // // Refrescar estadísticas si hay nivel seleccionado
-            // if (selectedLevelId != null) {
-            //     try {
-            //         const st = await getContestantStats(idOlympiad, idArea, idPhase, selectedLevelId);
-            //         setStats(st);
-            //     } catch {
-            //         // ignorar
-            //     }
-            // }
-        } catch (e) {
-            setError("No se pudo guardar la nota.");
-        } finally {
-            setSaving(false);
-        }
+        setError("No se pudo avalar la fase. Intenta nuevamente.");
+    } finally {
+        setSavingApprove(false);
     }
-
-    // Avalar fase para el nivel seleccionado
-    async function handleApproveSave(): Promise<void> {
-        if (!selectedLevelId) return;
-        setSavingApprove(true);
-        try {
-            await updatePhaseStatus(idOlympiad, idArea, selectedLevelId, idPhase);
-            setEndorsed(true);
-            setAlertTitle("Fase avalada");
-            setAlertMessage("La fase fue avalada correctamente para el nivel seleccionado.");
-            setAlertOpen(true);
-            if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
-            autoHideTimerRef.current = window.setTimeout(() => setAlertOpen(false), 4000);
-            // Refrescar la lista de concursantes para este nivel/fase — el backend puede mover clasificados a la siguiente fase
-            try {
-                if (selectedLevelId != null) {
-                    const refreshed = await getContestantByPhaseOlympiadAreaLevel(
-                        idPhase,
-                        idOlympiad,
-                        idArea,
-                        selectedLevelId,
-                    );
-                    setStudents(refreshed);
-                    // Resetear cursor de polling para evitar aplicar actualizaciones antiguas
-                    lastUpdateAtRef.current = new Date().toISOString();
-                }
-            } catch (e) {
-                console.warn("No se pudo refrescar la lista de concursantes tras avalar fase", e);
-            }
-        } catch (e) {
-            setError("No se pudo avalar la fase. Intenta nuevamente.");
-        } finally {
-            setSavingApprove(false);
-            setOpenApproveModal(false);
-        }
-    }
+}
 
     useEffect(() => {
         return () => {
@@ -453,60 +436,6 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
 
     return (
         <>
-            {phaseStatus === "Terminada" && (
-                <div className="mb-4">
-                    <BoxFinishedPhase />
-                </div>
-            )}
-            {phaseStatus === "Sin empezar" && (
-                <div className="mb-4">
-                    <BoxFaseLevel
-                        title={"Fase no iniciada"}
-                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
-                    />
-                </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {/* Total Competidores */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Total competidores
-                    </p>
-                    <p className="text-3xl font-bold mt-2">{students.length}</p>
-                </div>
-
-                {/* Clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-green-600">
-                        {students.filter(s => s.classification_status === "clasificado").length}
-                    </p>
-                </div>
-
-                {/* No clasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        No clasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-red-600">
-                        {students.filter(s => s.classification_status === "no_clasificado").length}
-                    </p>
-                </div>
-
-                {/* Desclasificados */}
-                <div className="p-4 rounded-xl shadow bg-white border">
-                    <p className="text-gray-600 text-sm flex items-center gap-2">
-                        Desclasificados
-                    </p>
-                    <p className="text-3xl font-bold mt-2 text-yellow-600">
-                        {students.filter(s => s.classification_status === "descalificado"|| s.classification_status === null ).length}
-                    </p>
-                </div>
-
-            </div>
-
             <div className="relative xl:w-90 mb-4">
                 <Select
                     placeholder="Seleccione un nivel"
@@ -527,169 +456,198 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 {levelsLoading && <p className="text-xs mt-1 text-black-700">Cargando niveles...</p>}
                 {levelsError && <p className="text-xs mt-1 text-red-600">{levelsError}</p>}
             </div>
-            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="flex items-center mb-3">
-                <div className="flex items-center flex-grow">
-                    <SearchBar
-                        onSearch={setSearchQuery}
-                        placeholder="Buscar por nombre, apellido o CI..."
-                    />
-                    {/* <Filter
-                        selectedFilters={selectedFilters}
-                        setSelectedFilters={setSelectedFilters}
-                    /> */}
+
+            {phaseStatus === "Terminada" && (
+                <div className="mb-4">
+                    <BoxFinishedPhase />
                 </div>
-                <Button
-                    type="button"
-                    size="sm"
-                    disabled={selectedLevelId == null || savingApprove || endorsed || phaseStatus === "Terminada"}
-                    onClick={() => setOpenApproveModal(true)}
-                    startIcon={<CheckLineIcon className="w-5 h-5" />}
-                >
-                    Avalar Fase
-                </Button>
+            )}
+            {phaseStatus === "Sin empezar" && (
+                <div className="mb-4">
+                    <BoxFaseLevel
+                        title={"Fase no iniciada"}
+                        message={"Esta fase aún no ha comenzado. Espera a que se habilite para este nivel."}
+                    />
+                </div>
+            )}
 
-            </div>
-        )}
-
-            {/* Renderizar la tabla solo cuando la fase ha iniciado (phaseStatus distinto de null y distinto de "Sin empezar") */}
             {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
-            <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-                <div className="max-w-full overflow-x-auto"></div>
-                <Table className="rounded-xl">
-                    <TableHeader className="bg-gray-100 ">
-                        <TableRow>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                            <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Acciones</th>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {loading === true && (
-                            <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
-                            </TableRow>
-                        )}
-                        {error !== null && loading === false && (
-                            <TableRow>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
-                            </TableRow>
-                        )}
-                        {selectedLevelId === null && (
-                            <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Por favor, seleccione un nivel para ver los estudiantes.
-                                </td>
-                            </tr>
-                        )}
-                        {!loading && !error && filteredStudents.map((s) => {
-                            const isEditing = editingCi === s.ci_document;
-                            return (
-                                <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
-                                    <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        {s.classification_status === "clasificado" && (
-                                            <Badge color="success">Clasificado</Badge>
-                                        )}
-                                        {s.classification_status === "no_clasificado" && (
-                                            <Badge color="error">No clasificado</Badge>
-                                        )}
-                                        {(s.classification_status === "descalificado" || s.classification_status === null) && (
-                                            <Badge color="warning">Desclasificado</Badge>
-                                        )}
-                                        {/* {( s.classification_status === null) && (
-                                            <Badge color="light">-</Badge>
-                                        )} */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {/* Total Competidores */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Total competidores
+                        </p>
+                        <p className="text-3xl font-bold mt-2">{students.length}</p>
+                    </div>
 
-                                    </td>
+                    {/* Clasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Clasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-green-600">
+                            {students.filter(s => s.classification_status === "clasificado").length}
+                        </p>
+                    </div>
 
-                                    <td
-                                        className={`px-6 py-4 text-sm items-center justify-center ${isEditing ? "" : "cursor-text"}`}
-                                        onClick={() => {
-                                            if (endorsed || phaseStatus === "Terminada") return; // Bloquear edición si avalado o fase terminada
-                                            if (!isEditing) {
-                                                // Permitir editar incluso si está Evaluado
-                                                setEditingCi(s.ci_document);
-                                                if (typeof s.score === "number") setDraftNote(s.score);
-                                                else setDraftNote("");
-                                            }
-                                        }}
-                                    >
-                                        {isEditing ? (
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={100}
-                                                    step={1}
-                                                    value={draftNote}
-                                                    autoFocus
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") void saveNote(s);
-                                                    }}
-                                                    onChange={(e) => {
-                                                        const v = e.target.value;
-                                                        setDraftNote(v === "" ? "" : Number(v));
-                                                    }}
-                                                    className="h-9 w-[70px] rounded-lg border border-gray-300 bg-transparent px-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 text-center "
-                                                />
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true || draftNote === "" || isNaN(Number(draftNote))}
-                                                    onClick={() => void saveNote(s)}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Aceptar"
-                                                >
-                                                    <CheckLineIcon className="size-5" />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={saving === true}
-                                                    onClick={() => {
-                                                        setEditingCi(null);
-                                                        setDraftNote("");
-                                                    }}
-                                                    className="inline-flex h-9 w-9 items-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 disabled:opacity-50 justify-center"
-                                                    title="Rechazar"
-                                                >
-                                                    <CloseLineIcon className="size-5" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3 justify-center">
-                                                <span>{typeof s.score === "number" ? s.score : "—"}</span>
-                                            </div>
-                                        )}
-                                     
-                                            
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-center">
-                                        <button
-                                            type="button"
-                                            disabled={endorsed || phaseStatus === "Terminada"}
-                                            onClick={() => { if (endorsed || phaseStatus === "Terminada") return; openCommentModal(s); }}
-                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 ${endorsed || phaseStatus === "Terminada" ? 'opacity-50 pointer-events-none' : ''}`}
-                                            title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
-                                        >
-                                            <MoreDotIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
-                                        </button>
-                                    </td>
+                    {/* No clasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            No clasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-red-600">
+                            {students.filter(s => s.classification_status === "no_clasificado").length}
+                        </p>
+                    </div>
+
+                    {/* Desclasificados */}
+                    <div className="p-4 rounded-xl shadow bg-white border">
+                        <p className="text-gray-600 text-sm flex items-center gap-2">
+                            Desclasificados
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-yellow-600">
+                            {students.filter(s => s.classification_status === "descalificado").length}
+                        </p>
+                    </div>
+
+                </div>
+            )}
+
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+                <div className="flex items-center mb-3">
+                    <div className="flex items-center flex-grow">
+                        <SearchBar
+                            onSearch={setSearchQuery}
+                            placeholder="Buscar por nombre, apellido o CI..."
+                        />
+
+                    </div>
+                    <Button
+                        type="button"
+                        size="sm"
+                        disabled={selectedLevelId == null || savingApprove || endorsed || phaseStatus === "Terminada"}
+                        onClick={() => setOpenApproveModal(true)}
+                        startIcon={<CheckLineIcon className="w-5 h-5" />}
+                    >
+                        Avalar Fase
+                    </Button>
+
+                </div>
+            )}
+
+            {canShowMedals && (
+                <div className="mb-4">
+                    {medalsLoading && (
+                        <p className="text-xs mt-1 text-black-700">Cargando medallero...</p>
+                    )}
+                    {medalsError && !medalsLoading && (
+                        <p className="text-xs mt-1 text-red-600">{medalsError}</p>
+                    )}
+                    {!medalsLoading && !medalsError && medalsArea && (
+                        <div className="flex flex-nowrap items-center gap-3 overflow-x-auto py-2">
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Oro</span>
+                                <span className="text-xl font-semibold text-amber-600">{medalsArea.gold}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Plata</span>
+                                <span className="text-xl font-semibold text-gray-500">{medalsArea.silver}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Medallas de Bronce</span>
+                                <span className="text-xl font-semibold text-orange-600">{medalsArea.bronze}</span>
+                            </div>
+                            <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                                <span className="text-sm text-gray-700">Mención Honorífica</span>
+                                <span className="text-xl font-semibold text-violet-600">{medalsArea.honorable_mention}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {phaseStatus !== null && phaseStatus !== "Sin empezar" && (
+                <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+                    <div className="max-w-full overflow-x-auto"></div>
+                    <Table className="rounded-xl">
+                        <TableHeader className="bg-gray-100 ">
+                            <TableRow>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">CI</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-foreground">Descripción</th>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {loading === true && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-foreground">Cargando...</td>
                                 </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
+                            )}
+                            {error !== null && loading === false && (
+                                <TableRow>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-red-600">{error}</td>
+                                </TableRow>
+                            )}
+                            {selectedLevelId === null && (
+                                <tr>
+                                    <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Por favor, seleccione un nivel para ver los estudiantes.
+                                    </td>
+                                </tr>
+                            )}
+                            {!loading && !error && sortedStudents.map((s) => {
+                                return (
+                                    <TableRow key={s.contestant_id} className="border-b border-border last:border-0">
+                                        <td className="px-6 py-4 text-sm text-center">{s.first_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.last_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.ci_document}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.level_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">{s.grade_name}</td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {s.classification_status === "clasificado" && (
+                                                <Badge color="success">Clasificado</Badge>
+                                            )}
+                                            {s.classification_status === "no_clasificado" && (
+                                                <Badge color="error">No clasificado</Badge>
+                                            )}
+                                            {s.classification_status === "descalificado" && (
+                                                <Badge color="warning">Desclasificado</Badge>
+                                            )}
+                                            {s.classification_status === null && (
+                                                <Badge color="neutral">-</Badge>
+                                            )}
+                                        </td>
 
-            </div>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            {typeof s.score === "number" ? s.score :
+                                                <Badge color="neutral">-</Badge>}
+                                        </td>
+                                        <td className="px-6 py-4 text-sm text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => openCommentModal(s)}
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg 
+                                                border border-gray-200 bg-gray-50 text-gray-700 
+                                                hover:bg-gray-100"
+                                                title={s.description && s.description.length > 0 ? "Ver/editar comentario" : "Agregar comentario"}
+                                            >
+                                                <CommentIcon className={`size-4 ${s.description ? "text-black-500" : ""}`} />
+                                            </button>
+
+                                        </td>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+
+                </div>
             )}
             {alertOpen && (
                 <div
@@ -706,24 +664,27 @@ export default function StudentTable({ idPhase, idOlympiad, idArea }: Props) {
                 </div>
             )
             }
-            {/* Modal de comentario */}
-            <DisqualifyModal
+            <CommentModal
                 open={commentModalOpen}
                 student={commentStudent}
                 draft={commentDraft}
                 saving={commentSaving}
-                onChangeDraft={setCommentDraft}
+                onChangeDraft={() => void setCommentDraft(commentDraft)}
                 onSave={() => void saveComment()}
                 onClose={closeCommentModal}
+                readOnly={true}
             />
             <ApprovePhaseModal
                 open={openApproveModal}
-                student={null}
-                draft={approveDraft}
+                phaseName={phaseName}
                 saving={savingApprove}
+                draft={approveDraft}
                 onChangeDraft={setApproveDraft}
                 onSave={() => void handleApproveSave()}
                 onClose={() => { if (!savingApprove) setOpenApproveModal(false); }}
+                errorMessage={endorseErrorMessage ?? undefined}
+                errorItems={endorseErrorItems ?? undefined}
+                 requiresConfirmation={requiresConfirmation}
             />
         </>
     )

@@ -61,19 +61,23 @@ export interface ConstestantRanked {
     score: number | null;
 }
 
-export interface AwardWinningCompetitorsResponse {
-    contestants: AwardWinningCompetitors[];
-    status: number;
-}
-export interface AwardWinningCompetitors {
-    contestant_id: number;
+export interface AwardWinningCompetitorsByArea {
     first_name: string;
     last_name: string;
-    ci_document: string;
     school_name: string;
     department: string;
-    classification_place: "Oro" | "Plata" | "Bronce" | "Mención de Honor" | null;
+    area_name: string;
+    level_name: string;
+    score: number;
+    classification_place: "Oro" | "Plata" | "Bronce" | "Mención honorífica" | null;
+    tutor: string;
+    area_responsible: string;
 }
+
+export interface AwardWinningCompetitorsResponse {
+    contestants: AwardWinningCompetitorsByArea[];
+}
+
 export interface ContestantStats {
     total: number;
     classified: number;
@@ -99,7 +103,38 @@ export interface ContestantMedal {
     classification_place: string | null;
 }
 
+export interface AwardMedalsPayload {
+    gold: string;
+    silver: string;
+    bronze: string;
+    honorable_mention: string;
+}
+
+export interface AwardMedalsResponse {
+    message: string;
+}
+
 //For update medals
 // export interface UpdateMedalPayload {
 //     classification_place?: number | null;
 // }
+
+export interface numberOfMedalsByLevel {
+    number_gold: number;
+    number_silver: number;
+    number_bronze: number;
+    number_honorable_mention: number;
+}
+
+export interface CertificateContestant {
+  name: string;
+  last_name: string;
+  school_name: string;
+  department: string;
+  area: string;
+  level: string;
+  score: number;
+  classification_place: number | null;
+  teacher: string;
+  area_responsible: string;
+}

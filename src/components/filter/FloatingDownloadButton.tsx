@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { DownloadIcon } from "../../icons";
 
-export default function FloatingDownloadButton({ hasData, onPDF, onCSV, onExcel }) {
+interface FloatingDownloadButtonProps {
+  hasData: boolean;
+  onPDF: () => void;
+  onCSV: () => void;
+  onExcel: () => void;
+}
+
+export default function FloatingDownloadButton({ hasData, onPDF, onCSV, onExcel }: FloatingDownloadButtonProps) {
   const [open, setOpen] = useState(false);
 
-  if (!hasData) return null; // Solo aparece si hay datos
+  if (!hasData) return null;
 
   return (
     <div className="fixed bottom-6 left-4 md:left-[300px] flex flex-col items-start z-50">
 
-      {/* Botones circulares (solo si open === true) */}
       {open && (
         <div className="flex flex-col space-y-3 mb-3 transition-all">
           <button
@@ -38,7 +44,6 @@ export default function FloatingDownloadButton({ hasData, onPDF, onCSV, onExcel 
         </div>
       )}
 
-      {/* Botón principal */}
       <button
         onClick={() => setOpen(!open)}
         className="
@@ -48,7 +53,6 @@ export default function FloatingDownloadButton({ hasData, onPDF, onCSV, onExcel 
         "
       >
         <DownloadIcon className="h-6 w-6" />
-        {/* Este texto aparece solo cuando el mouse pasa encima */}
         <span className="overflow-hidden max-w-0 group-hover:max-w-xs transition-all duration-200">
           Descargar
         </span>

@@ -2,6 +2,7 @@ import { useParams } from "react-router";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import StudentTable from "../../components/Grade/StudentTable";
+import TitleBreadCrumb from "../../components/common/TitleBreadCrumb";
 
 
 export default function MarksStudents() {
@@ -23,6 +24,7 @@ export default function MarksStudents() {
                 title={title}
                 description={"En esta sección puedes ver y gestionar las calificaciones de los estudiantes."}
             />
+            < TitleBreadCrumb pageTitle="Calificar Competidores" />
             <ComponentCard key={`${areaId}-${phaseId ?? 'none'}`} title={title}>
                 <StudentTable
                     key={`${areaId}-${phaseId ?? 'none'}`}

@@ -10,7 +10,7 @@ export default function AuthLayout({
   return (
     <div className="relative flex items-center justify-center min-h-screen w-full bg-white overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-[100%] bg-gradient-to-r from-[#3756A6] via-[#4A4DAF] to-[#E53E3E]" />
-       <div className="relative z-10 bg-white rounded-2xl shadow-xl 
+      <div className="relative z-10 bg-white rounded-2xl shadow-xl 
                       px-6 py-10
                       sm:px-10 sm:py-12 
                       w-full 
@@ -24,9 +24,6 @@ export default function AuthLayout({
             height={48}
           />
         </Link>
-        {/* <p className="text-gray-500 text-sm mb-6 text-center ">
-          Sistema de calificaciones Oh!Sansi
-        </p> */}
         {children}
       </div>
     </div>

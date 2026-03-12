@@ -7,14 +7,13 @@ import { Table, TableBody, TableHeader, TableRow } from "../ui/table";
 import Badge from "../ui/badge/Badge";
 import { getLevelsOlympiad } from "../../api/services/levelGradesService";
 import { LevelOption } from "../../types/Level";
-import { Clean, DownloadIcon } from "../../icons";
-
 import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import autoTable from "jspdf-autotable";
-import Button from "../ui/button/Button";
 import ScrollToTopButton from "../ui/button/ScrollToTopButton";
 import FloatingDownloadButton from "./FloatingDownloadButton";
+import ClearFiltersButton from "../ui/button/CleanFiltersButton";
+import Button from "../ui/button/Button";
 
 interface FilterBarProps {
   olympiadId: number;
@@ -34,47 +33,13 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
   const [notaRange, setNotaRange] = useState<{ min: number; max: number } | null>(null);
 
-  //Niveles
+  // Niveles
   const [levels, setLevels] = useState<LevelOption[]>([]);
 
-  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
-
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF({ orientation: "landscape" });
-
-    doc.setFontSize(14);
-    doc.text("Reporte de Concursantes Filtrados", 14, 15);
-
-    const tableData = filteredContestants.map((c) => [
-      c.first_name,
-      c.last_name,
-      c.ci_document,
-      c.gender,
-      c.department,
-      c.area_name,
-      c.grade_name,
-      c.level_name,
-      c.score !== null ? c.score : "—",
-      c.status ? "Evaluado" : "No Evaluado",
-    ]);
-
-    autoTable(doc, {
-      startY: 20,
-      head: [[
-        "Nombre", "Apellido", "C.I", "Género", "Departamento",
-        "Área", "Grado", "Nivel", "Nota", "Estado",
-      ]],
-      body: tableData,
-      styles: { halign: "center", valign: "middle" },
-      headStyles: { halign: "center", fillColor: [23, 86, 166] },
-    });
-
-    doc.save("reporte_concursantes_filtrados.pdf");
-  };
-
-
-  // 🔹 Llamada a la API
   useEffect(() => {
     const fetchContestants = async () => {
       try {
@@ -83,7 +48,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
         setContestants(data);
       } catch (err) {
         console.error(err);
-        setError("Error al cargar los concursantes");
+        setError("Error al cargar los concursantes o No se inscribieron concursantes.");
       } finally {
         setLoading(false);
       }
@@ -92,7 +57,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
     fetchContestants();
   }, [olympiadId]);
 
-  // Llamada a la API de niveles
   useEffect(() => {
     const fetchLevels = async () => {
       try {
@@ -106,8 +70,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
     fetchLevels();
   }, []);
 
-  // 🔹 Filtros en memoria
   const filteredContestants = contestants.filter((c) => {
+    // Paginar resultado filtrado
+
     const byGender = selectedGender.length === 0 || selectedGender.includes(c.gender.toLowerCase());
     const byDep = selectedDepartamento.length === 0 || selectedDepartamento.includes(c.department.toLowerCase());
     const byArea = selectedArea.length === 0 || selectedArea.includes(c.area_name.toLowerCase());
@@ -123,7 +88,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
     return byGender && byDep && byArea && byGrado && byNivel && byEstado && byNota;
   });
 
-  // función para limpiar todos los filtros
+  // const totalPages = Math.ceil(filteredContestants.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredContestants.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const paginatedContestants = filteredContestants.slice(start, start + pageSize);
+
   const handleClearFilters = () => {
     setSelectedGender([]);
     setSelectedDepartamento([]);
@@ -134,47 +103,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
     setNotaRange(null);
   };
 
-  // 🔹 Controlador de notas
   const handleFilterNota = (min: number, max: number) => {
     setNotaRange({ min, max });
   };
 
-  // 🔹 descargar en csv
-  const handleDownloadCSV = () => {
-    const headers = [
-      "Nombre","Apellido","C.I","Género","Departamento",
-      "Área","Grado","Nivel","Nota","Estado",
-    ];
-
-    const rows = filteredContestants.map(c => [
-      c.first_name,
-      c.last_name,
-      c.ci_document,
-      c.gender,
-      c.department,
-      c.area_name,
-      c.grade_name,
-      c.level_name,
-      c.score !== null ? c.score : "",
-      c.status ? "Evaluado" : "No Evaluado",
-    ]);
-
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rows].map(e => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.href = encodedUri;
-    link.download = "reporte_concursantes_filtrados.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // 🔹 descargar en xlsx
-  const handleDownloadExcel = () => {
-    const data = filteredContestants.map(c => ({
+  const formatRows = () => {
+    return filteredContestants.map((c) => ({
       Nombre: c.first_name,
       Apellido: c.last_name,
       CI: c.ci_document,
@@ -183,25 +117,85 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
       Área: c.area_name,
       Grado: c.grade_name,
       Nivel: c.level_name,
-      Nota: c.score !== null ? c.score : "",
+      Nota: c.score !== null ? c.score : "—",
       Estado: c.status ? "Evaluado" : "No Evaluado",
     }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Concursantes");
-    XLSX.writeFile(wb, "reporte_concursantes_filtrados.xlsx");
   };
 
+  const handleDownloadPDF = () => {
+    const rows = formatRows();
+    if (!rows.length) return;
+
+    const doc = new jsPDF({ orientation: "landscape" });
+
+    doc.setFontSize(14);
+    doc.text("Reporte de Concursantes Filtrados", 14, 15);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [Object.keys(rows[0])],
+      body: rows.map((r) => Object.values(r)),
+      styles: { halign: "center", valign: "middle" },
+      headStyles: { halign: "center", fillColor: [23, 86, 166] },
+    });
+
+    doc.save("reporte_concursantes_filtrados.pdf");
+  };
+
+  const handleDownloadCSV = () => {
+    const rows = formatRows();
+    if (!rows.length) return;
+
+    const headers = Object.keys(rows[0]).join(",");
+
+    const body = rows
+      .map((r) =>
+        Object.values(r)
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const csv = `${headers}\n${body}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "reporte_concursantes_filtrados.csv";
+    link.click();
+  };
+
+  const handleDownloadExcel = () => {
+    const rows = formatRows();
+    if (!rows.length) return;
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Concursantes");
+
+    XLSX.writeFile(workbook, "reporte_concursantes_filtrados.xlsx");
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    contestants,
+    selectedGender,
+    selectedDepartamento,
+    selectedArea,
+    selectedGrado,
+    selectedNivel,
+    selectedEstado,
+    notaRange
+  ]);
 
   return (
     <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-5 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-8">
       <div className="mx-auto w-full space-y-8">
         <p className="block text-left text-lg font-semibold mb-3">Filtrar por:</p>
 
-        {/* Dropdowns de filtro */}
         <div className="flex items-center justify-between flex-wrap gap-3">
-          {/* Contenedor izquierdo (filtros) */}
           <div className="flex flex-wrap items-center ">
             <FilterDropdown
               label="Género"
@@ -289,17 +283,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
             <FilterDropdownNota onConfirm={handleFilterNota} />
           </div>
 
-          {/* Botón limpiar filtros */}
-          <button
-            onClick={handleClearFilters}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition flex items-center gap-2"
-          >
-            <Clean className="w-5 h-5" />
-          </button>
+          <ClearFiltersButton onClick={handleClearFilters} />
         </div>
 
-
-        {/*Tabla de resultados */}
         <div className="mt-6 overflow-x-auto rounded-xl ">
           {loading ? (
             <p className="text-gray-500 text-center">Cargando datos...</p>
@@ -310,45 +296,79 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
           ) : (
             <Table className="min-w-full border border-gray-200 rounded-lg text-sm text-left">
               <TableHeader className="bg-gray-100 border-b border-border bg-muted/50 ">
-                <TableRow className="">
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Género</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Área</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
+                <TableRow >
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Nombre</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Apellido</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">C.I.</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Género</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Departamento</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Área</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Grado</th>
                   <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nivel</th>
                   <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Nota</th>
-                  <th className="px-5 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
+                  <th className="px-4 py-4 text-center text-sm font-semibold text-foreground">Estado</th>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredContestants.map((c) => (
-                  <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
-                    <td className="px-5 py-4 text-sm text-center">{c.first_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.last_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.ci_document}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.gender}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.department}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.area_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.grade_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">{c.level_name}</td>
-                    <td className="px-5 py-4 text-sm text-center">
+                {paginatedContestants.map((c) => (
+                  // <TableRow key={c.contestant_id} className="hover:bg-gray-50 border-b border-border last:border-0">
+                  // <TableRow key={c.contestant_id ?? `${c.ci_document}-${c.first_name}`} className="hover:bg-gray-50 border-b border-border last:border-0">
+                  <TableRow key={crypto.randomUUID()} className="hover:bg-gray-50 border-b border-border last:border-0" >
+
+                    <td className="px-4 py-4 text-sm text-center">{c.first_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.last_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.ci_document}</td>
+                    <td className="px-3 py-4 text-sm text-center">{c.gender}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.department}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.area_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.grade_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">{c.level_name}</td>
+                    <td className="px-4 py-4 text-sm text-center">
                       {c.score !== null ? c.score : "—"}
                     </td>
                     <td className="px-5 py-4 text-sm items-center whitespace-nowrap text-center">
-                        <Badge color={c.status === true ? "success" : "error"}>
-                             {c.status ? "Evaluado" : "No Evaluado"}
-                        </Badge>
+                      <Badge color={c.status === true ? "success" : "error"}>
+                        {c.status ? "Evaluado" : "No Evaluado"}
+                      </Badge>
                     </td>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+           {totalPages > 1 && (
+          <div className="flex justify-center mt-4 items-center space-x-3">
+
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              type="button"
+            >
+              Anterior
+            </Button>
+
+            <span className="px-2 text-sm text-gray-700">
+              {currentPage} de {totalPages}
+            </span>
+
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              type="button"
+            >
+              Siguiente
+            </Button>
+
+          </div>
+        )}
+
+
         </div>
-        {/* Botón de descargar PDF y Scroll to Top */}
+        
 
         <FloatingDownloadButton
           hasData={filteredContestants.length > 0}
@@ -356,9 +376,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({ olympiadId }) => {
           onCSV={handleDownloadCSV}
           onExcel={handleDownloadExcel}
         />
-      
         <ScrollToTopButton />
-        
       </div>
     </div>
   );

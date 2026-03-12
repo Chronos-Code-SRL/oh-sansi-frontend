@@ -8,15 +8,16 @@ type BadgeColor =
   | "info"
   | "light"
   | "dark"
-  | "neutral";
+  | "neutral"
+  | "purple";
 
 interface BadgeProps {
-  variant?: BadgeVariant; // Light or solid variant
-  size?: BadgeSize; // Badge size
-  color?: BadgeColor; // Badge color
-  startIcon?: React.ReactNode; // Icon at the start
-  endIcon?: React.ReactNode; // Icon at the end
-  children: React.ReactNode; // Badge content
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  color?: BadgeColor;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -30,13 +31,11 @@ const Badge: React.FC<BadgeProps> = ({
   const baseStyles =
     "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium";
 
-  // Define size styles
   const sizeStyles = {
-    sm: "text-theme-xs", // Smaller padding and font size
-    md: "text-sm", // Default padding and font size
+    sm: "text-theme-xs",
+    md: "text-sm",
   };
 
-  // Define color styles for variants
   const variants = {
     light: {
       primary:
@@ -51,6 +50,7 @@ const Badge: React.FC<BadgeProps> = ({
       light: "bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80",
       dark: "bg-gray-500 text-white dark:bg-white/5 dark:text-white",
       neutral: "bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300",
+      purple: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400",
     },
     solid: {
       primary: "bg-brand-500 text-white dark:text-white",
@@ -61,11 +61,11 @@ const Badge: React.FC<BadgeProps> = ({
       light: "bg-gray-400 dark:bg-white/5 text-white dark:text-white/80",
       dark: "bg-gray-700 text-white dark:text-white",
       neutral: "bg-gray-400 text-white dark:bg-gray-600 dark:text-white",
+      purple: "bg-purple-500 text-white dark:text-white",
 
     },
   };
 
-  // Get styles based on size and color variant
   const sizeClass = sizeStyles[size];
   const colorStyles = variants[variant][color];
 

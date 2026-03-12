@@ -4,9 +4,6 @@ interface Olympiad {
     id: number;
     name: string;
     status: string;
-    //startDate: string;
-    //endDate: string;
-    // areas: string[];
 }
 
 interface OlympiadContextType {
@@ -26,7 +23,6 @@ export const OlympiadProvider: React.FC<{ children: ReactNode }> = ({
         null
     );
 
-    // 🔹 Cargar desde localStorage cuando arranca la app
     useEffect(() => {
         const saved = localStorage.getItem("selectedOlympiad");
         if (saved) {
@@ -39,7 +35,6 @@ export const OlympiadProvider: React.FC<{ children: ReactNode }> = ({
         }
     }, []);
 
-    // 🔹 Guardar en localStorage cuando cambie
     useEffect(() => {
         if (selectedOlympiad) {
             localStorage.setItem(
@@ -51,7 +46,6 @@ export const OlympiadProvider: React.FC<{ children: ReactNode }> = ({
         }
     }, [selectedOlympiad]);
 
-    // 🔹 Función opcional para limpiar el valor (por ejemplo, al cerrar sesión)
     const clearOlympiad = () => {
         setSelectedOlympiad(null);
         localStorage.removeItem("selectedOlympiad");

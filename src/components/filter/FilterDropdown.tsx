@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-// import { ChevronDown } from "lucide-react"; // icono
-import  Checkbox  from "../form/input/Checkbox";
+import Checkbox from "../form/input/Checkbox";
 import { ChevronDownIcon } from "../../icons";
 
 interface FilterDropdownProps {
@@ -19,7 +18,6 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -56,10 +54,10 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
           <div className="py-2 mx-2 max-h-52 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {options.map((opt) => (
               <Checkbox
-            checked={selectedValues.includes(opt.value)}
-            onChange={() => toggleOption(opt.value)}
-            label={opt.label}
-                />
+                checked={selectedValues.includes(opt.value)}
+                onChange={() => toggleOption(opt.value)}
+                label={opt.label}
+              />
             ))}
           </div>
         </div>

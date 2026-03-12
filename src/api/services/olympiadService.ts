@@ -10,6 +10,12 @@ export const getOlympiads = async (): Promise<Olympiad[]> => {
   return res.data.olympiads;
 };
 
+//para obtener solo olimpiadas en planificación
+export const getOlympiadsInPlannification = async (): Promise<Olympiad[]> => {
+  const res = await ohSansiApi.get<AllOlympiads>(OLYMPIADS_URL);
+  return res.data.olympiads.filter(olympiad => olympiad.status === 'En planificación');
+};
+
 export const postOlympiad = async (
   olympiadData: OlympiadPayload,
 ): Promise<OlympiadPayload> => {

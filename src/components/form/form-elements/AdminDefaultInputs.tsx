@@ -50,6 +50,10 @@ export default function AdminDefaultInputs() {
             const next = { ...prev } as Record<string, string>;
             // eliminar error previo del campo
             delete next[field as string];
+            // sofia
+            if (field === 'start_date' || field === 'end_date') {
+                delete next.overlapping_olympiad;
+            }
             // si ahora hay error, lo agregamos
             if (!result.valid) {
                 const key = Object.keys(result.errors)[0];
@@ -104,6 +108,21 @@ export default function AdminDefaultInputs() {
             }
         } catch (err: any) {
             // Podríamos en el futuro usar un modal de error o toast centralizado
+            const overlap =
+                err?.response?.data?.error?.overlapping_olympiad ||
+                err?.data?.error?.overlapping_olympiad ||
+                err?.error?.overlapping_olympiad ||
+                err?.overlapping_olympiad;
+            if (overlap) {
+                setErrors(prev => ({
+                    ...prev,
+                    overlapping_olympiad: `Ya existe una olimipiada en el rango de fechas introducido`,
+                }));
+                
+                const el = document.getElementById('date-start');
+                if (el) (el as HTMLElement).focus();
+                return;
+            }
             window.alert(err?.message || "Error al crear la olimpiada");
         } finally {
             setIsSubmitting(false);
@@ -210,6 +229,9 @@ export default function AdminDefaultInputs() {
                                     {errors.end_date && <p className="mt-1.5 text-xs text-error-500">{errors.end_date}</p>}
                                 </div>
                             </div>
+                            {errors.overlapping_olympiad && (
+                                <p className="mmt-1.5 text-xs text-error-500">{errors.overlapping_olympiad}</p>
+                            )}
                         </div>
 
                         {/* Áreas */}
@@ -235,8 +257,8 @@ export default function AdminDefaultInputs() {
                             </div>
                         )}
 
-                        <div className="pt-3">
-                            <Button disabled={isSubmitting} className="w-full text-white font-medium py-2.5 disabled:opacity-50 disabled:cursor-not-allowed ">
+                        <div className="flex justify-end">
+                            <Button disabled={isSubmitting} >
                                 {isSubmitting ? "Creando..." : "Crear olimpiada"}
                             </Button>
                         </div>

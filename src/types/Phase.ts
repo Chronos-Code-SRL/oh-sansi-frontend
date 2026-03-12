@@ -1,4 +1,4 @@
-export interface Phase{
+export interface Phase {
     id: number;
     name: string;
     order: number;
@@ -20,3 +20,17 @@ export interface PhaseResponse {
     phase_status: PhaseStatus;
     status: number;
 }
+
+export interface LastPhaseStatusResponse {
+    message: string;
+    status: number;
+}
+
+export interface EndorseErrorItem {
+    medal: string;
+    score: string;
+    count: number;
+    available: number;
+    position: number;
+    message: string;
+};

@@ -26,7 +26,6 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
   }, []);
 
   const toggleFilter = (type: "estado" | "grado", value: string) => {
-      // const toggleFilter = (type: "estado" | "nivel" | "grado", value: string) => {
     setSelectedFilters((prev: any) => {
       const current = prev[type];
       const updated = current.includes(value) ? current.filter((v: string) => v !== value) : [...current, value];
@@ -36,15 +35,14 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
 
   const filterOptions = {
     Estado: ["Evaluado", "No Evaluado"],
-    // Nivel: ["Primero","Segundo","Tercero","Cuarto","Quinto","Sexto"],
     Grado: [
-      "Primero de primaria","Segundo de primaria","Tercero de primaria","Cuarto de primaria",
-      "Quinto de primaria","Sexto de primaria","Primero de secundaria","Segundo de secundaria",
-      "Tercero de secundaria","Cuarto de secundaria","Quinto de secundaria","Sexto de secundaria",
+      "Primero de primaria", "Segundo de primaria", "Tercero de primaria", "Cuarto de primaria",
+      "Quinto de primaria", "Sexto de primaria", "Primero de secundaria", "Segundo de secundaria",
+      "Tercero de secundaria", "Cuarto de secundaria", "Quinto de secundaria", "Sexto de secundaria",
     ],
   };
 
-  const handleClear = () => setSelectedFilters({ estado: [], nivel: [], grado: [] });
+  // const handleClear = () => setSelectedFilters({ estado: [], nivel: [], grado: [] });
 
   return (
     <div className="relative ml-3" ref={menuRef}>
@@ -52,7 +50,6 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
         Filtros
       </Button>
 
-      {/* Desktop */}
       {open && (
         <div className="hidden sm:flex absolute left-0 mt-2 w-[500px] h-[250px] max-w-[95vw] rounded-lg border border-gray-200 bg-white shadow-2xl z-50 flex-col sm:flex-row overflow-hidden">
           <Tabs tabs={Object.keys(filterOptions)} activeTab={activeTab} setActiveTab={setActiveTab} vertical />
@@ -63,20 +60,18 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
               toggle={(val) => toggleFilter(activeTab.toLowerCase() as any, val)}
             />
             <div className="border-t border-gray-200 bg-white  text-right sticky bottom-0">
-              <Button className="font-medium" size="sm" variant="noborder"  
-                      onClick={() => {setSelectedFilters({ estado: [], nivel: [], grado: [] });}} >
-              Limpiar filtros
-              </Button>    
+              <Button className="font-medium" size="sm" variant="noborder"
+                onClick={() => { setSelectedFilters({ estado: [], nivel: [], grado: [] }); }} >
+                Limpiar filtros
+              </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Mobile */}
       {open && (
         <div className="sm:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="bg-white rounded-xl w-[90%] max-w-sm h-[70%] shadow-2xl flex flex-col overflow-hidden">
-            {/* Header */}
             <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white shadow-sm">
               <span className="font-medium text-gray-800 text-base">Filtros</span>
               <button onClick={() => setOpen(false)} className="text-gray-500 text-xl hover:text-gray-700">✕</button>
@@ -91,10 +86,10 @@ export default function Filter({ selectedFilters, setSelectedFilters }: FilterPr
             />
 
             <div className="border-t border-gray-200 bg-white text-right sticky bottom-0">
-              <Button className="font-medium" size="sm" variant="noborder"  
-                      onClick={() => {setSelectedFilters({ estado: [], nivel: [], grado: [] });}} >
-              Limpiar filtros
-              </Button>    
+              <Button className="font-medium" size="sm" variant="noborder"
+                onClick={() => { setSelectedFilters({ estado: [], nivel: [], grado: [] }); }} >
+                Limpiar filtros
+              </Button>
             </div>
           </div>
         </div>

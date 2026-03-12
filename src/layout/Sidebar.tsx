@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
-import { getUser, getUserAreas, getRoleName } from "../api/services/authService";
+import { getUser, getUserAreas } from "../api/services/authService";
 import { UPermission } from "../types/enums/UPermissions";
-import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal } from "../icons";
+import { ListIcon, ChevronDownIcon, HorizontaLDots, GridIcon, GroupIcon, UserIcon, Slider, PencilIcon, HomeIcon, CheckLineIcon, Medal, QualificationIcon, DisqualifyIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useOlympiad } from "../context/OlympiadContext";
 import { Phase } from "../types/Phase";
@@ -30,21 +30,25 @@ const rolePermissions: Record<number, UPermission[]> = {
     UPermission.REGISTER_ACADEMIC_RESPONSIBLE,
     UPermission.REGISTER_EVALUATOR,
     UPermission.REGISTER_COMPETITOR,
+    UPermission.AUDIT_LISTS,
+    UPermission.CONFIGURE_MEDALS,
   ],
   2: [ // Responsable Académico
     UPermission.REGISTER_EVALUATOR,
-    UPermission.REGISTER_COMPETITOR,
     UPermission.EDIT_SCORE_CUT,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.APPROVE_PHASE,
     UPermission.RANKED_CONTESTANTS_LIST,
     UPermission.AWARDED_CONTESTANTS_LIST,
-    UPermission.MEDAL_PAGE,
+    UPermission.CERTIFICATED_CONTESTANTS_LIST,
+    UPermission.VIEW_OLYMPIAD,
   ],
   3: [ // Evaluador
     UPermission.GRADE_COMPETITOR,
     UPermission.FILTER_COMPETITOR_BY_AREA,
     UPermission.RANKED_CONTESTANTS_LIST,
+    UPermission.DISQUALIFY_COMPETITOR,
+    UPermission.VIEW_OLYMPIAD,
   ],
 };
 
@@ -53,6 +57,7 @@ const navItems: NavItem[] = [
     icon: <HomeIcon />,
     name: "Inicio",
     path: "/seleccionar-olimpiada",
+    permission: UPermission.VIEW_OLYMPIAD,
   },
   {
     icon: <GridIcon />,
@@ -60,8 +65,8 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Crear Olimpiada", path: "/Olimpiada", pro: false, permission: UPermission.CREATE_OLYMPIAD },
       { name: "Configurar Áreas", path: "/VerOlimpiadas", pro: false, permission: UPermission.CONFIGURE_AREAS },
+      { name: "Configurar Medallero", path: "/OlimpiadasMedallero", pro: false, permission: UPermission.CONFIGURE_MEDALS },
     ],
-
   },
   {
     icon: <UserIcon />,
@@ -78,13 +83,6 @@ const navItems: NavItem[] = [
     permission: UPermission.REGISTER_COMPETITOR
   },
   {
-    icon: <ListIcon />,
-    name: "Calificar Competidores",
-    path: "/calificaciones",
-    subItems: [],
-    permission: UPermission.GRADE_COMPETITOR
-  },
-  {
     icon: <PencilIcon />,
     name: "Editar Umbral",
     path: "/editar-umbral",
@@ -92,10 +90,18 @@ const navItems: NavItem[] = [
     permission: UPermission.EDIT_SCORE_CUT,
   },
   {
-    icon: <Slider />,
-    name: "Filtrar lista de Competidores",
-    path: "/filtros-de-lista",
-    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
+    icon: <QualificationIcon />,
+    name: "Calificar Competidores",
+    path: "/calificaciones",
+    subItems: [],
+    permission: UPermission.GRADE_COMPETITOR
+  },
+  {
+    icon: <DisqualifyIcon />,
+    name: "Desclasificar Competidor",
+    path: "/descalificar-competidor",
+    subItems: [],
+    permission: UPermission.DISQUALIFY_COMPETITOR,
   },
   {
     icon: <CheckLineIcon />,
@@ -121,9 +127,27 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Lista de Premiados",
     path: "/lista-competidores-premiados",
-    subItems: [],
     permission: UPermission.AWARDED_CONTESTANTS_LIST,
   },
+  {
+    icon: <ListIcon />,
+    name: "Lista para Certificados",
+    path: "/lista-competidores-certificados",
+    permission: UPermission.CERTIFICATED_CONTESTANTS_LIST,
+  },
+  {
+    icon: <ListIcon />,
+    name: "Historial de cambios",
+    path: "/historial-cambios",
+    permission: UPermission.AUDIT_LISTS,
+  },
+  {
+    icon: <Slider />,
+    name: "Filtrar lista de Competidores",
+    path: "/filtros-de-lista",
+    permission: UPermission.FILTER_COMPETITOR_BY_AREA,
+  },
+
 ];
 const othersItems: NavItem[] = [];
 
@@ -131,10 +155,17 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const user = getUser();
-  const isAdmin = getRoleName(user) === "Admin";
-  const userPerms = user ? rolePermissions[user.roles_id] || [] : [];
+  const isAdmin = user?.roles_id?.some(role => {
+    const roleName = role.name.toLowerCase();
+    return roleName === "administrador";
+  });
+  const userPerms = useMemo(() => {
+    if (!user || !Array.isArray(user.roles_id)) return [] as UPermission[];
+    return [...new Set(user.roles_id.flatMap((role: any) => rolePermissions[role.id] || []))];
+  }, [user?.roles_id?.map((r: any) => r.id).join(",")]);
+
   const { selectedOlympiad } = useOlympiad();
-  const [userAreas, setUserAreas] = useState<{ id: number; name: string; path: string }[]>([]);
+  const [roleAreas, setRoleAreas] = useState<Record<number, { id: number; name: string; path: string }[]>>({});
   const [menuItems, setMenuItems] = useState(navItems);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [openAreaId, setOpenAreaId] = useState<number | null>(null);
@@ -143,27 +174,26 @@ const AppSidebar: React.FC = () => {
     const fetchUserAreas = async (olympiadId: number) => {
       try {
         const res = await getUserAreas(olympiadId);
-        console.log("Respuesta de getUserAreas:", res);
-        const formatted = res.areas.map((area) => ({
-          id: area.id,
-          name: area.name,
-          path: `/calificaciones/${olympiadId}/${encodeURIComponent(area.name)}/${area.id}`,
-
-        }));
-        console.log("Respuesta de getUserAreas:", res);
-
-        setUserAreas(formatted);
+        const byRole: Record<number, { id: number; name: string; path: string }[]> = {};
+        (res.data || []).forEach((entry: any) => {
+          const list = (entry.areas || []).map((area: any) => ({
+            id: area.id,
+            name: area.name,
+            path: `/calificaciones/${olympiadId}/${encodeURIComponent(area.name)}/${area.id}`,
+          }));
+          byRole[entry.role_id] = list;
+        });
+        setRoleAreas(byRole);
       } catch (error) {
         console.error("Error obteniendo áreas del usuario:", error);
       }
     };
 
-    if (selectedOlympiad?.id) {
+    if (selectedOlympiad?.id && !isAdmin) {
       fetchUserAreas(selectedOlympiad.id);
     }
-  }, [selectedOlympiad]);
+  }, [selectedOlympiad, isAdmin]);
 
-  // obtener fases de la olimpiada
   useEffect(() => {
     const fetchPhases = async (olympiadId: number) => {
       try {
@@ -181,15 +211,27 @@ const AppSidebar: React.FC = () => {
 
 
   useEffect(() => {
-    // Solo actualizamos si ya tenemos las áreas
-    if (userAreas.length > 0) {
+    const getAreasForPermission = (permission?: UPermission) => {
+      if (!permission) return [] as { id: number; name: string; path: string }[];
+      const rolesForPermission = Object.entries(rolePermissions)
+        .filter(([_, perms]) => (perms as UPermission[]).includes(permission))
+        .map(([roleId]) => Number(roleId));
+      const orderedRoles = rolesForPermission.sort((a, b) => a - b).filter(r => r !== 1);
+      for (const rid of orderedRoles) {
+        if (roleAreas[rid]?.length) return roleAreas[rid];
+      }
+      return [] as { id: number; name: string; path: string }[];
+    };
+
+
+    const hasAnyArea = Object.values(roleAreas).some(arr => (arr?.length ?? 0) > 0);
+    if (hasAnyArea) {
       const updated = navItems.map((item) => {
         if (item.name === "Calificar Competidores") {
-          // construir subitems por área que contengan las fases
-          const areasWithPhases = userAreas.map((area) => {
+          const areas = getAreasForPermission(item.permission);
+          const areasWithPhases = areas.map((area) => {
             const areaSubItems = phases.length
               ? phases.map((p) => {
-                console.log(p.name);
                 return {
                   name: p.name,
                   path: `${area.path}/${encodeURIComponent(p.name)}/${p.id}`,
@@ -214,17 +256,16 @@ const AppSidebar: React.FC = () => {
     } else {
       setMenuItems(navItems);
     }
-  }, [userAreas, phases]);
+  }, [roleAreas, phases]);
 
   const toggleArea = (areaId: number) => {
     setOpenAreaId((prev) => (prev === areaId ? null : areaId));
   };
 
-  // Filtrar ítems visibles según permisos
+
   useEffect(() => {
     const filteredMenu = navItems
       .map((item) => {
-        // Filtrar subitems según permisos
         const visibleSubItems = item.subItems
           ? item.subItems.filter(
             (sub) => !sub.permission || userPerms.includes(sub.permission)
@@ -238,7 +279,6 @@ const AppSidebar: React.FC = () => {
 
         if (!canSeeItem) return null;
 
-        // Ajustar dinámicamente la ruta de "Inicio" según el rol
         const adjustedItem =
           item.name === "Inicio"
             ? { ...item, path: isAdmin ? "/" : "/seleccionar-olimpiada" }
@@ -251,11 +291,23 @@ const AppSidebar: React.FC = () => {
       })
       .filter(Boolean) as NavItem[];
 
-    // Agregar dinámicamente las áreas a los menús que las necesitan
+    const getAreasForPermission = (permission?: UPermission) => {
+      if (!permission) return [] as { id: number; name: string; path: string }[];
+      const rolesForPermission = Object.entries(rolePermissions)
+        .filter(([_, perms]) => (perms as UPermission[]).includes(permission))
+        .map(([roleId]) => Number(roleId));
+      const orderedRoles = rolesForPermission.sort((a, b) => a - b).filter(r => r !== 1);
+      for (const rid of orderedRoles) {
+        if (roleAreas[rid]?.length) return roleAreas[rid];
+      }
+      return [] as { id: number; name: string; path: string }[];
+    };
+
     const updatedMenu = filteredMenu.map((item) => {
       if (item.name === "Calificar Competidores") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const areaSubItems = phases.length
               ? phases.map((p) => ({
                 name: p.name,
@@ -277,8 +329,9 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Editar Umbral") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -304,11 +357,40 @@ const AppSidebar: React.FC = () => {
         }
         return { ...item, subItems: item.subItems };
       }
+      if (item.name === "Desclasificar Competidor") {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
+            const olympiadId = area.path.split("/")[2];
 
+            const areaSubItems = phases.length
+              ? phases.map((phase) => ({
+                name: phase.name,
+                path: `/descalificar-competidor/${olympiadId}/${encodeURIComponent(
+                  area.name
+                )}/${area.id}/${encodeURIComponent(phase.name)}/${phase.id}`,
+              }))
+              : [];
+
+            return {
+              id: area.id,
+              name: area.name,
+              path: `/descalificar-competidor/${olympiadId}/${encodeURIComponent(
+                area.name
+              )}/${area.id}`,
+              subItems: areaSubItems,
+            };
+          });
+
+          return { ...item, subItems: areasWithPhases };
+        }
+        return { ...item, subItems: item.subItems };
+      }
 
       if (item.name === "Avalar Fase") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -335,8 +417,9 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
       if (item.name === "Lista de Clasificados") {
-        if (userAreas.length > 0) {
-          const areasWithPhases = userAreas.map((area) => {
+        const areas = getAreasForPermission(item.permission);
+        if (areas.length > 0) {
+          const areasWithPhases = areas.map((area) => {
             const olympiadId = area.path.split("/")[2];
 
             const areaSubItems = phases.length
@@ -363,26 +446,6 @@ const AppSidebar: React.FC = () => {
         return { ...item, subItems: item.subItems };
       }
 
-      if (item.name === "Lista de Premiados") {
-        if (userAreas.length > 0) {
-          const areasOnly = userAreas.map((area) => {
-            const olympiadId = area.path.split("/")[2];
-
-            return {
-              id: area.id,
-              name: area.name,
-              path: `/lista-competidores-premiados/${olympiadId}/${encodeURIComponent(
-                area.name
-              )}/${area.id}`
-            };
-          });
-
-          return { ...item, subItems: areasOnly };
-        }
-
-        return { ...item, subItems: item.subItems };
-      }
-
       if (item.name === "Filtrar lista de Competidores") {
         if (selectedOlympiad?.id) {
           return {
@@ -395,11 +458,7 @@ const AppSidebar: React.FC = () => {
     });
 
     setMenuItems(updatedMenu);
-  }, [userPerms, userAreas, phases]);
-
-
-
-  //Editar
+  }, [userPerms, roleAreas, phases]);
 
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -412,7 +471,6 @@ const AppSidebar: React.FC = () => {
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const prevOpenSubmenuRef = useRef<typeof openSubmenu | null>(null);
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -421,7 +479,8 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      // Usar los items realmente renderizados para evitar desalineación de índices
+      const items = menuType === "main" ? menuItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -440,20 +499,16 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, menuItems]);
 
-  // Manejo refinado de expand/collapse para animaciones correctas
   useEffect(() => {
     const prev = prevOpenSubmenuRef.current;
-    // Si antes había un submenu abierto y ahora se cerró -> animar colapso
     if (prev && openSubmenu === null) {
       const prevKey = `${prev.type}-${prev.index}`;
       const el = subMenuRefs.current[prevKey];
       if (el) {
-        // fijar la altura actual y luego animar a 0
         const h = el.scrollHeight || 0;
         setSubMenuHeight((prevHeights) => ({ ...prevHeights, [prevKey]: h }));
-        // dar tiempo a que se aplique y luego colapsar
         window.requestAnimationFrame(() => {
           setTimeout(() => {
             setSubMenuHeight((prevHeights) => ({ ...prevHeights, [prevKey]: 0 }));
@@ -462,7 +517,6 @@ const AppSidebar: React.FC = () => {
       }
     }
 
-    // Si ahora hay un submenu abierto -> expandir y luego poner 'auto'
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
       const el = subMenuRefs.current[key];
@@ -471,7 +525,7 @@ const AppSidebar: React.FC = () => {
         setSubMenuHeight((prevHeights) => ({ ...prevHeights, [key]: h }));
         const tid = setTimeout(() => {
           setSubMenuHeight((prevHeights) => ({ ...prevHeights, [key]: 'auto' }));
-        }, 160); // ligeramente mayor que la duración CSS (150ms)
+        }, 160);
         return () => clearTimeout(tid);
       }
     }
@@ -479,13 +533,11 @@ const AppSidebar: React.FC = () => {
     prevOpenSubmenuRef.current = openSubmenu;
   }, [openSubmenu]);
 
-  // Recalcular altura del submenú abierto cuando cambian las fases o el contenido del menú
   useEffect(() => {
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
       const el = subMenuRefs.current[key];
       if (el) {
-        // Esperar al siguiente frame (y un micro delay) para que el DOM aplique "hidden/block"
         window.requestAnimationFrame(() => {
           setTimeout(() => {
             const h = el.scrollHeight || 0;
@@ -493,7 +545,6 @@ const AppSidebar: React.FC = () => {
             const tid = setTimeout(() => {
               setSubMenuHeight((prev) => ({ ...prev, [key]: 'auto' }));
             }, 160);
-            // limpieza si el effect se re-ejecuta
             return () => clearTimeout(tid);
           }, 0);
         });
@@ -592,7 +643,6 @@ const AppSidebar: React.FC = () => {
               <ul className="mt-2 space-y-1 ml-9">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
-                    {/* Si el subItem trae subItems (área con fases) renderizamos boton que expande las fases */}
                     {(
                       (subItem as any).subItems && (subItem as any).subItems.length > 0
                     ) ? (
@@ -690,7 +740,6 @@ const AppSidebar: React.FC = () => {
       <div
         className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
-      // className={`py-8 flex justify-center`}
       >
         <Link to="/" className="flex justify-center">
           {isExpanded || isHovered || isMobileOpen ? (

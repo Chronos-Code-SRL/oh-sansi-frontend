@@ -6,8 +6,8 @@ import { ChevronDownIcon, TrophyGold, TrophySilver, TrophyBronze, Award } from "
 export type ClassificationLabel = "Oro" | "Plata" | "Bronce" | "Mención honorífica";
 
 type MedalSelectorProps = {
-    value: string | null; // siempre string o null (desde API/UI)
-    onChange: (value: ClassificationLabel | null) => void; // devolvemos string o null
+    value: string | null;
+    onChange: (value: ClassificationLabel | null) => void;
     disabled?: boolean;
 };
 

@@ -1,5 +1,12 @@
 import { ohSansiApi } from "../ohSansiApi";
-import { AwardWinningCompetitors, AwardWinningCompetitorsResponse, ConstestantRanked, Contestant, ContestantMedal, ContestantMedalList, ContestantStats, Evaluation, EvaluationUpdatePayload, FilterList } from "../../types/Contestant";
+import {
+    AwardMedalsPayload, AwardMedalsResponse, AwardWinningCompetitorsByArea, AwardWinningCompetitorsResponse,
+    CertificateContestant,
+    ConstestantRanked, Contestant, ContestantMedal, Evaluation,
+    EvaluationUpdatePayload, FilterList,
+    numberOfMedalsByLevel
+} from "../../types/Contestant";
+import { LastPhaseStatusResponse } from "../../types/Phase";
 
 const CONTESTANTS_URL = `/contestants`;
 
@@ -55,40 +62,33 @@ export const getContestantsClassifieds = async (
     return res.data;
 };
 
-export const getAwardWinningCompetitors = async (
-    olympiadId: number,
-    areaId: number,
-): Promise<AwardWinningCompetitors[]> => {
-
-    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
-        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
-    );
-
-    return res.data.contestants; // ✔️ ahora sí devuelves un array
-};
-
-
-
-
-
-// //Conteo de concursantes por estado de clasificación
-// export const getContestantStats = async (
+// export const getAwardWinningCompetitors = async (
 //     olympiadId: number,
 //     areaId: number,
-//     phaseId: number,
-//     levelId: number
-// ): Promise<ContestantStats> => {
-//     const res = await ohSansiApi.get<ContestantStats>(
-//         `/contestants/olympiads/${olympiadId}/areas/${areaId}/phases/${phaseId}/levels/${levelId}`
+// ): Promise<AwardWinningCompetitors[]> => {
+
+//     const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+//         `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}`
 //     );
-//     return res.data;
+
+//     return res.data.contestants;
 // };
 
-//For medals
-export const getContestantMedals = async (
+export const getAwardWinningCompetitorsArea = async (
     olympiadId: number,
     areaId: number,
-    levelId: number,
+    levelId: number
+): Promise<AwardWinningCompetitorsByArea[]> => {
+
+    const res = await ohSansiApi.get<AwardWinningCompetitorsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+
+    return res.data.contestants;
+};
+
+//For medals
+export const getContestantMedals = async (olympiadId: number, areaId: number, levelId: number,
 ): Promise<ContestantMedal[]> => {
     const res = await ohSansiApi.get<ContestantMedal[]>(
         `/contestants/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
@@ -104,3 +104,53 @@ export async function updateMedal(
     const { data } = await ohSansiApi.patch(`/evaluations/${id}/classification`, payload);
     return data as { message: string; status: number };
 }
+
+// Post for Award Medals
+export const awardMedals = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number,
+    payload: AwardMedalsPayload
+): Promise<AwardMedalsResponse> => {
+    const res = await ohSansiApi.post<AwardMedalsResponse>(
+        `${CONTESTANTS_URL}/awarded/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`,
+        payload
+    );
+    return res.data;
+};
+
+
+//For medal count status
+export const getLastPhaseStatus = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number
+): Promise<LastPhaseStatusResponse> => {
+    const res = await ohSansiApi.get<LastPhaseStatusResponse>(
+        `/phases/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}/last-phase-status`
+    );
+
+    return res.data;
+};
+
+export const getNumberOfMedalsByLevel = async (
+    olympiadId: number,
+    areaId: number,
+    levelId: number
+): Promise<numberOfMedalsByLevel> => {
+    const res = await ohSansiApi.get<numberOfMedalsByLevel>(
+        `/medals/olympiads/${olympiadId}/areas/${areaId}/levels/${levelId}`
+    );
+    return res.data;
+}
+
+export const getCertificateContestants = async (
+  olympiadId: number | string,
+  areaId: number | string
+): Promise<CertificateContestant[]> => {
+  const res = await ohSansiApi.get<CertificateContestant[]>(
+    `/contestants/certificate/olympiads/${olympiadId}/areas/${areaId}`
+  );
+
+  return res.data;
+};

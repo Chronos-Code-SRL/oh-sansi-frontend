@@ -11,7 +11,7 @@ interface FilterDropdownNotaProps {
 export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
   label = "Nota",
   initialValue = 0,
-  finalValue = 100,
+  finalValue = 500,
   onConfirm,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,9 +41,14 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
     setIsOpen(false);
   };
 
+  useEffect(() => {
+    setNotaInicial(initialValue);
+    setNotaFinal(finalValue);
+  }, [initialValue, finalValue]);
+
+
   return (
     <div ref={dropdownRef} className="relative inline-block text-left m-1">
-      {/* Botón principal */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -55,7 +60,6 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
         />
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute left-0 mt-2 w-[190px] rounded-md bg-white shadow-lg ring-1 ring-gray-200 z-10 p-4">
           <div className="flex justify-between mb-3">
@@ -66,7 +70,7 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
                 value={notaInicial}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value >= 0 && value <= 100) setNotaInicial(value);
+                  if (value >= 0) setNotaInicial(value);
                 }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
@@ -79,7 +83,7 @@ export const FilterDropdownNota: React.FC<FilterDropdownNotaProps> = ({
                 value={notaFinal}
                 onChange={(e) => {
                   const value = Number(e.target.value);
-                  if (value >= 0 && value <= 100) setNotaFinal(value);
+                  if (value >= 0) setNotaFinal(value);
                 }}
                 className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
               />
